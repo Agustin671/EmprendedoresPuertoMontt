@@ -1,0 +1,1244 @@
+/* ============================================================
+   TRAMA — Hoja de estilos (styles.css)
+   ============================================================
+   GUÍA RÁPIDA PARA CAMBIAR COLORES Y TAMAÑOS:
+
+   1) COLORES PRINCIPALES: están definidos en el bloque :root
+      (variables). Si cambias solo el valor de una variable,
+      la página completa usa el nuevo color.
+        - --color-texto      : color de los textos
+        - --color-fondo      : color de fondo de la página
+        - --color-principal  : verde de Trama (botones principales)
+        - --color-acento     : color de énfasis (botones de ayuda)
+        - --color-peligro    : rojo de alerta
+
+   2) TAMAÑO DE LETRA: se controla con "em".
+      - El tamaño NORMAL está en la etiqueta body (--tamano-normal).
+      - Los modos "Grande" y "Muy grande" los aplica js/main.js
+        agregando las clases .tamano-grande y .tamano-muy-grande.
+      Para agrandar TODO: sube solo el valor de --tamano-normal.
+
+   3) CONTRASTE: por defecto este diseño ya tiene alto contraste
+      (texto oscuro casi negro sobre fondo blanco y verde oscuro.
+      La clase .alto-contraste (que activa el botón flotante)
+      hace el contraste aún más fuerte.
+   ============================================================ */
+
+/* ---------- VARIABLES DE COLOR Y TAMAÑO ---------- */
+:root {
+  /* Colores principales (contraste alto, pensado para adultos mayores) */
+  --color-texto: #1a1a1a;              /* Texto casi negro: alto contraste */
+  --color-texto-claro: #ffffff;        /* Texto blanco sobre botones de color */
+  --color-fondo: #ffffff;              /* Fondo blanco de la página */
+  --color-fondo-suave: #eef4f0;        /* Fondo gris-verde muy claro */
+  --color-principal: #1e7a46;          /* Verde oscuro de Trama (botones) */
+  --color-principal-oscuro: #145a30;   /* Verde más oscuro (al pasar el mouse) */
+  --color-acento: #b3541e;             /* Naranja/terracota (botones de ayuda) */
+  --color-acento-oscuro: #8a3c12;      /* Naranja más oscuro (hover) */
+  --color-whatsapp: #128c4a;           /* Verde de WhatsApp */
+  --color-whatsapp-oscuro: #0d6b38;    /* Verde WhatsApp más oscuro */
+  --color-borde: #7a7a7a;              /* Gris para bordes (visible) */
+  --color-atencion: #b3261e;           /* Rojo para avisos importantes */
+
+  /* Tamaños de letra (en em para crecer todo junto) */
+  --tamano-normal: 1.125rem;           /* Letra de base (18px): grande y clara */
+  --tamano-grande: 1.375rem;           /* Modo "Grande" (~22px) */
+  --tamano-muy-grande: 1.75rem;        /* Modo "Muy grande" (~28px) */
+}
+
+/* ---------- RECONFIGURACIÓN BÁSICA ---------- */
+* {
+  box-sizing: border-box;
+}
+
+/* Regla de accesibilidad: los elementos con el atributo "hidden"
+   se ocultan siempre (aunque otra regla use display:flex). */
+[hidden] {
+  display: none !important;
+}
+
+/* Márgenes y espacios básicos */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: "Verdana", "Segoe UI", Arial, sans-serif; /* Letra fácil de leer */
+  font-size: var(--tamano-normal);
+  line-height: 1.6;
+}
+
+/* Títulos: todos grandes para leer sin esfuerzo */
+h1 {
+  font-size: 2.2rem;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+/* Contenedor central: mantiene el contenido centrado y con ancho máximo */
+.contenedor {
+  max-width: 70rem;        /* Ancho máximo de la página */
+  margin: 0 auto;          /* Centra el bloque horizontalmente */
+  padding: 1rem 1.25rem;
+}
+
+/* Enlaces: subrayados y de color visible (fáciles de distinguir) */
+a {
+  color: var(--color-principal-oscuro);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ============================================================
+   ACCESIBILIDAD: ENFOQUE DE TECLADO (WCAG 2.4.7)
+   Cada botón o enlace muestra un anillo azul claro al enfocarse
+   con la pestaña (Tab) del teclado.
+   ============================================================ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 4px solid #1d5fd0;          /* Anillo azul bien visible */
+  outline-offset: 3px;
+}
+
+/* Enlace para saltar al contenido (visible solo al enfocarlo) */
+.skip-link {
+  position: absolute;
+  left: -999px;                        /* Escondido para la vista normal */
+  top: 0;
+  background: var(--color-principal-oscuro);
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 0;                             /* Aparece al presionar Tab */
+}
+
+/* ============================================================
+   ENCABEZADO (header)
+   ============================================================ */
+.encabezado {
+  background-color: var(--color-principal-oscuro);
+  color: var(--color-texto-claro);
+}
+
+.encabezado .contenedor {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Fila superior: logo, buscador y selector, uno al lado del otro.
+   Si la pantalla es angosta, se apilan (ver media queries al final). */
+.encabezado-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Logo de Trama */
+.logo {
+  display: inline-block;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.logo-nombre {
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.logo-subtitulo {
+  display: block;
+  font-size: 1rem;
+}
+
+/* Buscador: campo y botón grandes */
+.buscador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 22rem;
+}
+
+.buscador input[type="search"] {
+  flex: 1;
+  font-size: 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.5rem;
+  min-height: 3.25rem;               /* Caja alta, fácil de tocar */
+}
+
+/* Selector de tamaño de texto */
+.selector-tamano {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ============================================================
+   MENÚ DE TAMAÑO DE LETRA (DESPLEGABLE)
+   ============================================================ */
+.tamano-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.boton-tamano-menu {
+  background-color: transparent;
+  color: #ffffff;
+  border: 3px solid #ffffff;
+  padding: 0.6rem 1.1rem;
+}
+
+.menu-tamano-opciones {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: var(--color-principal-oscuro);
+  border: 3px solid #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+  z-index: 25;
+  min-width: 12rem;
+}
+
+.opcion-tamano {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid transparent;
+  text-align: left;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+}
+
+.opcion-tamano:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.opcion-tamano[aria-checked="true"] {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  font-weight: bold;
+}
+
+/* ============================================================
+   BOTONES (grandes, con texto claro)
+   ============================================================ */
+.boton {
+  display: inline-block;
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: var(--color-principal);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  min-height: 3rem;                  /* Botón alto para tocar fácil */
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.boton:hover {
+  background-color: var(--color-principal-oscuro);
+}
+
+.boton-buscar {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid var(--color-principal-oscuro);
+}
+
+.boton-secundario {
+  background-color: var(--color-texto);
+  color: #ffffff;
+}
+
+.boton-secundario:hover {
+  background-color: #000000;
+}
+
+/* Botón principal (el más importante de cada tarjeta) */
+.boton-principal {
+  background-color: var(--color-principal);
+  color: #ffffff;
+  border: 3px solid transparent;
+}
+
+/* Botones del selector de tamaño */
+.boton-tamano {
+  background-color: transparent;
+  border: 3px solid #ffffff;
+  color: #ffffff;
+  font-size: 1.125rem;
+  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+}
+
+.boton-tamano:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* El tamaño activo se resalta con un fondo blanco */
+.boton-tamano-activo {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+}
+
+/* Botón WhatsApp (verde característico y texto claro) */
+.boton-whatsapp {
+  background-color: var(--color-whatsapp);
+  color: #ffffff;
+  display: block;
+  width: 100%;
+}
+
+.boton-whatsapp:hover {
+  background-color: var(--color-whatsapp-oscuro);
+}
+
+/* Botón de ayuda telefónica (resaltado, imposible de no ver) */
+.boton-ayuda-telefono {
+  background-color: var(--color-acento);
+  color: #ffffff;
+  font-size: 1.375rem;
+  padding: 1rem 2rem;
+  border: 3px solid var(--color-acento-oscuro);
+}
+
+.boton-ayuda-telefono:hover {
+  background-color: var(--color-acento-oscuro);
+}
+
+/* Botón para cerrar el mensaje de confirmación */
+.boton-cerrar {
+  background-color: var(--color-atencion);
+}
+
+.boton-cerrar:hover {
+  background-color: #7e1a14;
+}
+
+/* ============================================================
+   MENÚ DE NAVEGACIÓN
+   ============================================================ */
+.navegacion {
+  background-color: var(--color-principal);
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 1.25rem;
+}
+
+.menu-enlace {
+  display: inline-block;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+}
+
+.menu-enlace:hover {
+  text-decoration: underline;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================================
+   SECCIONES GENERALES
+   ============================================================ */
+.seccion {
+  padding: 2.5rem 0;
+}
+
+/* Sección con fondo suave para diferenciar bloques */
+.seccion-clara {
+  background-color: var(--color-fondo-suave);
+}
+
+/* Frase pequeña que explica cada sección (debajo de los títulos) */
+.ayuda-tarea {
+  font-size: 1.25rem;
+  color: var(--color-texto);
+}
+
+/* ============================================================
+   BIENVENIDA (inicio)
+   ============================================================ */
+.bienvenida {
+  background-color: #eaf2ec;
+  padding: 3rem 0;
+}
+
+/* Lista de pasos: recuadro tranquilo y con espacio */
+.pasos {
+  background-color: #ffffff;
+  border: 3px solid var(--color-principal);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.75rem;
+  margin: 1.5rem 0;
+  max-width: 40rem;
+}
+
+.pasos li {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================================
+   CARTELERA DE FERIAS (tarjetas)
+   ============================================================ */
+.grilla-ferias,
+.grilla-emprendedoras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.75rem;
+  margin-top: 1.5rem;
+}
+
+.tarjeta {
+  background-color: #ffffff;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.9rem;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Imágenes grandes y claras en cada tarjeta */
+.tarjeta img {
+  width: 100%;
+  height: 13rem;
+  object-fit: cover;
+  display: block;
+}
+
+.tarjeta-contenido {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Fecha y lugar: texto grande y fácil de leer */
+.fecha {
+  font-size: 1.25rem;
+  color: var(--color-principal-oscuro);
+  margin: 0.25rem 0;
+}
+
+.lugar {
+  font-size: 1.125rem;
+  margin: 0.25rem 0;
+}
+
+/* Botones de la tarjeta (juntos, abajo) */
+.tarjeta-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: auto;                  /* Empuja los botones hacia abajo */
+  padding-top: 1rem;
+}
+
+/* ============================================================
+   DIRECTORIO DE EMPRENDEDORAS
+   ============================================================ */
+.categoria {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: var(--color-principal-oscuro);
+  border: 2px solid var(--color-principal);
+  border-radius: 2rem;
+  display: inline-block;
+  padding: 0.35rem 1rem;
+  margin: 0.5rem 0;
+}
+
+/* ============================================================
+   SECCIÓN DE AYUDA
+   ============================================================ */
+.ayuda {
+  background-color: #fdf3ec;        /* Fondo anaranjado muy suave */
+  text-align: center;
+  border-top: 4px solid var(--color-acento);
+  border-bottom: 4px solid var(--color-acento);
+}
+
+.ayuda .ayuda-tarea {
+  max-width: 46rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.horario-ayuda {
+  font-size: 1.125rem;
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   MENSAJE DE CONFIRMACIÓN (aparece al guardar o asistir)
+   ============================================================ */
+.confirmacion {
+  background-color: #f6fbf8;
+  border: 4px solid #b3261e;        /* Borde rojo para llamar la atención */
+  border-radius: 0.9rem;
+  color: var(--color-texto);
+  font-size: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem auto;
+  max-width: 56rem;
+  padding: 1rem 1.5rem;
+  position: sticky;                 /* Se mantiene visible al bajar la página */
+  top: 0.75rem;
+  z-index: 20;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.confirmacion p {
+  margin: 0;
+}
+
+/* Aviso cuando el buscador no encuentra ferias */
+.aviso-sin-resultados {
+  background-color: #fff4f4;
+  border: 4px solid var(--color-atencion);
+  border-radius: 0.75rem;
+  color: var(--color-texto);
+  font-size: 1.35rem;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+/* ============================================================
+   BOTÓN FLOTANTE (Modo alto contraste)
+   Siempre visible en la esquina inferior derecha.
+   ============================================================ */
+.boton-flotante {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 30;
+  background-color: var(--color-principal-oscuro);
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border: 4px solid #ffffff;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.boton-flotante:hover {
+  background-color: var(--color-principal);
+}
+
+/* ============================================================
+   PIE DE PÁGINA
+   ============================================================ */
+.pie {
+  background-color: var(--color-principal-oscuro);
+  color: #ffffff;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.pie a {
+  color: #ffffff;
+}
+
+/* ============================================================
+   CLASE PARA TEXTO "MUY GRANDE" (acciones con js/main.js)
+   ============================================================ */
+/* Cuando el usuario elige "Normal": tamaño base del body (ya definido).
+   Cuando elige "Grande" o "Muy grande", se agregan estas clases: */
+body.tamano-grande {
+  font-size: var(--tamano-grande);
+}
+
+body.tamano-muy-grande {
+  font-size: var(--tamano-muy-grande);
+}
+
+/* ============================================================
+   MODO ALTO CONTRASTE (botón flotante rojo-blanco, WCAG AAA)
+   Texto 100% negro sobre fondo blanco. El botón flotante
+   también cambia a blanco con texto negro para destacar aún más.
+   ============================================================ */
+body.alto-contraste {
+  background-color: #000000;
+  color: #ffffff;
+  --color-fondo: #000000;             /* Fondo negro */
+  --color-texto: #ffffff;             /* Texto blanco */
+  --color-fondo-suave: #000000;       /* Fondos suaves ahora negros */
+  --color-principal: #ffd400;         /* Botones: amarillo brillante */
+  --color-principal-oscuro: #e6be00;
+  --color-acento: #ff8c1a;            /* Botones de ayuda naranja */
+  --color-acento-oscuro: #e07a0f;
+  --color-borde: #ffffff;             /* Bordes blancos bien visibles */
+}
+
+body.alto-contraste a {
+  color: #ffd400;
+}
+
+body.alto-contraste .tarjeta,
+body.alto-contraste .pasos {
+  background-color: #000000;
+  border-color: #ffffff;
+  box-shadow: none;
+}
+
+body.alto-contraste .logo-nombre,
+body.alto-contraste .menu-enlace {
+  color: #ffffff;
+}
+
+/* El botón flotante cambia a fondo blanco con letra negra en altocontraste */
+body.alto-contraste .boton-flotante {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
+
+/* ============================================================
+   CLASES AUXILIARES
+   ============================================================ */
+/* .solo-lector: texto que leen los lectores de pantalla
+   pero que no se ve en la pantalla (como la etiqueta del buscador) */
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   PANTALLAS ANGOSTAS (celulares)
+   En pantallas pequeñas apilamos logo, buscador y menú.
+   ============================================================ */
+@media (max-width: 42rem) {
+  .encabezado-fila {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .buscador {
+    flex-direction: column;
+  }
+
+  .selector-tamano {
+    justify-content: center;
+  }
+
+  .menu {
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .boton-flotante {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* ============================================================
+   COMPONENTES NUEVOS (vitrina pública según requisitos)
+   ============================================================ */
+
+/* Botones de bienvenida (dos accesos claros) */
+.bienvenida-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+/* Etiquetas pequeñas pero legibles (tipo de feria o de producto) */
+.etiqueta {
+  display: inline-block;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #ffffff;
+  border-radius: 2rem;
+  padding: 0.3rem 1rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.etiqueta-feria {
+  background-color: var(--color-principal);
+}
+
+.etiqueta-a-pedido {
+  background-color: var(--color-acento);
+}
+
+.etiqueta-agotado,
+.etiqueta-no-disponible {
+  background-color: var(--color-atencion);
+}
+
+.etiqueta-pieza-unica {
+  background-color: #2c3e8f;        /* Azul oscuro: pieza única */
+}
+
+.etiqueta-consultar-precio {
+  background-color: var(--color-texto);
+}
+
+.etiqueta-categoria {
+  background: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid var(--color-principal);
+}
+
+/* Línea "Participan" dentro de las tarjetas de ferias */
+.participantes-linea {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+/* ============================================================
+   DIRECTORIO: PESTAÑAS (Emprendedoras / Asociaciones)
+   ============================================================ */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.tab {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid var(--color-principal);
+  padding: 0.7rem 1.5rem;
+}
+
+.tab-activo {
+  background-color: var(--color-principal);
+  color: #ffffff;
+}
+
+/* ============================================================
+   DIRECTORIO: FILTROS
+   ============================================================ */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  background-color: #ffffff;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.campo-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.campo-filtro-ancho {
+  flex: 1 1 18rem;
+}
+
+.campo-filtro label {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+/* Entradas y listas desplegables grandes, fáciles de tocar */
+.campo-filtro input,
+.campo-filtro select,
+.formulario-login input {
+  font-size: 1.25rem;
+  padding: 0.6rem 0.8rem;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  background-color: #ffffff;
+  color: var(--color-texto);
+}
+
+/* Rejilla del directorio */
+.grilla-directorio {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1.75rem;
+}
+
+/* ============================================================
+   VENTANAS (MODALES)
+   Fondo oscuro que cubre la página y panel blanco centrado.
+   ============================================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-panel {
+  background-color: #ffffff;
+  color: var(--color-texto);
+  max-width: 52rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 4px solid var(--color-principal);
+  border-radius: 0.9rem;
+  padding: 1rem 1.5rem 1.75rem;
+}
+
+.modal-panel-angosto {
+  max-width: 30rem;
+}
+
+/* Botón "Cerrar esta ventana": queda siempre visible mientras se baja */
+.boton-cerrar-modal {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  background-color: var(--color-texto);
+}
+
+.boton-cerrar-modal:hover {
+  background-color: #000000;
+}
+
+/* ============================================================
+   DETALLE DE PRODUCTO (RF-CMP-02 y RF-CMP-03)
+   ============================================================ */
+.detalle-producto {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.detalle-producto img {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 3px solid var(--color-borde);
+}
+
+.detalle-precio {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--color-principal-oscuro);
+  margin: 0.5rem 0;
+}
+
+.detalle-descripcion {
+  font-size: 1.2rem;
+}
+
+/* Variantes: cada botón de variante muestra foto y precio al tocarlo */
+.variantes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.boton-variante {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid var(--color-principal);
+  padding: 0.6rem 1.2rem;
+}
+
+.boton-variante-activo {
+  background-color: var(--color-principal);
+  color: #ffffff;
+}
+
+/* Calificaciones con estrellas grandes (RF-CMP-09) */
+.estrellas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.boton-estrella {
+  font-size: 1.7rem;
+  min-height: 3.5rem;
+  min-width: 3.5rem;
+  background-color: #ffffff;
+  border: 3px solid var(--color-texto);
+  border-radius: 0.4rem;
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.boton-estrella.activa {
+  background-color: var(--color-acento);
+  color: #ffffff;
+  border-color: var(--color-acento-oscuro);
+}
+
+/* Botón de seguimiento: cambia cuando ya se está siguiendo */
+.boton-siguiendo {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid var(--color-principal);
+}
+
+/* ============================================================
+   FICHA DE FERIA: MAPA (RF-MAP-02) Y ORGANIZACIÓN
+   ============================================================ */
+.mapa {
+  width: 100%;
+  height: 16rem;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  background-color: #eef1f5;
+}
+
+.mapa iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0.6rem;
+}
+
+.campo-ficha {
+  margin: 0.75rem 0;
+  font-size: 1.2rem;
+}
+
+.campo-ficha strong {
+  display: block;
+  font-size: 1.05rem;
+  color: var(--color-principal-oscuro);
+}
+
+.lista-integrantes {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Botón para entrar a la tienda de una participante desde la ficha */
+.boton-integrante {
+  width: 100%;
+  background-color: #ffffff;
+  border: 3px solid var(--color-principal);
+  color: var(--color-principal-oscuro);
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.boton-integrante:hover {
+  background-color: #eaf2ec;
+}
+
+/* Muestra del catálogo de las participantes (RF-FER-10) */
+.muestra-catalogo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.producto-mini {
+  flex: 1 1 11rem;
+  background-color: #ffffff;
+  border: 3px solid var(--color-borde);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.producto-mini img {
+  width: 100%;
+  height: 7rem;
+  object-fit: cover;
+  display: block;
+}
+
+.producto-mini strong {
+  display: block;
+  padding: 0.5rem 0.6rem 0.1rem;
+  font-size: 1.05rem;
+}
+
+.producto-mini span {
+  display: block;
+  padding: 0 0.6rem 0.75rem;
+}
+
+/* ============================================================
+   ACCESO DE CUENTA (RF-ACC-04 y RF-ACC-08)
+   ============================================================ */
+.acceso-cuenta {
+  display: flex;
+  align-items: center;
+}
+
+.boton-entrar {
+  background-color: #ffffff;
+  color: var(--color-principal-oscuro);
+  border: 3px solid #ffffff;
+  padding: 0.6rem 1.1rem;
+}
+
+.usuario-logueado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.usuario-saludo {
+  font-weight: bold;
+  font-size: 1.15rem;
+}
+
+.boton-salir {
+  background-color: transparent;
+  border: 3px solid #ffffff;
+  color: #ffffff;
+  padding: 0.6rem 1.1rem;
+}
+
+.login-motivo {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--color-principal-oscuro);
+  background-color: #eaf2ec;
+  border: 3px solid var(--color-principal);
+  border-radius: 0.6rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Simulación del botón de acceso con Google */
+.boton-google {
+  background-color: #ffffff;
+  color: #202124;
+  border: 3px solid #202124;
+}
+
+.boton-google:hover {
+  background-color: #f1f3f4;
+}
+
+.boton-ancho {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.formulario-login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
+.formulario-login label {
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+.formulario-login input {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.nota-login {
+  font-size: 1.05rem;
+  border-top: 3px dashed var(--color-borde);
+  padding-top: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Aviso del pie de página (privacidad, RNF-PRI-01/02) */
+.pie-legal {
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+/* ============================================================
+   MODO ALTO CONTRASTE: componentes nuevos
+   ============================================================ */
+body.alto-contraste .modal-panel {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #ffd400;
+}
+
+body.alto-contraste .filtros {
+  background-color: #000000;
+  border-color: #ffffff;
+}
+
+body.alto-contraste .campo-filtro input,
+body.alto-contraste .campo-filtro select,
+body.alto-contraste .formulario-login input {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+body.alto-contraste .tab,
+body.alto-contraste .boton-variante,
+body.alto-contraste .boton-integrante,
+body.alto-contraste .boton-estrella,
+body.alto-contraste .boton-siguiendo,
+body.alto-contraste .producto-mini,
+body.alto-contraste .boton-tamano {
+  background-color: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+body.alto-contraste .tab-activo,
+body.alto-contraste .boton-variante-activo {
+  background-color: #ffd400;
+  color: #000000;
+  border-color: #ffd400;
+}
+
+body.alto-contraste .etiqueta-categoria {
+  background-color: #000000;
+  color: #ffd400;
+  border-color: #ffd400;
+}
+
+body.alto-contraste .mapa {
+  border-color: #ffffff;
+}
+
+body.alto-contraste .opcion-tamano[aria-checked="true"] {
+  background-color: #ffd400;
+  color: #000000;
+}
+
+body.alto-contraste .login-motivo {
+  background-color: #000000;
+  color: #ffd400;
+  border-color: #ffd400;
+}
+
+/* ============================================================
+   PANTALLAS ANGOSTAS: ajustes de los componentes nuevos
+   ============================================================ */
+@media (max-width: 42rem) {
+  .detalle-producto {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros {
+    align-items: stretch;
+  }
+
+  .campo-filtro {
+    min-width: 100%;
+  }
+
+  .modal {
+    padding: 0.5rem;
+  }
+
+  .modal-panel {
+    padding: 0.75rem;
+    border-width: 3px;
+  }
+
+  .tabs,
+  .bienvenida-botones {
+    flex-direction: column;
+  }
+
+  .tab {
+    width: 100%;
+  }
+
+  .mapa {
+    height: 13rem;
+  }
+
+  .encabezado-fila {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .selector-tamano {
+    justify-content: center;
+  }
+
+  .menu {
+    flex-direction: column;
+  }
+}
