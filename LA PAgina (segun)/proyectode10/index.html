@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  TRAMA — Vitrina pública web (prototipo navegable)
+  Sistema que conecta ferias, emprendedoras y asociaciones de
+  Puerto Montt. Página pensada para personas mayores: letra
+  grande, alto contraste, botones grandes con texto claro.
+  ============================================================
+
+  CÓMO EDITAR ESTA PÁGINA (guía rápida):
+  1) CAMBIAR TEXTOS: busca el texto en este archivo y escríbelo de nuevo.
+  2) AGREGAR UNA FERIA: copia un bloque <article class="tarjeta"> de la
+     sección "Próximas ferias" y pégalo debajo. Cambia el texto visible y
+     TODOS los atributos data-feria-* (nombre, fecha, lugar, mapa, etc.).
+  3) AGREGAR EMPRENDEDORAS, ASOCIACIONES Y PRODUCTOS: se editan en el
+     archivo js/main.js, en las listas EMPRENDEDORAS, ASOCIACIONES y
+     PRODUCTOS (ahí está explicado paso a paso).
+  4) CAMBIAR COLORES O TAMAÑO DE LETRA: abre css/styles.css (está comentado).
+  5) CAMBIAR LAS OPCIONES DEL MENÚ: edita la lista <ul class="menu">.
+
+  TRAZABILIDAD CON LOS REQUISITOS (ficha v1.1):
+   - RF-CMP-01 directorio con búsqueda y filtros
+   - RF-CMP-02 tienda, detalle de producto y ficha de asociación
+   - RF-CMP-03 variante cambia foto y precio
+   - RF-CMP-04 calendario de próximas ferias y ficha de cada una
+   - RF-CMP-05 contacto según forma configurada (WhatsApp / formulario)
+   - RF-CMP-06 seguir y dejar de seguir tienda o asociación
+   - RF-CMP-08 avisos del navegador o correo (simulado)
+   - RF-CMP-09 calificar (si la tienda lo tiene activo)
+   - RF-FER-10 ficha pública de feria con participantes y muestra de catálogo
+   - RF-MAP-02 mapa de la feria con opción "Cómo llegar"
+   - RF-ACC-08 seguir/calificar pide iniciar sesión y luego completa la acción
+   - RF-CFG-01 mostrar precios o "consultar precio"
+   - RF-CFG-02 forma de contacto configurable
+   - RNF-USA-01/02 usabilidad y tamaño táctil; RNF-CPT-02 web adaptable
+   - RNF-PRI-04 la ubicación se pide solo al usar el mapa
+   - RNF-IDI-01 toda la interfaz en español de Chile
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trama — Ferias y Emprendedoras de Puerto Montt</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Enlace de accesibilidad: permite saltar al contenido con el teclado -->
+  <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
+  <!-- ============================================================
+       ENCABEZADO: logo, buscador de ferias, tamaño de letra y acceso
+       ============================================================ -->
+  <header class="encabezado">
+    <div class="contenedor encabezado-fila">
+
+      <a class="logo" href="#inicio" aria-label="Trama, volver al inicio">
+        <span class="logo-nombre">TRAMA</span>
+        <span class="logo-subtitulo">Emprendedoras de Puerto Montt</span>
+      </a>
+
+      <!-- Buscador simplificado de ferias (nombre o lugar) -->
+      <form class="buscador" id="formulario-buscador" action="#" method="get" role="search">
+        <label class="solo-lector" for="campo-busqueda">Buscar feria por nombre o ciudad</label>
+        <input type="search"
+               id="campo-busqueda"
+               name="busqueda"
+               placeholder="Buscar feria por nombre o lugar"
+               autocomplete="off">
+        <button type="submit" class="boton boton-buscar">Buscar</button>
+      </form>
+
+      <!-- Botón para abrir menú de tamaño de letra -->
+      <div class="tamano-menu">
+        <button type="button" class="boton boton-tamano-menu" id="boton-tamano-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-tamano-opciones">
+          Tamaño de letra
+        </button>
+        <div class="menu-tamano-opciones" id="menu-tamano-opciones" role="menu" aria-labelledby="boton-tamano-menu" hidden>
+          <button type="button" class="boton opcion-tamano boton-tamano-activo" data-tamano="normal" role="menuitemradio" aria-checked="true">Normal</button>
+          <button type="button" class="boton opcion-tamano" data-tamano="grande" role="menuitemradio" aria-checked="false">Grande</button>
+          <button type="button" class="boton opcion-tamano" data-tamano="muy-grande" role="menuitemradio" aria-checked="false">Muy grande</button>
+        </div>
+      </div>
+
+      <!-- Acceso del comprador en la web (RF-ACC-04). Navegar sin cuenta
+           siempre está permitido (RF-ACC-07); solo seguir y calificar
+           piden iniciar sesión (RF-ACC-08). -->
+      <div class="acceso-cuenta" id="acceso-cuenta">
+        <button type="button" class="boton boton-entrar" id="boton-entrar">Iniciar sesión</button>
+        <div class="usuario-logueado" id="usuario-logueado" hidden>
+          <span class="usuario-saludo" id="usuario-saludo">Hola</span>
+          <button type="button" class="boton boton-salir" id="boton-salir">Cerrar sesión</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Menú de navegación: pocas opciones, siempre visibles -->
+    <nav class="navegacion" aria-label="Menú principal">
+      <ul class="contenedor menu">
+        <li><a href="#inicio" class="menu-enlace">Inicio</a></li>
+        <li><a href="#ferias" class="menu-enlace">Ver Ferias</a></li>
+        <li><a href="#emprendedoras" class="menu-enlace">Emprendedoras</a></li>
+        <li><a href="#ayuda" class="menu-enlace">Contacto y Ayuda</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="contenido-principal">
+
+    <!-- Mensaje grande de confirmación (lo muestra js/main.js) -->
+    <div id="mensaje-confirmacion" class="confirmacion" role="status" aria-live="polite" hidden>
+      <p id="texto-confirmacion">¡Listo!</p>
+      <button type="button" class="boton boton-cerrar" id="boton-cerrar-mensaje">Cerrar</button>
+    </div>
+
+    <!-- ============================================================
+         INICIO / BIENVENIDA
+         ============================================================ -->
+    <section id="inicio" class="bienvenida" aria-labelledby="titulo-bienvenida">
+      <div class="contenedor">
+        <h1 id="titulo-bienvenida">Bienvenida y bienvenido a Trama</h1>
+        <p>
+          Aquí encuentras las próximas ferias de Puerto Montt, las emprendedoras
+          y asociaciones locales, y una forma fácil de contactarlas o pedir ayuda.
+          Puedes mirar todo sin iniciar sesión.
+        </p>
+        <div class="pasos">
+          <p><strong>Tres pasos para encontrar lo que buscas:</strong></p>
+          <ol>
+            <li>Mira las próximas ferias más abajo y presiona "Ver ficha".</li>
+            <li>Revisa el directorio de emprendedoras y filtran por tipo o sector.</li>
+            <li>Presiona "WhatsApp" o "Enviar mensaje" para contactar a quien te guste.</li>
+          </ol>
+        </div>
+        <div class="bienvenida-botones">
+          <a class="boton boton-principal" href="#ferias">Ver las próximas ferias</a>
+          <a class="boton boton-secundario" href="#emprendedoras">Ver emprendedoras</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PRÓXIMAS FERIAS (RF-CMP-04, RF-FER-10, RF-MAP-02)
+         Cada tarjeta lleva los datos en atributos data-feria-* para que
+         js/main.js arme la ficha pública en una ventana.
+         ============================================================ -->
+    <section id="ferias" class="seccion" aria-labelledby="titulo-ferias">
+      <div class="contenedor">
+        <h2 id="titulo-ferias">Próximas ferias</h2>
+        <p class="ayuda-tarea">Presiona "Ver ficha" para conocer el lugar, el mapa, cómo llegar y quiénes participan.</p>
+
+        <div class="grilla-ferias" id="grilla-ferias">
+
+          <!-- FERIA 1 -->
+          <article class="tarjeta"
+            data-feria-nombre="Feria de Artesanía del Parque"
+            data-feria-fecha="Sábado 24 de Octubre de 2026"
+            data-feria-horario="10:00 a 18:00 hrs"
+            data-feria-lugar="Plaza del Parque Central"
+            data-feria-direccion="Av. Presidente Ibáñez s/n, frente a la Municipalidad, Puerto Montt"
+            data-feria-organizador="Asociación Manos de Alerce"
+            data-feria-descripcion="Encuentro de cerámica, tejidos y cosmética natural. Habrá talleres gratuitos y música en vivo durante toda la jornada."
+            data-feria-imagen="https://picsum.photos/seed/feria1/640/360"
+            data-feria-imagen-alt="Feria de artesanía al aire libre con toldos blancos"
+            data-feria-lat="-41.4696"
+            data-feria-lng="-72.9370"
+            data-feria-participantes="e1,e2,e4">
+            <img src="https://picsum.photos/seed/feria1/640/360" alt="Feria de artesanía al aire libre con toldos blancos">
+            <div class="tarjeta-contenido">
+              <span class="etiqueta etiqueta-feria">Próxima feria</span>
+              <h3>Feria de Artesanía del Parque</h3>
+              <p class="fecha"><strong>Sábado 24 de Octubre</strong> de 10:00 a 18:00 hrs</p>
+              <p class="lugar">Plaza del Parque Central, frente a la Municipalidad</p>
+              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
+              <div class="tarjeta-botones">
+                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- FERIA 2 -->
+          <article class="tarjeta"
+            data-feria-nombre="Feria Gastronómica del Barrio"
+            data-feria-fecha="Domingo 25 de Octubre de 2026"
+            data-feria-horario="11:00 a 19:00 hrs"
+            data-feria-lugar="Calle Los Aromos 450"
+            data-feria-direccion="Calle Los Aromos 450, esquina con Av. Principal, Puerto Montt"
+            data-feria-organizador="Asociación Tierra que Alimenta"
+            data-feria-descripcion="Mermeladas, miel, panes y repostería casera. Degustaciones y venta directa de productoras locales."
+            data-feria-imagen="https://picsum.photos/seed/feria2/640/360"
+            data-feria-imagen-alt="Puestos de alimentos caseros en una feria gastronómica"
+            data-feria-lat="-41.4782"
+            data-feria-lng="-72.9256"
+            data-feria-participantes="e3">
+            <img src="https://picsum.photos/seed/feria2/640/360" alt="Puestos de alimentos caseros en una feria gastronómica">
+            <div class="tarjeta-contenido">
+              <span class="etiqueta etiqueta-feria">Próxima feria</span>
+              <h3>Feria Gastronómica del Barrio</h3>
+              <p class="fecha"><strong>Domingo 25 de Octubre</strong> de 11:00 a 19:00 hrs</p>
+              <p class="lugar">Calle Los Aromos 450, esquina con Av. Principal</p>
+              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
+              <div class="tarjeta-botones">
+                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- FERIA 3 -->
+          <article class="tarjeta"
+            data-feria-nombre="Feria de Tejidos y Tradiciones"
+            data-feria-fecha="Sábado 31 de Octubre de 2026"
+            data-feria-horario="10:00 a 17:00 hrs"
+            data-feria-lugar="Salón Comunitario de Alerce"
+            data-feria-direccion="Paseo de las Artes 120, Alerce, Puerto Montt"
+            data-feria-organizador="Asociación Manos de Alerce"
+            data-feria-descripcion="Tejidos en lana, plantas y productos de la huerta. Un espacio para conocer a las emprendedoras del sector."
+            data-feria-imagen="https://picsum.photos/seed/feria3/640/360"
+            data-feria-imagen-alt="Tejidos y textiles de lana de colores en un puesto"
+            data-feria-lat="-41.4046"
+            data-feria-lng="-72.9131"
+            data-feria-participantes="e2,e5">
+            <img src="https://picsum.photos/seed/feria3/640/360" alt="Tejidos y textiles de lana de colores en un puesto">
+            <div class="tarjeta-contenido">
+              <span class="etiqueta etiqueta-feria">Próxima feria</span>
+              <h3>Feria de Tejidos y Tradiciones</h3>
+              <p class="fecha"><strong>Sábado 31 de Octubre</strong> de 10:00 a 17:00 hrs</p>
+              <p class="lugar">Salón Comunitario de Alerce, Paseo de las Artes 120</p>
+              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
+              <div class="tarjeta-botones">
+                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Bloque para avisar cuando la búsqueda no encuentra ferias -->
+        <p id="aviso-sin-resultados" class="aviso-sin-resultados" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         DIRECTORIO DE EMPRENDEDORAS Y ASOCIACIONES (RF-CMP-01)
+         Con búsqueda y filtros por tipo de emprendimiento, sector y
+         asociación. El contenido lo genera js/main.js.
+         ============================================================ -->
+    <section id="emprendedoras" class="seccion seccion-clara" aria-labelledby="titulo-emprendedoras">
+      <div class="contenedor">
+        <h2 id="titulo-emprendedoras">Emprendedoras y asociaciones</h2>
+        <p class="ayuda-tarea">Busca por nombre y usa los filtros. Presiona "Ver tienda" para ver los productos y contactar.</p>
+
+        <!-- Pestañas para elegir qué ver -->
+        <div class="tabs" role="tablist" aria-label="Tipo de directorio">
+          <button type="button" class="boton tab tab-activo" id="tab-emprendedoras" role="tab" aria-selected="true" aria-controls="grilla-directorio" data-vista="emprendedoras">Emprendedoras</button>
+          <button type="button" class="boton tab" id="tab-asociaciones" role="tab" aria-selected="false" aria-controls="grilla-directorio" data-vista="asociaciones">Asociaciones</button>
+        </div>
+
+        <!-- Filtros (fáciles de ver y tocar) -->
+        <div class="filtros">
+          <div class="campo-filtro campo-filtro-ancho">
+            <label for="buscador-directorio">Buscar por nombre</label>
+            <input type="search" id="buscador-directorio" placeholder="Ejemplo: Cerámica, Tejidos, Miel">
+          </div>
+          <div class="campo-filtro">
+            <label for="filtro-tipo">Tipo de emprendimiento</label>
+            <select id="filtro-tipo"><option value="">Todos</option></select>
+          </div>
+          <div class="campo-filtro">
+            <label for="filtro-sector">Sector de Puerto Montt</label>
+            <select id="filtro-sector"><option value="">Todos</option></select>
+          </div>
+          <div class="campo-filtro">
+            <label for="filtro-asociacion">Asociación</label>
+            <select id="filtro-asociacion"><option value="">Todas</option></select>
+          </div>
+          <button type="button" class="boton boton-secundario boton-limpiar" id="boton-limpiar-filtros">Borrar filtros</button>
+        </div>
+
+        <!-- Aquí js/main.js muestra las tarjetas del directorio -->
+        <div class="grilla-directorio" id="grilla-directorio" role="tabpanel" aria-live="polite"></div>
+        <p id="aviso-directorio-vacio" class="aviso-sin-resultados" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         AYUDA (RNF-OPE / RF-CMP-05 alternativo)
+         Teléfono de asistencia siempre visible.
+         Reemplaza 2 2123 4567 por el número real de Trama.
+         ============================================================ -->
+    <section id="ayuda" class="seccion ayuda" aria-labelledby="titulo-ayuda">
+      <div class="contenedor">
+        <h2 id="titulo-ayuda">¿Necesitas ayuda?</h2>
+        <p class="ayuda-tarea">
+          Si tienes dudas para usar la página, contactar a una emprendedora o
+          saber cuándo es una feria, llámanos. Te ayudamos por teléfono, sin apuro.
+        </p>
+        <a class="boton boton-ayuda-telefono" href="tel:+56221234567">Pedir ayuda por teléfono: 2 2123 4567</a>
+        <p class="horario-ayuda">Disponible de lunes a viernes, de 9:00 a 18:00 hrs.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       PIE DE PÁGINA
+       ============================================================ -->
+  <footer class="pie">
+    <div class="contenedor">
+      <p><strong>Trama</strong> — Ferias y emprendedoras de Puerto Montt.</p>
+      <p>Si esta página te presenta alguna dificultad, escríbenos o llámanos y lo solucionamos juntos.</p>
+      <p class="pie-enlaces">
+        <a href="#ferias">Ferias</a> ·
+        <a href="#emprendedoras">Emprendedoras</a> ·
+        <a href="#ayuda">Ayuda</a>
+      </p>
+      <p class="pie-legal">Los datos personales se tratan según la normativa chilena de protección de datos. Puedes dejar de seguir una tienda cuando quieras.</p>
+    </div>
+  </footer>
+
+  <!-- Botón flotante permanente: Modo alto contraste -->
+  <button type="button" class="boton-flotante" id="boton-alto-contraste" aria-pressed="false">Modo alto contraste</button>
+
+  <!-- ============================================================
+       VENTANAS (MODALES). Están ocultas y js/main.js las abre.
+       ============================================================ -->
+
+  <!-- Ficha pública de la feria -->
+  <div class="modal" id="modal-feria" hidden role="dialog" aria-modal="true" aria-labelledby="modal-feria-titulo">
+    <div class="modal-panel">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <div id="modal-feria-cuerpo"></div>
+    </div>
+  </div>
+
+  <!-- Tienda de una emprendedora -->
+  <div class="modal" id="modal-tienda" hidden role="dialog" aria-modal="true" aria-labelledby="modal-tienda-titulo">
+    <div class="modal-panel">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <div id="modal-tienda-cuerpo"></div>
+    </div>
+  </div>
+
+  <!-- Detalle de un producto -->
+  <div class="modal" id="modal-producto" hidden role="dialog" aria-modal="true" aria-labelledby="modal-producto-titulo">
+    <div class="modal-panel">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <div id="modal-producto-cuerpo"></div>
+    </div>
+  </div>
+
+  <!-- Ficha de una asociación -->
+  <div class="modal" id="modal-asociacion" hidden role="dialog" aria-modal="true" aria-labelledby="modal-asociacion-titulo">
+    <div class="modal-panel">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <div id="modal-asociacion-cuerpo"></div>
+    </div>
+  </div>
+
+  <!-- Formulario de contacto (cuando la tienda lo tiene activado) -->
+  <div class="modal" id="modal-contacto" hidden role="dialog" aria-modal="true" aria-labelledby="modal-contacto-titulo">
+    <div class="modal-panel">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <div id="modal-contacto-cuerpo"></div>
+    </div>
+  </div>
+
+  <!-- Iniciar sesión / crear cuenta del comprador (web) -->
+  <div class="modal" id="modal-login" hidden role="dialog" aria-modal="true" aria-labelledby="modal-login-titulo">
+    <div class="modal-panel modal-panel-angosto">
+      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
+      <h2 id="modal-login-titulo">Iniciar sesión</h2>
+      <p id="login-motivo" class="login-motivo" hidden></p>
+      <p>Para seguir una tienda o calificar necesitas una cuenta. Puedes entrar con Google o con tu correo.</p>
+      <button type="button" class="boton boton-google boton-ancho" id="boton-login-google">Entrar con Google</button>
+      <form id="formulario-login" class="formulario-login">
+        <label for="login-correo">Correo electrónico</label>
+        <input type="email" id="login-correo" placeholder="tucorreo@ejemplo.cl" required>
+        <label for="login-clave">Contraseña</label>
+        <input type="password" id="login-clave" placeholder="Tu contraseña" required>
+        <button type="submit" class="boton boton-principal boton-ancho">Entrar con correo y contraseña</button>
+      </form>
+      <p class="nota-login">Prototipo: cualquier correo sirve para simular el inicio de sesión.</p>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
