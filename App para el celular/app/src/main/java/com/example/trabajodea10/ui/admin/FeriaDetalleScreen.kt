@@ -63,6 +63,9 @@ import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.componentes.colorDeAsistencia
 import com.example.trabajodea10.ui.componentes.colorDeFeria
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
+import com.example.trabajodea10.ui.navegacion.Ruta
+import androidx.compose.foundation.background
+import com.example.trabajodea10.ui.theme.FondoLimpio
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
 import com.example.trabajodea10.ui.theme.RojoError
@@ -84,7 +87,11 @@ fun PantallaFeriaDetalle(
     var mostrarInvitaciones by remember { mutableStateOf(false) }
 
     if (feria == null) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoLimpio)
+        ) {
             BarraSuperior(titulo = "Feria", onVolver = { nav.volver() })
             com.example.trabajodea10.ui.componentes.Vacio(
                 titulo = "Feria no encontrada",
@@ -95,7 +102,11 @@ fun PantallaFeriaDetalle(
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoLimpio)
+    ) {
         BarraSuperior(
             titulo = feria.nombre.ifBlank { "Nueva feria" },
             subtitulo = rangoDeFechas(feria.fechaInicio, feria.fechaFin),

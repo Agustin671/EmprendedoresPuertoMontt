@@ -39,6 +39,7 @@ import com.example.trabajodea10.ui.publico.PantallaVisAyuda
 import com.example.trabajodea10.ui.publico.PantallaVisFerias
 import com.example.trabajodea10.ui.publico.PantallaVisProductos
 import com.example.trabajodea10.ui.theme.Berenjena
+import com.example.trabajodea10.ui.theme.FondoLimpio
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,6 +60,7 @@ fun TramaApp() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = FondoLimpio,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (rol != null && ruta.grafica != null) {

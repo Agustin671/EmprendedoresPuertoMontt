@@ -62,6 +62,9 @@ import com.example.trabajodea10.ui.componentes.Vacio
 import com.example.trabajodea10.ui.componentes.colorDeCuenta
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
+import androidx.compose.foundation.background
+import com.example.trabajodea10.ui.theme.FondoLimpio
+import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
@@ -77,13 +80,17 @@ fun PantallaAdminEmprendedoras(
     var mostrarAlta by remember { mutableStateOf(false) }
     var seleccionada by remember { mutableStateOf<Emprendedora?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoLimpio)
+    ) {
         BarraSuperior(
             titulo = "Emprendedoras",
             subtitulo = "${TramaStore.emprendedoras.size} cuentas · ${TramaStore.asociaciones.size} asociaciones",
             acciones = {
                 IconButton(onClick = { mostrarAlta = true }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Alta rápida")
+                    Icon(Icons.Filled.Add, contentDescription = "Alta rápida", tint = NegroApple)
                 }
             }
         )

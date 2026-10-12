@@ -55,9 +55,16 @@ import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.theme.AmarilloAlerta
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
+import com.example.trabajodea10.ui.theme.BlancoPuro
+import com.example.trabajodea10.ui.theme.GrisBorde
+import com.example.trabajodea10.ui.theme.GrisChip
+import com.example.trabajodea10.ui.theme.GrisTexto
 import com.example.trabajodea10.ui.theme.LineaSuave
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
 import com.example.trabajodea10.ui.theme.NaranjaContenedor
+import com.example.trabajodea10.ui.theme.NegroApple
+import com.example.trabajodea10.ui.theme.RojoAlerce
+import com.example.trabajodea10.ui.theme.RojoAlerceContenedor
 import com.example.trabajodea10.ui.theme.RojoContenedor
 import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
@@ -75,7 +82,7 @@ fun colorDeCuenta(estado: EstadoCuenta): ColorEstado = when (estado) {
 
 fun colorDeFeria(estado: EstadoFeria): ColorEstado = when (estado) {
     EstadoFeria.EN_CURSO -> ColorEstado(VerdeContenedor, VerdeOk)
-    EstadoFeria.PROXIMA -> ColorEstado(Color(0xFFEADFEA), Berenjena)
+    EstadoFeria.PROXIMA -> ColorEstado(GrisChip, NegroApple)
     EstadoFeria.BORRADOR -> ColorEstado(NaranjaContenedor, NaranjaAlerta)
     EstadoFeria.FINALIZADA -> ColorEstado(SuperficieVariante, TextoSecundario)
 }
@@ -113,7 +120,7 @@ fun BarraSuperior(
     ) {
         if (onVolver != null) {
             IconButton(onClick = onVolver) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver")
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = NegroApple)
             }
         } else {
             Spacer(modifier = Modifier.width(8.dp))
@@ -121,8 +128,9 @@ fun BarraSuperior(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = titulo,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = NegroApple,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -130,7 +138,7 @@ fun BarraSuperior(
                 Text(
                     text = subtitulo,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextoSecundario,
+                    color = GrisTexto,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -151,18 +159,18 @@ fun Tarjeta(
         Card(
             onClick = onClick,
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = BlancoPuro),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            border = BorderStroke(1.dp, LineaSuave)
+            border = BorderStroke(1.dp, GrisBorde)
         ) { contenido() }
     } else {
         Card(
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = BlancoPuro),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            border = BorderStroke(1.dp, LineaSuave)
+            border = BorderStroke(1.dp, GrisBorde)
         ) { contenido() }
     }
 }
@@ -189,7 +197,7 @@ fun ChipEstado(
                 text = texto,
                 color = color.texto,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1
             )
         }
@@ -207,16 +215,16 @@ fun ChipFiltro(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(50),
-        color = if (seleccionado) Berenjena else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, if (seleccionado) Berenjena else LineaSuave),
+        color = if (seleccionado) NegroApple else BlancoPuro,
+        border = BorderStroke(1.dp, if (seleccionado) NegroApple else GrisBorde),
         onClick = onClick
     ) {
         Text(
             text = texto,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            color = if (seleccionado) Color.White else MaterialTheme.colorScheme.onSurface
+            fontWeight = FontWeight.SemiBold,
+            color = if (seleccionado) BlancoPuro else NegroApple
         )
     }
 }
@@ -231,15 +239,20 @@ fun BotonPrimario(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().height(46.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Berenjena),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+        shape = RoundedCornerShape(50.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = NegroApple,
+            contentColor = BlancoPuro,
+            disabledContainerColor = GrisChip,
+            disabledContentColor = GrisTexto
+        ),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 10.dp)
     ) {
         icono?.invoke()
         if (icono != null) Spacer(modifier = Modifier.width(8.dp))
-        Text(texto, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+        Text(texto, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = BlancoPuro)
     }
 }
 
@@ -253,15 +266,21 @@ fun BotonSecundario(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().height(46.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.5.dp, Berenjena),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+        shape = RoundedCornerShape(50.dp),
+        border = BorderStroke(1.dp, GrisBorde),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = BlancoPuro,
+            contentColor = NegroApple,
+            disabledContainerColor = GrisChip,
+            disabledContentColor = GrisTexto
+        ),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 10.dp)
     ) {
         icono?.invoke()
         if (icono != null) Spacer(modifier = Modifier.width(8.dp))
-        Text(texto, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = Berenjena)
+        Text(texto, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = NegroApple)
     }
 }
 
@@ -329,38 +348,46 @@ fun TarjetaMetrica(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, LineaSuave)
+        shape = RoundedCornerShape(18.dp),
+        color = BlancoPuro,
+        border = BorderStroke(1.dp, GrisBorde),
+        shadowElevation = 0.5.dp
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = colorIcono.copy(alpha = 0.14f)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(color = colorIcono.copy(alpha = 0.12f), shape = CircleShape),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icono,
                     contentDescription = null,
                     tint = colorIcono,
-                    modifier = Modifier.padding(8.dp).size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Text(
                 text = valor,
                 style = MaterialTheme.typography.titleLarge,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
+                color = NegroApple,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = titulo,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextoSecundario,
+                fontSize = 12.sp,
+                color = GrisTexto,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             if (pie != null) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = pie,
                     style = MaterialTheme.typography.labelSmall,
@@ -413,12 +440,21 @@ fun TituloSeccion(
         Text(
             text = texto,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
+            color = NegroApple,
             modifier = Modifier.weight(1f)
         )
         if (accion != null && onAccion != null) {
-            TextButton(onClick = onAccion) {
-                Text(accion, color = Berenjena, fontWeight = FontWeight.SemiBold)
+            TextButton(
+                onClick = onAccion,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = accion,
+                    color = RojoAlerce,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
+                )
             }
         }
     }

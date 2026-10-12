@@ -49,8 +49,10 @@ import com.example.trabajodea10.ui.componentes.Vacio
 import com.example.trabajodea10.ui.componentes.colorDeInvitacion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
+import com.example.trabajodea10.ui.theme.FondoLimpio
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
 import com.example.trabajodea10.ui.theme.NaranjaContenedor
+import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
@@ -64,16 +66,20 @@ fun PantallaEmprendedoraInicio(
     val alertas = TramaStore.alertasStock()
     val proxima = TramaStore.proximaFeriaDeLaEmprendedora()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoLimpio)
+    ) {
         BarraSuperior(
             titulo = "Hola, Camila",
             subtitulo = tienda.nombre,
             acciones = {
                 IconButton(onClick = { avisar("No tenés notificaciones nuevas") }) {
-                    Icon(Icons.Filled.Notifications, contentDescription = "Notificaciones")
+                    Icon(Icons.Filled.Notifications, contentDescription = "Notificaciones", tint = NegroApple)
                 }
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
+                    Icon(Icons.Filled.Settings, contentDescription = "Ajustes", tint = NegroApple)
                 }
             }
         )
@@ -97,7 +103,7 @@ fun PantallaEmprendedoraInicio(
                     titulo = "Productos publicados",
                     valor = TramaStore.productosPublicados().toString(),
                     icono = Icons.Filled.Inventory2,
-                    colorIcono = com.example.trabajodea10.ui.theme.Berenjena,
+                    colorIcono = NegroApple,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -113,7 +119,7 @@ fun PantallaEmprendedoraInicio(
                     titulo = "Seguidores",
                     valor = TramaStore.seguidores().toString(),
                     icono = Icons.Filled.People,
-                    colorIcono = com.example.trabajodea10.ui.theme.Berenjena,
+                    colorIcono = NegroApple,
                     modifier = Modifier.weight(1f)
                 )
             }

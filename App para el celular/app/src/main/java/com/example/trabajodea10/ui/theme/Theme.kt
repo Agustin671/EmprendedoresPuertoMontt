@@ -69,7 +69,7 @@ private val EsquemaOscuro = darkColorScheme(
 
 @Composable
 fun TramaAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
     // Modo accesible: si la persona toca "+A", multiplicamos la escala de fuente
