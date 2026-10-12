@@ -421,8 +421,6 @@ private fun HojaInvitaciones(
     }
 }
 
-private fun Modifier.heightInMax(): Modifier = this
-
 @Composable
 private fun PestañaDatos(
     feria: Feria,

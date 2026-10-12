@@ -31,8 +31,8 @@ import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.theme.VerdeOk
 
 /** Números de contacto del soporte de Red Trama (de ejemplo). */
-private const val TELEFONO_SOPORTE = "+54 9 341 555 0000"
-private const val WHATSAPP_SOPORTE = "+54 9 341 555 0000"
+private const val TELEFONO_SOPORTE = "+56 9 6123 0000"
+private const val WHATSAPP_SOPORTE = "+56 9 6123 0000"
 
 /**
  * PANTALLA PARA VISITANTES: "Ayuda".

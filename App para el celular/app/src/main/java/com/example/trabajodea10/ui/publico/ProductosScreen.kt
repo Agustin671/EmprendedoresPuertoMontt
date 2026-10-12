@@ -44,7 +44,12 @@ import com.example.trabajodea10.ui.theme.Berenjena
 @Composable
 fun PantallaVisProductos() {
     val contexto = LocalContext.current
-    val publicados = TramaStore.productos.filter { it.publicado }
+    // Si la administradora desactiva "Catálogo visible para visitantes", no se muestra.
+    val publicados = if (TramaStore.config.catalogoPublico) {
+        TramaStore.productos.filter { it.publicado }
+    } else {
+        emptyList()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(

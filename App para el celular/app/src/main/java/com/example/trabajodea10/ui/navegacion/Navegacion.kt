@@ -76,9 +76,9 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
     )
 }
 
-class ControladorNavegacion {
+class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
 
-    val pila = mutableStateListOf<Ruta>(Ruta.Login)
+    val pila = mutableStateListOf<Ruta>(rutaInicial)
 
     val actual: Ruta get() = pila.last()
 
@@ -122,8 +122,16 @@ class ControladorNavegacion {
     }
 }
 
+private fun rutaInicialDe(rol: Rol?): Ruta = when (rol) {
+    Rol.ADMIN -> Ruta.AdminInicio
+    Rol.EMPRENDEDORA -> Ruta.EmpInicio
+    Rol.VISITANTE -> Ruta.VisInicio
+    null -> Ruta.Login
+}
+
 @Composable
-fun rememberControladorNavegacion(): ControladorNavegacion = remember { ControladorNavegacion() }
+fun rememberControladorNavegacion(): ControladorNavegacion =
+    remember { ControladorNavegacion(rutaInicialDe(TramaStore.rol)) }
 
 @Composable
 fun BarraInferior(

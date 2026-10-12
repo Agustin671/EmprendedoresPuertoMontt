@@ -63,10 +63,11 @@ fun PantallaEmprendedoraInicio(
     val tienda = TramaStore.tienda
     val alertas = TramaStore.alertasStock()
     val proxima = TramaStore.proximaFeriaDeLaEmprendedora()
+    val nombreCorto = TramaStore.emprendedoraActual.nombre.split(" ").first()
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = "Hola, Camila",
+            titulo = "Hola, $nombreCorto",
             subtitulo = tienda.nombre,
             acciones = {
                 IconButton(onClick = { avisar("No tenés notificaciones nuevas") }) {

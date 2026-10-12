@@ -3,9 +3,9 @@ package com.example.trabajodea10.data
 object MockData {
 
     val asociaciones = listOf(
-        Asociacion("as1", "Manos de Valle", "Villa del Valle", 0xFF8E6B94),
-        Asociacion("as2", "Red del Río", "Puerto Norte", 0xFF3E7D6E),
-        Asociacion("as3", "Taller Costero", "Playa Hermosa", 0xFFC07A3E)
+        Asociacion("as1", "Manos del Sur", "Puerto Montt", 0xFF8E6B94),
+        Asociacion("as2", "Red del Lago", "Puerto Varas", 0xFF3E7D6E),
+        Asociacion("as3", "Taller Costero", "Frutillar", 0xFFC07A3E)
     )
 
     val emprendedoras = listOf(
@@ -13,7 +13,7 @@ object MockData {
             id = "emp1",
             nombre = "Camila Rojas",
             email = "camila.rojas@trama.app",
-            telefono = "+54 9 341 555 0141",
+            telefono = "+56 9 6123 4501",
             asociacionId = "as1",
             estado = EstadoCuenta.ACTIVA,
             color = 0xFF8E6B94,
@@ -23,7 +23,7 @@ object MockData {
             id = "emp2",
             nombre = "Lucía Fernández",
             email = "lucia.fernandez@trama.app",
-            telefono = "+54 9 341 555 0192",
+            telefono = "+56 9 6123 4502",
             asociacionId = "as1",
             estado = EstadoCuenta.ACTIVA,
             color = 0xFF3E7D6E,
@@ -33,7 +33,7 @@ object MockData {
             id = "emp3",
             nombre = "Marina Sosa",
             email = "marina.sosa@trama.app",
-            telefono = "+54 9 342 555 0117",
+            telefono = "+56 9 6123 4503",
             asociacionId = "as2",
             estado = EstadoCuenta.ACTIVA,
             color = 0xFFC07A3E,
@@ -43,7 +43,7 @@ object MockData {
             id = "emp4",
             nombre = "Sofía Benítez",
             email = "sofia.benitez@trama.app",
-            telefono = "+54 9 342 555 0173",
+            telefono = "+56 9 6123 4504",
             asociacionId = "as2",
             estado = EstadoCuenta.INVITADA,
             color = 0xFF6B7FB3,
@@ -53,7 +53,7 @@ object MockData {
             id = "emp5",
             nombre = "Rocío Giménez",
             email = "rocio.gimenez@trama.app",
-            telefono = "+54 9 340 555 0128",
+            telefono = "+56 9 6123 4505",
             asociacionId = "as3",
             estado = EstadoCuenta.SUSPENDIDA,
             color = 0xFFB36B7F,
@@ -63,7 +63,7 @@ object MockData {
             id = "emp6",
             nombre = "Valentina Quiroga",
             email = "vale.quiroga@trama.app",
-            telefono = "+54 9 341 555 0166",
+            telefono = "+56 9 6123 4506",
             asociacionId = null,
             estado = EstadoCuenta.ACTIVA,
             color = 0xFF7A6B3E,
@@ -73,7 +73,7 @@ object MockData {
             id = "emp7",
             nombre = "Paula Medina",
             email = "paula.medina@trama.app",
-            telefono = "+54 9 343 555 0104",
+            telefono = "+56 9 6123 4507",
             asociacionId = null,
             estado = EstadoCuenta.INVITADA,
             color = 0xFF3E7DA0,
@@ -83,7 +83,7 @@ object MockData {
             id = "emp8",
             nombre = "Daniela Vargas",
             email = "daniela.vargas@trama.app",
-            telefono = "+54 9 342 555 0159",
+            telefono = "+56 9 6123 4508",
             asociacionId = "as3",
             estado = EstadoCuenta.ACTIVA,
             color = 0xFF9B4A6B,
@@ -95,7 +95,7 @@ object MockData {
         Feria(
             id = "f1",
             nombre = "Feria de Emprendedoras del Valle",
-            ubicacion = "Plaza San Martín, Villa del Valle",
+            ubicacion = "Plaza de Armas, Puerto Montt",
             fechaInicio = "2026-10-07",
             fechaFin = "2026-10-07",
             cupos = 40,
@@ -113,7 +113,7 @@ object MockData {
         Feria(
             id = "f2",
             nombre = "Artesanías del Río – Primavera",
-            ubicacion = "Costanera del Río, Puerto Norte",
+            ubicacion = "Costanera, Puerto Varas",
             fechaInicio = "2026-11-08",
             fechaFin = "2026-11-09",
             cupos = 30,
@@ -129,7 +129,7 @@ object MockData {
         Feria(
             id = "f3",
             nombre = "Mercado de Diseño Independiente",
-            ubicacion = "Centro Cultural Municipal, Centro",
+            ubicacion = "Centro Cultural, Puerto Montt",
             fechaInicio = "2026-12-05",
             fechaFin = "2026-12-06",
             cupos = 50,
@@ -144,7 +144,7 @@ object MockData {
         Feria(
             id = "f4",
             nombre = "Feria Navideña Artesanal",
-            ubicacion = "Plaza Principal, Villa del Valle",
+            ubicacion = "Plaza de Armas, Puerto Varas",
             fechaInicio = "2026-12-19",
             fechaFin = "2026-12-20",
             cupos = 60,
@@ -340,8 +340,8 @@ object MockData {
 
     val tienda = Tienda(
         nombre = "Tejidos del Sur",
-        bio = "Piezas textiles y cuero artesanal, elaboradas a mano en Villa del Valle. Envíos a todo el país.",
-        whatsapp = "+54 9 341 555 0141",
+        bio = "Piezas textiles y cuero artesanal, elaboradas a mano en Puerto Montt. Envíos a todo Chile.",
+        whatsapp = "+56 9 6123 4501",
         instagram = "@tejidosdelsur",
         colorPortada = 0xFF5C315B,
         colorLogo = 0xFF3E7D6E

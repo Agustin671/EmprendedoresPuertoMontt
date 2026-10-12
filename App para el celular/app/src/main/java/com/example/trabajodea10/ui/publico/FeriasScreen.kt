@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.EstadoFeria
 import com.example.trabajodea10.data.Feria
 import com.example.trabajodea10.data.TramaStore
+import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.BotonesTamanoTexto
 import com.example.trabajodea10.ui.componentes.BotonPrimario
@@ -102,9 +103,14 @@ fun PantallaVisFerias(
     var anotadaRecien by remember { mutableStateOf<String?>(null) }
 
     // Ferias públicas: en curso y próximas, ordenadas por fecha.
-    val ferias = TramaStore.ferias
-        .filter { it.estado == EstadoFeria.PROXIMA || it.estado == EstadoFeria.EN_CURSO }
-        .sortedBy { it.fechaInicio }
+    // Si la administradora desactiva "Ferias visibles públicamente", dejan de mostrarse.
+    val ferias = if (TramaStore.config.feriasPublicas) {
+        TramaStore.ferias
+            .filter { it.estado == EstadoFeria.PROXIMA || it.estado == EstadoFeria.EN_CURSO }
+            .sortedBy { it.fechaInicio }
+    } else {
+        emptyList()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
@@ -230,7 +236,7 @@ private fun TarjetaFeriaGrande(
                 // Precio de entrada en texto grande y color de alto contraste.
                 if (feria.precioEntrada > 0) {
                     Text(
-                        text = "Entrada: \$${feria.precioEntrada.toInt()}",
+                        text = "Entrada: ${formatearMoneda(feria.precioEntrada)}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = TextoSecundario

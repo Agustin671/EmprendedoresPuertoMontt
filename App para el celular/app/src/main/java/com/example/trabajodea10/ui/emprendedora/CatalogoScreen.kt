@@ -55,7 +55,6 @@ import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
-import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
@@ -232,13 +231,4 @@ fun TarjetaProducto(producto: Producto) {
             }
         }
     }
-}
-
-@Composable
-fun AlertaStockVacia() {
-    Text(
-        text = "Sin alertas de stock",
-        color = RojoError,
-        style = MaterialTheme.typography.bodySmall
-    )
 }

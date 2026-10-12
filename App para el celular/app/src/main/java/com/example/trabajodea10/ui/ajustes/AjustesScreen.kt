@@ -219,7 +219,7 @@ private fun AjustesSistema() {
             LineaSeparadora()
             DatoFila(etiqueta = "Zona horaria", valor = config.zonaHoraria)
             LineaSeparadora()
-            DatoFila(etiqueta = "Idioma", valor = "Español (Argentina)")
+            DatoFila(etiqueta = "Idioma", valor = "Español (Chile)")
         }
     }
 

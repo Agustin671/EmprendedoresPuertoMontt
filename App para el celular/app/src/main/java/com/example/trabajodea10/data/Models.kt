@@ -1,5 +1,7 @@
 package com.example.trabajodea10.data
 
+import kotlinx.serialization.Serializable
+
 enum class Rol(val etiqueta: String) {
     ADMIN("Administradora"),
     EMPRENDEDORA("Emprendedora"),
@@ -47,12 +49,14 @@ enum class Categoria(val etiqueta: String) {
     DECORACION("Decoración")
 }
 
+@Serializable
 data class Participacion(
     val emprendedoraId: String,
     val asistencia: EstadoAsistencia = EstadoAsistencia.PENDIENTE,
     val invitacion: EstadoInvitacion = EstadoInvitacion.CONFIRMADA
 )
 
+@Serializable
 data class Feria(
     val id: String,
     val nombre: String,
@@ -67,6 +71,7 @@ data class Feria(
     val organizadora: String = "Red Trama"
 )
 
+@Serializable
 data class Asociacion(
     val id: String,
     val nombre: String,
@@ -74,6 +79,7 @@ data class Asociacion(
     val color: Long
 )
 
+@Serializable
 data class Emprendedora(
     val id: String,
     val nombre: String,
@@ -85,12 +91,14 @@ data class Emprendedora(
     val seguidores: Int = 0
 )
 
+@Serializable
 data class Variante(
     val id: String,
     val nombre: String,
     val stock: Int
 )
 
+@Serializable
 data class Producto(
     val id: String,
     val nombre: String,
@@ -106,6 +114,7 @@ data class Producto(
     val stockBajo: Boolean get() = stockTotal in 1..3
 }
 
+@Serializable
 data class ItemVenta(
     val productoId: String,
     val varianteId: String,
@@ -115,6 +124,7 @@ data class ItemVenta(
     val cantidad: Int
 )
 
+@Serializable
 data class Venta(
     val id: String,
     val fecha: String,
@@ -124,6 +134,7 @@ data class Venta(
     val total: Double
 )
 
+@Serializable
 data class Tienda(
     val nombre: String,
     val bio: String,
@@ -133,17 +144,39 @@ data class Tienda(
     val colorLogo: Long
 )
 
+@Serializable
 data class ConfigSistema(
-    val moneda: String = "ARS – Peso argentino",
-    val zonaHoraria: String = "America/Argentina/Buenos_Aires",
+    val moneda: String = "CLP – Peso chileno",
+    val zonaHoraria: String = "America/Santiago",
     val registroPublico: Boolean = true,
     val catalogoPublico: Boolean = true,
     val chatDirecto: Boolean = false,
     val feriasPublicas: Boolean = true
 )
 
+@Serializable
 data class PreferenciasEmprendedora(
     val alertasStock: Boolean = true,
     val recordatoriosFeria: Boolean = true,
     val resumenVentas: Boolean = false
+)
+
+/**
+ * Fotografía completa del estado de la app que se guarda en disco para que
+ * todo siga igual cuando se cierra y se vuelve a abrir la aplicación.
+ */
+@Serializable
+data class EstadoApp(
+    val rol: Rol? = null,
+    val emprendedoraActualId: String = "emp1",
+    val asociaciones: List<Asociacion> = emptyList(),
+    val emprendedoras: List<Emprendedora> = emptyList(),
+    val ferias: List<Feria> = emptyList(),
+    val productos: List<Producto> = emptyList(),
+    val ventas: List<Venta> = emptyList(),
+    val tienda: Tienda = MockData.tienda,
+    val config: ConfigSistema = ConfigSistema(),
+    val prefs: PreferenciasEmprendedora = PreferenciasEmprendedora(),
+    val inscripcionesVisitante: List<String> = emptyList(),
+    val escalaTexto: Float = 1f
 )

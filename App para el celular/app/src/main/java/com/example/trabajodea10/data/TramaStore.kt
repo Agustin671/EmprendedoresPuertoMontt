@@ -1,18 +1,39 @@
 package com.example.trabajodea10.data
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.Locale
 
-private val localeAR = Locale("es", "AR")
+private val localeCL = Locale("es", "CL")
 
 fun formatearMoneda(valor: Double): String {
-    val formato = NumberFormat.getNumberInstance(localeAR)
+    val formato = NumberFormat.getNumberInstance(localeCL)
     formato.maximumFractionDigits = 0
     return "$ " + formato.format(valor)
+}
+
+/** Devuelve el mes en curso como "2026-10", para filtrar ventas por mes sin hardcodear. */
+fun mesActualIso(): String {
+    val calendario = Calendar.getInstance()
+    return "%04d-%02d".format(
+        calendario.get(Calendar.YEAR),
+        calendario.get(Calendar.MONTH) + 1
+    )
+}
+
+/** Fecha de hoy como "2026-10-12". */
+fun fechaActualIso(): String {
+    val calendario = Calendar.getInstance()
+    return "%04d-%02d-%02d".format(
+        calendario.get(Calendar.YEAR),
+        calendario.get(Calendar.MONTH) + 1,
+        calendario.get(Calendar.DAY_OF_MONTH)
+    )
 }
 
 private val MESES = listOf(
@@ -51,8 +72,8 @@ fun legibleAIso(texto: String): String? {
 }
 
 fun List<Venta>.totalDelMes(): Double {
-    val mesActual = "2026-10"
-    return filter { it.fecha.startsWith(mesActual) }.sumOf { it.total }
+    val mes = mesActualIso()
+    return filter { it.fecha.startsWith(mes) }.sumOf { it.total }
 }
 
 object TramaStore {
@@ -87,14 +108,78 @@ object TramaStore {
     val emprendedoraActual: Emprendedora
         get() = emprendedoras.firstOrNull { it.id == emprendedoraActualId } ?: emprendedoras.first()
 
+    // ---------- Persistencia ----------
+
+    private var persistenciaLista = false
+
+    /** Inicializa el almacenamiento local y recupera lo guardado. Se llama desde el Application. */
+    fun inicializar(context: Context) {
+        if (persistenciaLista) return
+        PersistenciaStore.inicializar(context)
+        persistenciaLista = true
+        cargarDesdeDisco()
+    }
+
+    private fun cargarDesdeDisco() {
+        val estado = PersistenciaStore.cargar() ?: return
+        rol = estado.rol
+        emprendedoraActualId = estado.emprendedoraActualId
+        if (estado.asociaciones.isNotEmpty()) {
+            asociaciones.clear()
+            asociaciones.addAll(estado.asociaciones)
+        }
+        if (estado.emprendedoras.isNotEmpty()) {
+            emprendedoras.clear()
+            emprendedoras.addAll(estado.emprendedoras)
+        }
+        if (estado.ferias.isNotEmpty()) {
+            ferias.clear()
+            ferias.addAll(estado.ferias)
+        }
+        if (estado.productos.isNotEmpty()) {
+            productos.clear()
+            productos.addAll(estado.productos)
+        }
+        ventas.clear()
+        ventas.addAll(estado.ventas)
+        tienda = estado.tienda
+        config = estado.config
+        prefs = estado.prefs
+        inscripcionesVisitante.clear()
+        inscripcionesVisitante.addAll(estado.inscripcionesVisitante)
+        escalaTexto = estado.escalaTexto
+    }
+
+    private fun persistir() {
+        if (!persistenciaLista) return
+        PersistenciaStore.guardar(
+            EstadoApp(
+                rol = rol,
+                emprendedoraActualId = emprendedoraActualId,
+                asociaciones = asociaciones.toList(),
+                emprendedoras = emprendedoras.toList(),
+                ferias = ferias.toList(),
+                productos = productos.toList(),
+                ventas = ventas.toList(),
+                tienda = tienda,
+                config = config,
+                prefs = prefs,
+                inscripcionesVisitante = inscripcionesVisitante.toList(),
+                escalaTexto = escalaTexto
+            )
+        )
+    }
+
     // ---------- Sesión ----------
 
     fun iniciarSesion(nuevoRol: Rol) {
         rol = nuevoRol
+        persistir()
     }
 
     fun cerrarSesion() {
         rol = null
+        persistir()
     }
 
     // ---------- Ferias ----------
@@ -116,12 +201,14 @@ object TramaStore {
                 estado = EstadoFeria.BORRADOR
             )
         )
+        persistir()
         return id
     }
 
     fun guardarFeria(feria: Feria) {
         val indice = ferias.indexOfFirst { it.id == feria.id }
         if (indice >= 0) ferias[indice] = feria else ferias.add(feria)
+        persistir()
     }
 
     fun descartarSiEstaVacio(id: String) {
@@ -129,6 +216,7 @@ object TramaStore {
         if (feria != null && feria.nombre.isBlank()) ferias.removeAll { it.id == id }
         val producto = productos.firstOrNull { it.id == id }
         if (producto != null && producto.nombre.isBlank()) productos.removeAll { it.id == id }
+        persistir()
     }
 
     fun setAsistencia(feriaId: String, emprendedoraId: String, estado: EstadoAsistencia) {
@@ -139,6 +227,7 @@ object TramaStore {
             if (it.emprendedoraId == emprendedoraId) it.copy(asistencia = estado) else it
         }
         ferias[indice] = feria.copy(participaciones = nuevas)
+        persistir()
     }
 
     fun enviarInvitaciones(feriaId: String, emprendedoraIds: List<String>) {
@@ -151,6 +240,7 @@ object TramaStore {
                 Participacion(it, invitacion = EstadoInvitacion.PENDIENTE)
             }
         ferias[indice] = feria.copy(participaciones = nuevas)
+        persistir()
     }
 
     fun responderInvitacion(feriaId: String, respuesta: EstadoInvitacion) {
@@ -161,6 +251,7 @@ object TramaStore {
             if (it.emprendedoraId == emprendedoraActualId) it.copy(invitacion = respuesta) else it
         }
         ferias[indice] = feria.copy(participaciones = nuevas)
+        persistir()
     }
 
     fun misFerias(): List<Pair<Feria, Participacion>> =
@@ -193,12 +284,14 @@ object TramaStore {
                 color = 0xFF6B7FB3
             )
         )
+        persistir()
         return true
     }
 
     fun cambiarEstadoEmprendedora(id: String, estado: EstadoCuenta) {
         val indice = emprendedoras.indexOfFirst { it.id == id }
         if (indice >= 0) emprendedoras[indice] = emprendedoras[indice].copy(estado = estado)
+        persistir()
     }
 
     fun nombreAsociacion(id: String?): String =
@@ -223,12 +316,14 @@ object TramaStore {
                 variantes = listOf(Variante("${id}v1", "Único", 0))
             )
         )
+        persistir()
         return id
     }
 
     fun guardarProducto(producto: Producto) {
         val indice = productos.indexOfFirst { it.id == producto.id }
         if (indice >= 0) productos[indice] = producto else productos.add(producto)
+        persistir()
     }
 
     fun togglePublicado(id: String) {
@@ -236,6 +331,7 @@ object TramaStore {
         if (indice >= 0) {
             val producto = productos[indice]
             productos[indice] = producto.copy(publicado = !producto.publicado)
+            persistir()
         }
     }
 
@@ -244,11 +340,13 @@ object TramaStore {
         if (indice >= 0) {
             val producto = productos[indice]
             productos[indice] = producto.copy(destacado = !producto.destacado)
+            persistir()
         }
     }
 
     fun eliminarProducto(id: String) {
         productos.removeAll { it.id == id }
+        persistir()
     }
 
     // ---------- Ventas ----------
@@ -261,7 +359,7 @@ object TramaStore {
         val total = items.sumOf { it.precio * it.cantidad }
         val venta = Venta(
             id = "v${System.currentTimeMillis()}",
-            fecha = "2026-10-07 " + horaActual(),
+            fecha = fechaActualIso() + " " + horaActual(),
             items = items,
             medioPago = medioPago,
             feriaId = feriaId,
@@ -269,6 +367,7 @@ object TramaStore {
         )
         ventas.add(0, venta)
         descontarStock(items)
+        persistir()
         return venta
     }
 
@@ -301,14 +400,17 @@ object TramaStore {
 
     fun guardarTienda(nueva: Tienda) {
         tienda = nueva
+        persistir()
     }
 
     fun guardarConfig(nueva: ConfigSistema) {
         config = nueva
+        persistir()
     }
 
     fun guardarPrefs(nuevas: PreferenciasEmprendedora) {
         prefs = nuevas
+        persistir()
     }
 
     // ---------- Métricas ----------
@@ -347,24 +449,49 @@ object TramaStore {
     fun estaInscrito(feriaId: String): Boolean = inscripcionesVisitante.contains(feriaId)
 
     fun inscribirse(feriaId: String) {
-        if (!estaInscrito(feriaId)) inscripcionesVisitante.add(feriaId)
+        if (!estaInscrito(feriaId)) {
+            inscripcionesVisitante.add(feriaId)
+            persistir()
+        }
     }
 
     fun desinscribirse(feriaId: String) {
         inscripcionesVisitante.removeAll { it == feriaId }
+        persistir()
     }
 
     // ---------- Accesibilidad: tamaño de texto ----------
 
     fun aumentarTexto() {
         escalaTexto = (escalaTexto + 0.15f).coerceAtMost(1.75f)
+        persistir()
     }
 
     fun reducirTexto() {
         escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(0.85f)
+        persistir()
     }
 
     fun restablecerTexto() {
         escalaTexto = 1f
+        persistir()
+    }
+
+    /** Borra todo lo guardado y vuelve a los datos de ejemplo originales. */
+    fun restablecerDatos() {
+        PersistenciaStore.borrar()
+        rol = null
+        emprendedoraActualId = "emp1"
+        asociaciones.clear(); asociaciones.addAll(MockData.asociaciones)
+        emprendedoras.clear(); emprendedoras.addAll(MockData.emprendedoras)
+        ferias.clear(); ferias.addAll(MockData.ferias)
+        productos.clear(); productos.addAll(MockData.productos)
+        ventas.clear(); ventas.addAll(MockData.ventas)
+        tienda = MockData.tienda
+        config = ConfigSistema()
+        prefs = PreferenciasEmprendedora()
+        inscripcionesVisitante.clear()
+        escalaTexto = 1f
+        persistir()
     }
 }
