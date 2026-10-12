@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.NecesidadesTienda
+import androidx.compose.foundation.BorderStroke
 import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.BarraSuperior
@@ -74,6 +75,9 @@ import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
 import com.example.trabajodea10.ui.theme.BerenjenaOscuro
 import com.example.trabajodea10.ui.theme.LineaSuave
+import com.example.trabajodea10.ui.theme.NegroApple
+import com.example.trabajodea10.ui.theme.RojoAlerce
+import com.example.trabajodea10.ui.theme.RojoAlerceContenedor
 import com.example.trabajodea10.ui.theme.SuperficieBlanca
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
@@ -82,7 +86,7 @@ import com.example.trabajodea10.ui.theme.VerdeOk
 import kotlinx.coroutines.launch
 
 private val COLORES_TEMA = listOf(
-    0xFF5C315B, 0xFF2E7D5B, 0xFF319795, 0xFFC07A3E, 0xFF2D3748, 0xFFC53030
+    0xFF111111, 0xFFDC2626, 0xFF18181B, 0xFF059669, 0xFF2563EB, 0xFFD97706
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -154,33 +158,46 @@ fun PantallaTienda(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Saludo personalizado con efecto wow
+            // Saludo personalizado estilo Apple Studio
             Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = BerenjenaContenedor,
+                shape = RoundedCornerShape(16.dp),
+                color = SuperficieBlanca,
+                border = BorderStroke(1.dp, LineaSuave),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier.padding(14.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(shape = CircleShape, color = Berenjena, modifier = Modifier.size(42.dp)) {
+                    Surface(shape = CircleShape, color = SuperficieVariante, modifier = Modifier.size(44.dp)) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Filled.Store, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                            Icon(Icons.Filled.Store, contentDescription = null, tint = NegroApple, modifier = Modifier.size(22.dp))
                         }
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "¡Hola, ${FirebaseManager.nombreUsuarioDemo}!",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
-                            color = BerenjenaOscuro
+                            color = NegroApple
                         )
                         Text(
-                            text = "Configuración activa para la comuna de Puerto Montt",
+                            text = "Configuración activa · Alerce, Puerto Montt",
                             style = MaterialTheme.typography.bodySmall,
-                            color = BerenjenaOscuro.copy(alpha = 0.8f)
+                            color = TextoSecundario
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(50.dp),
+                        color = RojoAlerceContenedor
+                    ) {
+                        Text(
+                            text = "En línea",
+                            color = RojoAlerce,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
                 }
@@ -394,31 +411,34 @@ fun PantallaTienda(
                     }
                 },
                 enabled = !guardando,
-                colors = ButtonDefaults.buttonColors(containerColor = Berenjena),
-                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(48.dp)
             ) {
                 if (guardando) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.CloudUpload, contentDescription = null)
+                        Icon(Icons.Filled.CloudUpload, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Guardar Cambios en Firebase", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text("Guardar Cambios en Firebase", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                     }
                 }
             }
 
             OutlinedButton(
                 onClick = { nav.seleccionarTab(Ruta.VisProductos) },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(1.dp, LineaSuave),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
             ) {
-                Icon(Icons.Filled.Visibility, contentDescription = null, tint = Berenjena)
+                Icon(Icons.Filled.Visibility, contentDescription = null, tint = NegroApple)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver en el Marketplace como Comprador", color = Berenjena, fontWeight = FontWeight.SemiBold)
+                Text("Ver en el Marketplace como Comprador", color = NegroApple, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -438,26 +458,26 @@ private fun FilaSwitchNecesidad(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!activo) }
-            .padding(vertical = 6.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = if (activo) VerdeContenedor else SuperficieVariante,
-            modifier = Modifier.size(38.dp)
+            shape = RoundedCornerShape(12.dp),
+            color = if (activo) RojoAlerceContenedor else SuperficieVariante,
+            modifier = Modifier.size(40.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icono,
                     contentDescription = null,
-                    tint = if (activo) VerdeOk else TextoSecundario,
+                    tint = if (activo) RojoAlerce else TextoSecundario,
                     modifier = Modifier.size(20.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(titulo, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Text(titulo, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = NegroApple)
             Text(descripcion, style = MaterialTheme.typography.bodySmall, color = TextoSecundario, fontSize = 12.sp)
         }
         Spacer(modifier = Modifier.width(8.dp))
@@ -466,7 +486,8 @@ private fun FilaSwitchNecesidad(
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = VerdeOk
+                checkedTrackColor = RojoAlerce,
+                uncheckedTrackColor = LineaSuave
             )
         )
     }

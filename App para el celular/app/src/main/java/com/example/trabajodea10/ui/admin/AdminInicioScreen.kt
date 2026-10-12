@@ -57,8 +57,8 @@ fun PantallaAdminInicio(
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = "Hola, Valentina",
-            subtitulo = "Panel de administración · Red Trama",
+            titulo = "Bienvenido, Paul",
+            subtitulo = "Panel de administración · Alerce Emprende",
             acciones = {
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
                     Icon(Icons.Filled.Settings, contentDescription = "Ajustes")

@@ -108,8 +108,8 @@ fun PantallaVisFerias(
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = "Próximas ferias",
-            subtitulo = "Ferias artesanales cerca tuyo",
+            titulo = "Bienvenido, Paul",
+            subtitulo = "Explora ferias artesanales cerca de ti · Alerce",
             acciones = { BotonesTamanoTexto() }
         )
 

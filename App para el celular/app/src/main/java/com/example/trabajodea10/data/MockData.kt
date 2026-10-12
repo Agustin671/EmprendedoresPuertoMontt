@@ -61,9 +61,9 @@ object MockData {
         ),
         Emprendedora(
             id = "emp6",
-            nombre = "Valentina Quiroga",
-            email = "vale.quiroga@trama.app",
-            telefono = "+54 9 341 555 0166",
+            nombre = "Paul Quiroga",
+            email = "paul.quiroga@alerce.app",
+            telefono = "+56 9 8765 4321",
             asociacionId = null,
             estado = EstadoCuenta.ACTIVA,
             color = 0xFF7A6B3E,

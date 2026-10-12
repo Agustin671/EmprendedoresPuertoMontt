@@ -3,6 +3,7 @@ package com.example.trabajodea10.ui.publico
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -30,26 +31,26 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,6 +63,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -69,13 +71,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.Tienda
-import com.example.trabajodea10.ui.theme.Berenjena
-import com.example.trabajodea10.ui.theme.BerenjenaContenedor
-import com.example.trabajodea10.ui.theme.BerenjenaOscuro
-import com.example.trabajodea10.ui.theme.LineaSuave
-import com.example.trabajodea10.ui.theme.SuperficieBlanca
-import com.example.trabajodea10.ui.theme.SuperficieVariante
-import com.example.trabajodea10.ui.theme.TextoSecundario
+import com.example.trabajodea10.ui.theme.BlancoPuro
+import com.example.trabajodea10.ui.theme.FondoLimpio
+import com.example.trabajodea10.ui.theme.GrisBorde
+import com.example.trabajodea10.ui.theme.GrisChip
+import com.example.trabajodea10.ui.theme.GrisTexto
+import com.example.trabajodea10.ui.theme.NegroApple
+import com.example.trabajodea10.ui.theme.RojoAlerce
+import com.example.trabajodea10.ui.theme.RojoAlerceContenedor
 import com.example.trabajodea10.ui.theme.VerdeContenedor
 import com.example.trabajodea10.ui.theme.VerdeOk
 import kotlinx.coroutines.launch
@@ -118,17 +121,17 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(FondoLimpio)
     ) {
-        // Cabecera Marketplace estilo refinado
+        // Cabecera Minimalista Editorial (Inspirada en Farfetch & Apple)
         Surface(
-            color = SuperficieBlanca,
-            shadowElevation = 2.dp
+            color = BlancoPuro,
+            border = BorderStroke(1.dp, GrisBorde)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 18.dp, vertical = 14.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,69 +139,90 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = "ALERCE",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 24.sp,
+                                letterSpacing = 3.sp,
+                                color = NegroApple
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .padding(bottom = 4.dp, start = 2.dp)
+                                    .size(6.dp)
+                                    .background(RojoAlerce, CircleShape)
+                            )
+                        }
                         Text(
-                            text = "Marketplace Alerce",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            color = BerenjenaOscuro
-                        )
-                        Text(
-                            text = "Comercios y servicios locales de Puerto Montt",
+                            text = "Bienvenido, Paul · Vitrina de Alerce",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextoSecundario
+                            color = GrisTexto
                         )
                     }
 
-                    // Botón para refrescar o sembrar en Firebase
+                    // Botón para refrescar o sembrar en Firebase (Pill minimalista)
                     Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = VerdeContenedor,
+                        shape = RoundedCornerShape(50.dp),
+                        color = if (FirebaseManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
+                        border = BorderStroke(1.dp, GrisBorde),
                         modifier = Modifier.clickable {
                             coroutineScope.launch {
                                 sembrando = true
                                 val exito = FirebaseManager.sembrarTiendasIniciales()
                                 FirebaseManager.cargarTiendasDesdeFirestore()
                                 sembrando = false
-                                avisar?.invoke(if (exito) "¡Base de datos Firestore sincronizada con 4 tiendas!" else "Tiendas cargadas en memoria")
+                                avisar?.invoke(if (exito) "¡Firestore sincronizado con éxito!" else "Tiendas cargadas en memoria")
                             }
                         }
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (sembrando) {
-                                CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = VerdeOk)
+                                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = NegroApple)
                             } else {
-                                Icon(Icons.Filled.CloudSync, contentDescription = "Sincronizar", tint = VerdeOk, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.CloudSync,
+                                    contentDescription = "Sincronizar",
+                                    tint = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple,
+                                    modifier = Modifier.size(15.dp)
+                                )
                             }
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Firestore",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = VerdeOk
+                                color = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Buscador
+                // Buscador Estilo Apple / Pinterest (Pill con borde sutil)
                 OutlinedTextField(
                     value = busqueda,
                     onValueChange = { busqueda = it },
-                    placeholder = { Text("Buscar tiendas, barberías, abarrotes en Alerce...") },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Berenjena) },
+                    placeholder = { Text("Buscar barberías, panaderías, artesanía...", color = GrisTexto, fontSize = 14.sp) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = NegroApple) },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = GrisChip,
+                        unfocusedContainerColor = GrisChip,
+                        focusedBorderColor = NegroApple,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Filtros horizontales por rubro
+                // Filtros horizontales por rubro (Pills tipo Farfetch: negro sólido activo, gris inactivo)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -207,47 +231,53 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                 ) {
                     CATEGORIAS.forEach { cat ->
                         val seleccionado = categoriaSeleccionada == cat
-                        FilterChip(
-                            selected = seleccionado,
-                            onClick = { categoriaSeleccionada = cat },
-                            label = { Text(cat, fontSize = 12.sp) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = BerenjenaContenedor,
-                                selectedLabelColor = BerenjenaOscuro
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(if (seleccionado) NegroApple else GrisChip)
+                                .clickable { categoriaSeleccionada = cat }
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = cat,
+                                fontSize = 12.sp,
+                                fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium,
+                                color = if (seleccionado) BlancoPuro else NegroApple
                             )
-                        )
+                        }
                     }
                 }
             }
         }
 
-        // Estado de carga o contenido
+        // Estado de carga o listado de tiendas
         if (FirebaseManager.cargando && FirebaseManager.tiendas.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Berenjena)
+                CircularProgressIndicator(color = NegroApple)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Banner informativo sobre el origen de los datos
+                // Banner sutil de estado
                 item {
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (FirebaseManager.mensajeError != null) Color(0xFFFFFBEB) else Color(0xFFF0FDF4),
+                        shape = RoundedCornerShape(12.dp),
+                        color = BlancoPuro,
+                        border = BorderStroke(1.dp, GrisBorde),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
-                            modifier = Modifier.padding(10.dp),
+                            modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = if (FirebaseManager.mensajeError != null) Icons.Filled.Store else Icons.Filled.CloudDone,
                                 contentDescription = null,
-                                tint = if (FirebaseManager.mensajeError != null) Color(0xFFB45309) else VerdeOk,
+                                tint = if (FirebaseManager.mensajeError != null) RojoAlerce else VerdeOk,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -257,7 +287,7 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                                 else
                                     "Conectado a Firebase Cloud Firestore (${tiendasFiltradas.size} tiendas activas)",
                                 fontSize = 12.sp,
-                                color = if (FirebaseManager.mensajeError != null) Color(0xFFB45309) else VerdeOk,
+                                color = NegroApple,
                                 fontWeight = FontWeight.Medium
                             )
                         }
@@ -279,13 +309,13 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Spacer(modifier = Modifier.height(70.dp))
                 }
             }
         }
     }
 
-    // Modal de Detalle de Tienda / Servicios
+    // Modal de Detalle de Tienda / Servicios (Estilo Apple)
     tiendaDetalle?.let { tienda ->
         DialogoDetalleTienda(
             tienda = tienda,
@@ -308,20 +338,23 @@ private fun TarjetaTiendaMarketplace(
     onVerDetalle: () -> Unit,
     onContactarWhatsApp: () -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SuperficieBlanca),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    var esFavorito by remember { mutableStateOf(false) }
+
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = BlancoPuro,
+        border = BorderStroke(1.dp, GrisBorde),
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClick = onVerDetalle)
     ) {
         Column {
-            // Franja superior con color de marca de la pyme
+            // Franja superior editorial con rubro y botón de corazón (Wishlist Farfetch/Pinterest)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(46.dp)
                     .background(Color(tienda.colorPortada)),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -334,27 +367,47 @@ private fun TarjetaTiendaMarketplace(
                 ) {
                     Text(
                         text = tienda.rubro.uppercase(),
-                        color = Color.White.copy(alpha = 0.9f),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.95f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
                     )
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.Black.copy(alpha = 0.25f)
-                    ) {
-                        Text(
-                            text = tienda.sector,
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.Black.copy(alpha = 0.35f)
+                        ) {
+                            Text(
+                                text = tienda.sector,
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // Corazón Wishlist (Farfetch/Apple Style)
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.25f))
+                                .clickable { esFavorito = !esFavorito },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (esFavorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                contentDescription = "Favorito",
+                                tint = if (esFavorito) RojoAlerce else Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = CircleShape,
@@ -378,31 +431,31 @@ private fun TarjetaTiendaMarketplace(
                             text = tienda.nombre,
                             fontWeight = FontWeight.Bold,
                             fontSize = 17.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = NegroApple
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.LocationOn, contentDescription = null, tint = TextoSecundario, modifier = Modifier.size(13.dp))
+                            Icon(Icons.Filled.LocationOn, contentDescription = null, tint = GrisTexto, modifier = Modifier.size(13.dp))
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
                                 text = "${tienda.sector}, Puerto Montt",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextoSecundario
+                                color = GrisTexto
                             )
                         }
                     }
                 }
 
                 if (tienda.bio.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = tienda.bio,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = GrisTexto,
                         maxLines = 2
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Badges que reflejan la "Selección de Necesidades" configurada por el emprendedor
                 FlowRow(
@@ -410,34 +463,34 @@ private fun TarjetaTiendaMarketplace(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (tienda.necesidades.tieneAgendamiento) {
-                        InsigniaNecesidad(
-                            texto = "Agendamiento Disponible",
+                        InsigniaNecesidadEditorial(
+                            texto = "Agendamiento",
                             icono = Icons.Filled.CalendarMonth,
-                            colorFondo = Color(0xFFE0F2FE),
+                            colorFondo = Color(0xFFF0F9FF),
                             colorTexto = Color(0xFF0369A1)
                         )
                     }
 
                     if (tienda.necesidades.tieneStock) {
-                        InsigniaNecesidad(
+                        InsigniaNecesidadEditorial(
                             texto = "Stock en Tienda",
                             icono = Icons.Filled.Inventory2,
-                            colorFondo = Color(0xFFFEF3C7),
-                            colorTexto = Color(0xFFB45309)
+                            colorFondo = RojoAlerceContenedor,
+                            colorTexto = RojoAlerce
                         )
                     }
 
                     if (tienda.necesidades.tieneProductosAPedido) {
-                        InsigniaNecesidad(
-                            texto = "Trabajos A Pedido",
+                        InsigniaNecesidadEditorial(
+                            texto = "A Pedido",
                             icono = Icons.Filled.ContentCut,
-                            colorFondo = Color(0xFFEDE9FE),
+                            colorFondo = Color(0xFFF5F3FF),
                             colorTexto = Color(0xFF6D28D9)
                         )
                     }
 
                     if (tienda.necesidades.participaEnFerias) {
-                        InsigniaNecesidad(
+                        InsigniaNecesidadEditorial(
                             texto = "Ferias Comunales",
                             icono = Icons.Filled.ShoppingBag,
                             colorFondo = VerdeContenedor,
@@ -446,34 +499,40 @@ private fun TarjetaTiendaMarketplace(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(color = GrisBorde)
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = LineaSuave)
-                Spacer(modifier = Modifier.height(10.dp))
 
-                // Botones de acción
+                // Botones de acción estilo Farfetch / Apple (Pills)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     OutlinedButton(
                         onClick = onVerDetalle,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(50.dp),
+                        border = BorderStroke(1.dp, GrisBorde),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp)
                     ) {
                         Text(
-                            text = if (tienda.necesidades.tieneAgendamiento) "Agendar / Ver" else "Ver Vitrina",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
+                            text = if (tienda.necesidades.tieneAgendamiento) "Agendar Cita" else "Ver Vitrina",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NegroApple
                         )
                     }
 
                     Button(
                         onClick = onContactarWhatsApp,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = VerdeOk),
-                        modifier = Modifier.weight(1f)
+                        shape = RoundedCornerShape(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp)
                     ) {
-                        Text("WhatsApp", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = BlancoPuro)
                     }
                 }
             }
@@ -482,21 +541,21 @@ private fun TarjetaTiendaMarketplace(
 }
 
 @Composable
-private fun InsigniaNecesidad(
+private fun InsigniaNecesidadEditorial(
     texto: String,
     icono: androidx.compose.ui.graphics.vector.ImageVector,
     colorFondo: Color,
     colorTexto: Color
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(50.dp),
         color = colorFondo
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icono, contentDescription = null, tint = colorTexto, modifier = Modifier.size(13.dp))
+            Icon(icono, contentDescription = null, tint = colorTexto, modifier = Modifier.size(12.dp))
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = texto, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = colorTexto)
         }
@@ -511,45 +570,47 @@ private fun DialogoDetalleTienda(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = BlancoPuro,
+        shape = RoundedCornerShape(24.dp),
         title = {
             Column {
-                Text(tienda.nombre, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text(tienda.rubro, style = MaterialTheme.typography.bodySmall, color = TextoSecundario)
+                Text(tienda.nombre, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = NegroApple)
+                Text(tienda.rubro, style = MaterialTheme.typography.bodySmall, color = GrisTexto)
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(tienda.bio, style = MaterialTheme.typography.bodyMedium)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(tienda.bio, style = MaterialTheme.typography.bodyMedium, color = NegroApple)
 
-                HorizontalDivider()
+                HorizontalDivider(color = GrisBorde)
 
-                Text("Servicios y facilidades activas:", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Servicios y facilidades activas:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = NegroApple)
 
                 if (tienda.necesidades.tieneAgendamiento) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Permite agendar horas de atención por WhatsApp.", fontSize = 13.sp)
+                        Text("Permite agendar horas de atención.", fontSize = 13.sp, color = GrisTexto)
                     }
                 }
 
                 if (tienda.necesidades.tieneStock) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Dispone de productos para entrega inmediata.", fontSize = 13.sp)
+                        Text("Dispone de stock para entrega inmediata.", fontSize = 13.sp, color = GrisTexto)
                     }
                 }
 
                 if (tienda.necesidades.tieneProductosAPedido) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Acepta pedidos y encargos personalizados.", fontSize = 13.sp)
+                        Text("Acepta pedidos y encargos personalizados.", fontSize = 13.sp, color = GrisTexto)
                     }
                 }
 
-                Text("Ubicación: ${tienda.sector}, Puerto Montt", fontSize = 13.sp, color = TextoSecundario)
+                Text("Ubicación: ${tienda.sector}, Puerto Montt", fontSize = 12.sp, color = GrisTexto)
             }
         },
         confirmButton = {
@@ -558,14 +619,15 @@ private fun DialogoDetalleTienda(
                     onDismiss()
                     onContactarWhatsApp()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = VerdeOk)
+                shape = RoundedCornerShape(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = NegroApple)
             ) {
-                Text("Hablar por WhatsApp")
+                Text("Contactar por WhatsApp", color = BlancoPuro, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cerrar")
+                Text("Cerrar", color = GrisTexto)
             }
         }
     )

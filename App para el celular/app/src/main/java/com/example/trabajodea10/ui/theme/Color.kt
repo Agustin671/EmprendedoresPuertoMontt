@@ -2,29 +2,43 @@ package com.example.trabajodea10.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Berenjena = Color(0xFF5C315B)
-val BerenjenaOscuro = Color(0xFF3E1F3E)
-val BerenjenaContenedor = Color(0xFFEADFEA)
-val SobreBerenjenaContenedor = Color(0xFF3E1F3E)
+// Paleta Editorial Humana (Inspirada en Farfetch & Apple: Blanco, Negro y Rojo Alerce)
+val NegroApple = Color(0xFF111111)
+val NegroSuave = Color(0xFF18181B)
+val RojoAlerce = Color(0xFFDC2626)
+val RojoAlerceContenedor = Color(0xFFFEE2E2)
+val RojoAlerceOscuro = Color(0xFF991B1B)
+val BlancoPuro = Color(0xFFFFFFFF)
+val FondoLimpio = Color(0xFFFAFAFA)
+val GrisBorde = Color(0xFFE5E7EB)
+val GrisTexto = Color(0xFF71717A)
+val GrisChip = Color(0xFFF4F4F5)
 
-val VerdeOk = Color(0xFF2E7D5B)
-val VerdeContenedor = Color(0xFFD6EFE2)
-val AmarilloAlerta = Color(0xFFF2B33D)
-val NaranjaAlerta = Color(0xFFE07A2B)
-val NaranjaContenedor = Color(0xFFFFE9CF)
-val RojoError = Color(0xFFC0392B)
-val RojoContenedor = Color(0xFFFBE0DC)
+// Mapeos de compatibilidad para transformar toda la app al nuevo estilo visual
+val Berenjena = NegroApple
+val BerenjenaOscuro = Color(0xFF000000)
+val BerenjenaContenedor = Color(0xFFF4F4F5)
+val SobreBerenjenaContenedor = NegroApple
 
-val FondoNeutro = Color(0xFFF7F5F7)
-val SuperficieBlanca = Color(0xFFFFFFFF)
-val SuperficieVariante = Color(0xFFEFEAEE)
-val TextoSecundario = Color(0xFF6B616A)
-val LineaSuave = Color(0xFFDDD5DC)
+val VerdeOk = Color(0xFF16A34A)
+val VerdeContenedor = Color(0xFFDCFCE7)
+val AmarilloAlerta = Color(0xFFF59E0B)
+val NaranjaAlerta = Color(0xFFEA580C)
+val NaranjaContenedor = Color(0xFFFFEDD5)
+val RojoError = Color(0xFFDC2626)
+val RojoContenedor = Color(0xFFFEE2E2)
 
-val DarkBackground = Color(0xFF1A151C)
-val DarkSurface = Color(0xFF241E26)
-val DarkSurfaceVariant = Color(0xFF3A323B)
-val DarkPrimary = Color(0xFFD8B7D6)
-val DarkOnPrimary = Color(0xFF3A1C39)
-val DarkOnSurfaceVariant = Color(0xFFCFC5CE)
-val DarkOutline = Color(0xFF4C434E)
+val FondoNeutro = FondoLimpio
+val SuperficieBlanca = BlancoPuro
+val SuperficieVariante = GrisChip
+val TextoSecundario = GrisTexto
+val LineaSuave = GrisBorde
+
+// Modo oscuro sofisticado
+val DarkBackground = Color(0xFF09090B)
+val DarkSurface = Color(0xFF18181B)
+val DarkSurfaceVariant = Color(0xFF27272A)
+val DarkPrimary = Color(0xFFFFFFFF)
+val DarkOnPrimary = Color(0xFF000000)
+val DarkOnSurfaceVariant = Color(0xFFA1A1AA)
+val DarkOutline = Color(0xFF3F3F46)

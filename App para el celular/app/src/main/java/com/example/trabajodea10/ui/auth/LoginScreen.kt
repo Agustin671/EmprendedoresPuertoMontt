@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,10 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,9 +60,15 @@ import com.example.trabajodea10.data.Rol
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
-import com.example.trabajodea10.ui.theme.Berenjena
-import com.example.trabajodea10.ui.theme.BerenjenaOscuro
-import com.example.trabajodea10.ui.theme.SuperficieVariante
+import com.example.trabajodea10.ui.theme.BlancoPuro
+import com.example.trabajodea10.ui.theme.FondoLimpio
+import com.example.trabajodea10.ui.theme.GrisBorde
+import com.example.trabajodea10.ui.theme.GrisChip
+import com.example.trabajodea10.ui.theme.GrisTexto
+import com.example.trabajodea10.ui.theme.NegroApple
+import com.example.trabajodea10.ui.theme.RojoAlerce
+import com.example.trabajodea10.ui.theme.RojoAlerceContenedor
+import com.example.trabajodea10.ui.theme.SuperficieBlanca
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
 import kotlinx.coroutines.launch
@@ -83,106 +88,138 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(FondoLimpio)
             .verticalScroll(rememberScrollState())
     ) {
-        // Cabecera institucional elegante
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Berenjena)
-                .padding(top = 48.dp, bottom = 32.dp),
-            contentAlignment = Alignment.Center
+        // Cabecera Minimalista Editorial (Inspirada en Farfetch & Apple)
+        Surface(
+            color = BlancoPuro,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color.White,
-                    shadowElevation = 4.dp
-                ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 44.dp, bottom = 22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = "ALERCE",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 4.sp,
+                        color = NegroApple
+                    )
                     Box(
                         modifier = Modifier
-                            .size(64.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                            .padding(bottom = 6.dp, start = 3.dp)
+                            .size(7.dp)
+                            .background(RojoAlerce, CircleShape)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "MERCADO LOCAL & ARTESANÍA",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 2.sp,
+                    color = NegroApple.copy(alpha = 0.85f)
+                )
+                Text(
+                    text = "Puerto Montt · Región de Los Lagos",
+                    fontSize = 12.sp,
+                    color = GrisTexto
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Selector Segmentado Estilo iOS / Farfetch (Pills)
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 20.dp)
+                .fillMaxWidth()
+                .background(GrisChip, RoundedCornerShape(50.dp))
+                .padding(4.dp)
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(if (pestañaModo == 0) NegroApple else Color.Transparent)
+                        .clickable { pestañaModo = 0 }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Filled.Store,
-                            contentDescription = "Logo Alerce",
-                            tint = Berenjena,
-                            modifier = Modifier.size(36.dp)
+                            Icons.Filled.Store,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (pestañaModo == 0) BlancoPuro else GrisTexto
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "Soy Emprendedora",
+                            fontWeight = if (pestañaModo == 0) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = if (pestañaModo == 0) BlancoPuro else GrisTexto
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(14.dp))
-                Text(
-                    text = "Alerce Emprende",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = "Punto de encuentro del comercio local en Puerto Montt",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.9f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
-            }
-        }
 
-        // Selector claro de Modo: Emprendedora vs Comprador (RF-ACC-05)
-        TabRow(
-            selectedTabIndex = pestañaModo,
-            containerColor = Color.White,
-            contentColor = Berenjena,
-            indicator = { tabPositions ->
-                TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(tabPositions[pestañaModo]),
-                    color = Berenjena
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(50.dp))
+                        .background(if (pestañaModo == 1) NegroApple else Color.Transparent)
+                        .clickable { pestañaModo = 1 }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.ShoppingBag,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = if (pestañaModo == 1) BlancoPuro else GrisTexto
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "Soy Comprador",
+                            fontWeight = if (pestañaModo == 1) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = if (pestañaModo == 1) BlancoPuro else GrisTexto
+                        )
+                    }
+                }
             }
-        ) {
-            Tab(
-                selected = pestañaModo == 0,
-                onClick = { pestañaModo = 0 },
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Store, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Soy Emprendedora", fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            )
-            Tab(
-                selected = pestañaModo == 1,
-                onClick = { pestañaModo = 1 },
-                text = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.ShoppingBag, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Soy Comprador", fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            )
         }
 
         Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Tarjeta con formulario de Firebase Auth
-            Tarjeta {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = BlancoPuro,
+                border = BorderStroke(1.dp, GrisBorde),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
+                        .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = if (esModoRegistro) "Crear cuenta en Firebase" else "Iniciar Sesión con Firebase Auth",
+                        text = if (esModoRegistro) "Crear cuenta en Firebase" else "Iniciar Sesión",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = BerenjenaOscuro
+                        color = NegroApple
                     )
 
                     Text(
@@ -199,8 +236,9 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             value = nombreRegistro,
                             onValueChange = { nombreRegistro = it },
                             label = { Text("Nombre o Nombre de la Tienda") },
-                            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = GrisTexto) },
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -209,9 +247,10 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         value = correo,
                         onValueChange = { correo = it },
                         label = { Text("Correo electrónico") },
-                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = GrisTexto) },
                         placeholder = { Text("ejemplo@gmail.com") },
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -220,8 +259,9 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         value = clave,
                         onValueChange = { clave = it },
                         label = { Text("Contraseña") },
-                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
+                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null, tint = GrisTexto) },
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth()
@@ -230,7 +270,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     mensajeError?.let {
                         Text(
                             text = it,
-                            color = MaterialTheme.colorScheme.error,
+                            color = RojoAlerce,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -274,18 +314,21 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                 }
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Berenjena),
+                        colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                        shape = RoundedCornerShape(14.dp),
                         enabled = !cargando,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp)
+                            .height(50.dp)
                     ) {
                         if (cargando) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(color = BlancoPuro, modifier = Modifier.size(22.dp))
                         } else {
                             Text(
                                 text = if (esModoRegistro) "Registrarme y Entrar" else "Iniciar Sesión",
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = BlancoPuro
                             )
                         }
                     }
@@ -299,7 +342,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     ) {
                         Text(
                             text = if (esModoRegistro) "¿Ya tienes cuenta? Inicia sesión aquí" else "¿No tienes cuenta? Regístrate aquí",
-                            color = Berenjena,
+                            color = NegroApple,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp
                         )
                     }
@@ -313,51 +357,81 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = GrisBorde)
                 Text(
-                    text = "  O INGRESO RÁPIDO PARA DEMOSTRACIÓN  ",
+                    text = "  O ACCESO RÁPIDO PARA DEMOSTRACIÓN  ",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextoSecundario,
-                    fontWeight = FontWeight.SemiBold
+                    color = GrisTexto,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
-                HorizontalDivider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f), color = GrisBorde)
             }
 
-            // Botones de acceso rápido para la reunión del miércoles (Garantía de fluidez total)
-            Tarjeta(onClick = {
-                FirebaseManager.entrarModoDemo("Doña Rosa (Minimarket Alerce)", Rol.EMPRENDEDORA)
-                nav.iniciarSesion(Rol.EMPRENDEDORA)
-            }) {
-                FilaAccesoRapido(
-                    titulo = "Ingresar como Emprendedora (Demo)",
-                    subtitulo = "Entrar directo al Panel de Tienda y Selección de Necesidades.",
+            // Botones de acceso rápido estilo Apple Cards
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = BlancoPuro,
+                border = BorderStroke(1.dp, GrisBorde),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable {
+                        FirebaseManager.entrarModoDemo("Doña Rosa", Rol.EMPRENDEDORA)
+                        nav.iniciarSesion(Rol.EMPRENDEDORA)
+                    }
+            ) {
+                FilaAccesoRapidoEditorial(
+                    badge = "DEMO EMPRENDEDORA",
+                    badgeColor = RojoAlerceContenedor,
+                    badgeTextColor = RojoAlerce,
+                    titulo = "Ingresar como Doña Rosa",
+                    subtitulo = "Minimarket Alerce · Selección de necesidades en vivo.",
                     icono = Icons.Filled.Store
                 )
             }
 
-            Tarjeta(onClick = {
-                FirebaseManager.entrarModoDemo("Vecino Comprador", Rol.VISITANTE)
-                nav.iniciarSesion(Rol.VISITANTE)
-            }) {
-                FilaAccesoRapido(
-                    titulo = "Explorar como Comprador (Marketplace)",
-                    subtitulo = "Navegar las tiendas de Alerce leídas desde Firestore.",
+            Surface(
+                shape = RoundedCornerShape(18.dp),
+                color = BlancoPuro,
+                border = BorderStroke(1.dp, GrisBorde),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable {
+                        FirebaseManager.entrarModoDemo("Paul", Rol.VISITANTE)
+                        nav.iniciarSesion(Rol.VISITANTE)
+                    }
+            ) {
+                FilaAccesoRapidoEditorial(
+                    badge = "EXPLORADOR / COMPRADOR",
+                    badgeColor = GrisChip,
+                    badgeTextColor = NegroApple,
+                    titulo = "Explorar como Comprador",
+                    subtitulo = "Ver vitrina de tiendas leídas de Firestore y WhatsApp.",
                     icono = Icons.Filled.ShoppingBag
                 )
             }
 
             OutlinedButton(
                 onClick = { nav.iniciarSesion(Rol.ADMIN) },
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, GrisBorde),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
             ) {
-                Text("Acceso Administración de Ferias", color = TextoSecundario, fontSize = 13.sp)
+                Text("Acceso Administración de Ferias", color = GrisTexto, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             }
         }
     }
 }
 
 @Composable
-private fun FilaAccesoRapido(
+private fun FilaAccesoRapidoEditorial(
+    badge: String,
+    badgeColor: Color,
+    badgeTextColor: Color,
     titulo: String,
     subtitulo: String,
     icono: androidx.compose.ui.graphics.vector.ImageVector
@@ -365,20 +439,31 @@ private fun FilaAccesoRapido(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(14.dp),
+            .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(shape = RoundedCornerShape(12.dp), color = SuperficieVariante) {
-            Box(modifier = Modifier.padding(10.dp)) {
-                Icon(icono, contentDescription = null, tint = Berenjena, modifier = Modifier.size(24.dp))
+        Surface(shape = RoundedCornerShape(12.dp), color = GrisChip) {
+            Box(modifier = Modifier.padding(12.dp)) {
+                Icon(icono, contentDescription = null, tint = NegroApple, modifier = Modifier.size(24.dp))
             }
         }
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(titulo, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-            Text(subtitulo, style = MaterialTheme.typography.bodySmall, color = TextoSecundario)
+            Surface(shape = RoundedCornerShape(4.dp), color = badgeColor) {
+                Text(
+                    text = badge,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.5.sp,
+                    color = badgeTextColor,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(titulo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = NegroApple)
+            Text(subtitulo, style = MaterialTheme.typography.bodySmall, color = GrisTexto)
         }
-        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = BerenjenaOscuro)
+        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = NegroApple.copy(alpha = 0.5f))
     }
 }
 

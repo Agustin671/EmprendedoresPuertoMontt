@@ -119,12 +119,12 @@ private fun PerfilAdmin() {
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AvatarIniciales(nombre = "Valentina Duarte", color = 0xFF5C315B, tamano = 52)
+            AvatarIniciales(nombre = "Paul", color = 0xFF111111, tamano = 52)
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Valentina Duarte", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text("Paul", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "valentina@trama.app",
+                    text = "paul@alerce.app",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextoSecundario
                 )
