@@ -6,8 +6,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -66,6 +64,7 @@ import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.CampoTexto
+import com.example.trabajodea10.ui.componentes.ContenedorChips
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
@@ -96,7 +95,6 @@ private fun colorSeguro(valor: Long, porDefecto: Color = RojoAlerce): Color {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaTienda(
     nav: ControladorNavegacion,
@@ -382,9 +380,9 @@ fun PantallaTienda(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Badges activos según los switches
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ContenedorChips(
+                            espacioHorizontal = 6.dp,
+                            espacioVertical = 6.dp
                         ) {
                             if (tieneAgendamiento) {
                                 InsigniaPreview("Agendamiento de Horas", Color(0xFFE0F2FE), Color(0xFF0369A1))

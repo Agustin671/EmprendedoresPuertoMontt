@@ -10,10 +10,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import com.example.trabajodea10.ui.componentes.ContenedorChips
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -91,7 +90,6 @@ private val CATEGORIAS = listOf(
     "Pastelería y Gastronomía"
 )
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
     val context = LocalContext.current
@@ -331,7 +329,6 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TarjetaTiendaMarketplace(
     tienda: Tienda,
@@ -458,9 +455,9 @@ private fun TarjetaTiendaMarketplace(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Badges que reflejan la "Selección de Necesidades" configurada por el emprendedor
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ContenedorChips(
+                    espacioHorizontal = 6.dp,
+                    espacioVertical = 6.dp
                 ) {
                     if (tienda.necesidades.tieneAgendamiento) {
                         InsigniaNecesidadEditorial(

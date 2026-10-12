@@ -657,3 +657,66 @@ fun BotonesTamanoTexto(
         }
     }
 }
+
+/**
+ * Contenedor flexible de insignias/chips que envuelve automáticamente a la siguiente línea
+ * sin depender de FlowRow ni causar errores NoSuchMethodError en ninguna versión de Android/Compose.
+ */
+@Composable
+fun ContenedorChips(
+    modifier: Modifier = Modifier,
+    espacioHorizontal: androidx.compose.ui.unit.Dp = 6.dp,
+    espacioVertical: androidx.compose.ui.unit.Dp = 6.dp,
+    contenido: @Composable () -> Unit
+) {
+    androidx.compose.ui.layout.Layout(
+        content = contenido,
+        modifier = modifier
+    ) { measurables, constraints ->
+        val espacioH = espacioHorizontal.roundToPx()
+        val espacioV = espacioVertical.roundToPx()
+        val lineas = mutableListOf<MutableList<androidx.compose.ui.layout.Placeable>>()
+        val alturasLineas = mutableListOf<Int>()
+        var lineaActual = mutableListOf<androidx.compose.ui.layout.Placeable>()
+        var anchoLineaActual = 0
+        var alturaLineaActual = 0
+
+        val maxW = if (constraints.hasBoundedWidth) constraints.maxWidth else Int.MAX_VALUE
+        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+
+        for (placeable in placeables) {
+            val nuevoAncho = if (lineaActual.isEmpty()) placeable.width else anchoLineaActual + espacioH + placeable.width
+            if (nuevoAncho <= maxW || lineaActual.isEmpty()) {
+                lineaActual.add(placeable)
+                anchoLineaActual = nuevoAncho
+                alturaLineaActual = maxOf(alturaLineaActual, placeable.height)
+            } else {
+                lineas.add(lineaActual)
+                alturasLineas.add(alturaLineaActual)
+                lineaActual = mutableListOf(placeable)
+                anchoLineaActual = placeable.width
+                alturaLineaActual = placeable.height
+            }
+        }
+        if (lineaActual.isNotEmpty()) {
+            lineas.add(lineaActual)
+            alturasLineas.add(alturaLineaActual)
+        }
+
+        val alturaTotal = if (lineas.isEmpty()) 0 else alturasLineas.sum() + (lineas.size - 1) * espacioV
+        val anchoTotal = if (constraints.hasBoundedWidth) constraints.maxWidth else (lineas.maxOfOrNull { l -> l.sumOf { it.width } + (l.size - 1) * espacioH } ?: 0)
+
+        layout(anchoTotal, alturaTotal) {
+            var y = 0
+            for (i in lineas.indices) {
+                var x = 0
+                for (placeable in lineas[i]) {
+                    placeable.placeRelative(x, y)
+                    x += placeable.width + espacioH
+                }
+                y += alturasLineas[i] + espacioV
+            }
+        }
+    }
+}
+
