@@ -621,8 +621,13 @@ fun BotonesTamanoTexto(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (mostrarEtiqueta) {
+                val etiquetaNivel = when {
+                    escala <= 0.85f -> "Compacto"
+                    escala <= 1.0f -> "Normal"
+                    else -> "Grande"
+                }
                 Text(
-                    text = "Texto",
+                    text = etiquetaNivel,
                     fontSize = 11.sp,
                     color = Berenjena,
                     fontWeight = FontWeight.Medium
@@ -631,14 +636,14 @@ fun BotonesTamanoTexto(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(
                     onClick = { TramaStore.reducirTexto() },
-                    enabled = escala > 1f,
+                    enabled = escala > 0.80f,
                     modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Text(
                         text = "A−",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (escala > 1f) Berenjena else TextoSecundario
+                        color = if (escala > 0.80f) Berenjena else TextoSecundario
                     )
                 }
                 TextButton(

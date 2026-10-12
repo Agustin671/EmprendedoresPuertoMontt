@@ -7,12 +7,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import com.example.trabajodea10.data.BloqueHorario
+import com.example.trabajodea10.data.TramaStore
+import com.example.trabajodea10.data.nombreDiaLegible
+import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
+import com.example.trabajodea10.ui.theme.VerdeContenedor
+import com.example.trabajodea10.ui.theme.VerdeOk
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -97,6 +105,7 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
     var busqueda by remember { mutableStateOf("") }
     var categoriaSeleccionada by remember { mutableStateOf("Todos") }
     var tiendaDetalle by remember { mutableStateOf<Tienda?>(null) }
+    var tiendaAgendamiento by remember { mutableStateOf<Tienda?>(null) }
     var sembrando by remember { mutableStateOf(false) }
 
     // Cargar tiendas desde Firestore en el primer render
@@ -296,6 +305,7 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                     TarjetaTiendaMarketplace(
                         tienda = tienda,
                         onVerDetalle = { tiendaDetalle = tienda },
+                        onAgendarCita = { tiendaAgendamiento = tienda },
                         onContactarWhatsApp = {
                             abrirWhatsApp(
                                 context,
@@ -318,6 +328,10 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
         DialogoDetalleTienda(
             tienda = tienda,
             onDismiss = { tiendaDetalle = null },
+            onAgendarCita = {
+                tiendaDetalle = null
+                tiendaAgendamiento = tienda
+            },
             onContactarWhatsApp = {
                 abrirWhatsApp(
                     context,
@@ -327,12 +341,24 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
             }
         )
     }
+
+    // Modal de Agendamiento de Citas (Próximas 2 Semanas)
+    tiendaAgendamiento?.let { tienda ->
+        DialogoAgendamientoTienda(
+            tienda = tienda,
+            onDismiss = { tiendaAgendamiento = null },
+            onCitaConfirmada = { mensaje ->
+                avisar?.invoke(mensaje)
+            }
+        )
+    }
 }
 
 @Composable
 private fun TarjetaTiendaMarketplace(
     tienda: Tienda,
     onVerDetalle: () -> Unit,
+    onAgendarCita: () -> Unit,
     onContactarWhatsApp: () -> Unit
 ) {
     var esFavorito by remember { mutableStateOf(false) }
@@ -506,7 +532,13 @@ private fun TarjetaTiendaMarketplace(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     OutlinedButton(
-                        onClick = onVerDetalle,
+                        onClick = {
+                            if (tienda.necesidades.tieneAgendamiento) {
+                                onAgendarCita()
+                            } else {
+                                onVerDetalle()
+                            }
+                        },
                         shape = RoundedCornerShape(50.dp),
                         border = BorderStroke(1.dp, GrisBorde),
                         modifier = Modifier
@@ -563,6 +595,7 @@ private fun InsigniaNecesidadEditorial(
 private fun DialogoDetalleTienda(
     tienda: Tienda,
     onDismiss: () -> Unit,
+    onAgendarCita: (() -> Unit)? = null,
     onContactarWhatsApp: () -> Unit
 ) {
     AlertDialog(
@@ -607,6 +640,20 @@ private fun DialogoDetalleTienda(
                     }
                 }
 
+                if (tienda.necesidades.tieneAgendamiento && onAgendarCita != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = onAgendarCita,
+                        shape = RoundedCornerShape(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                        modifier = Modifier.fillMaxWidth().height(42.dp)
+                    ) {
+                        Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = BlancoPuro, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Agendar Cita (Próximas 2 Semanas)", color = BlancoPuro, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+
                 Text("Ubicación: ${tienda.sector}, Puerto Montt", fontSize = 12.sp, color = GrisTexto)
             }
         },
@@ -625,6 +672,333 @@ private fun DialogoDetalleTienda(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cerrar", color = GrisTexto)
+            }
+        }
+    )
+}
+
+@Composable
+fun DialogoAgendamientoTienda(
+    tienda: Tienda,
+    onDismiss: () -> Unit,
+    onCitaConfirmada: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val fechas = remember { TramaStore.proximos14Dias() }
+    var fechaSeleccionada by remember { mutableStateOf(fechas.firstOrNull() ?: "") }
+    var bloqueSeleccionado by remember { mutableStateOf<BloqueHorario?>(null) }
+
+    var nombreCliente by remember {
+        mutableStateOf(if (FirebaseManager.nombreUsuarioDemo.isNotBlank()) FirebaseManager.nombreUsuarioDemo else "Paul Ferrada")
+    }
+    var telefonoCliente by remember { mutableStateOf("+56 9 ") }
+    var servicio by remember { mutableStateOf("Atención / Corte de Cabello") }
+    var reservaConfirmada by remember { mutableStateOf(false) }
+
+    val bloquesDelDia = TramaStore.horariosDeTienda(tienda.id, fechaSeleccionada)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = BlancoPuro,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (reservaConfirmada) "¡Hora Reservada!" else "Agendar Cita",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = NegroApple
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(50.dp),
+                        color = RojoAlerceContenedor
+                    ) {
+                        Text(
+                            text = "2 Semanas",
+                            color = RojoAlerce,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Text(
+                    text = tienda.nombre,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GrisTexto
+                )
+            }
+        },
+        text = {
+            if (reservaConfirmada) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = VerdeContenedor,
+                        modifier = Modifier.size(54.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(28.dp))
+                        }
+                    }
+                    Text(
+                        text = "¡Tu cita ha sido agendada con éxito!",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = NegroApple
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = GrisChip,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("Día: ${nombreDiaLegible(fechaSeleccionada)}", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = NegroApple)
+                            Text("Hora: ${bloqueSeleccionado?.hora ?: ""} (${bloqueSeleccionado?.duracion ?: "45 min"})", fontSize = 13.sp, color = GrisTexto)
+                            Text("Servicio: $servicio", fontSize = 13.sp, color = GrisTexto)
+                            Text("Cliente: $nombreCliente", fontSize = 13.sp, color = GrisTexto)
+                        }
+                    }
+                    Text(
+                        text = "Puedes enviar los detalles directamente al WhatsApp de ${tienda.nombre} para confirmar con el emprendedor.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GrisTexto
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Text(
+                        text = "1. Selecciona la fecha (Próximos 14 días):",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = NegroApple
+                    )
+
+                    // Carrusel horizontal de días
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        fechas.forEachIndexed { idx, fechaIso ->
+                            val esSeleccionado = fechaIso == fechaSeleccionada
+                            val etiqueta = if (idx == 0) "Hoy" else nombreDiaLegible(fechaIso)
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (esSeleccionado) NegroApple else GrisChip,
+                                border = BorderStroke(1.dp, if (esSeleccionado) NegroApple else GrisBorde),
+                                modifier = Modifier.clickable {
+                                    fechaSeleccionada = fechaIso
+                                    bloqueSeleccionado = null
+                                }
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = etiqueta,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (esSeleccionado) BlancoPuro else NegroApple
+                                    )
+                                    Text(
+                                        text = fechaIso.takeLast(5).replace("-", "/"),
+                                        fontSize = 10.sp,
+                                        color = if (esSeleccionado) Color.White.copy(alpha = 0.8f) else GrisTexto
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = GrisBorde)
+
+                    Text(
+                        text = "2. Horarios disponibles para el ${nombreDiaLegible(fechaSeleccionada)}:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = NegroApple
+                    )
+
+                    if (bloquesDelDia.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = GrisChip,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "No hay bloques creados para este día.",
+                                    fontSize = 12.sp,
+                                    color = GrisTexto
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        listOf("10:00", "11:30", "15:00", "16:30").forEach { hora ->
+                                            TramaStore.agregarHorario(tienda.id, fechaSeleccionada, hora)
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(50.dp),
+                                    border = BorderStroke(1.dp, GrisBorde)
+                                ) {
+                                    Text("+ Generar bloques de prueba", fontSize = 11.sp, color = NegroApple)
+                                }
+                            }
+                        }
+                    } else {
+                        ContenedorChips(
+                            espacioHorizontal = 8.dp,
+                            espacioVertical = 8.dp
+                        ) {
+                            bloquesDelDia.forEach { bloque ->
+                                val esEsteSeleccionado = bloqueSeleccionado?.id == bloque.id
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = when {
+                                        bloque.reservado -> Color(0xFFF3F4F6)
+                                        esEsteSeleccionado -> NegroApple
+                                        else -> BlancoPuro
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        when {
+                                            bloque.reservado -> Color(0xFFE5E7EB)
+                                            esEsteSeleccionado -> NegroApple
+                                            else -> GrisBorde
+                                        }
+                                    ),
+                                    modifier = Modifier.clickable(enabled = !bloque.reservado) {
+                                        bloqueSeleccionado = bloque
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = bloque.hora,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = when {
+                                                bloque.reservado -> GrisTexto
+                                                esEsteSeleccionado -> BlancoPuro
+                                                else -> NegroApple
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = if (bloque.reservado) "(Ocupado)" else "(${bloque.duracion})",
+                                            fontSize = 10.sp,
+                                            color = when {
+                                                bloque.reservado -> Color(0xFF9CA3AF)
+                                                esEsteSeleccionado -> Color.White.copy(alpha = 0.8f)
+                                                else -> GrisTexto
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (bloqueSeleccionado != null) {
+                        HorizontalDivider(color = GrisBorde)
+
+                        Text(
+                            text = "3. Datos para tu reserva:",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            color = NegroApple
+                        )
+
+                        CampoTexto(
+                            valor = nombreCliente,
+                            onValorChange = { nombreCliente = it },
+                            etiqueta = "Tu Nombre Completo"
+                        )
+
+                        CampoTexto(
+                            valor = telefonoCliente,
+                            onValorChange = { telefonoCliente = it },
+                            etiqueta = "Tu Teléfono / WhatsApp",
+                            tipoTeclado = KeyboardType.Phone
+                        )
+
+                        CampoTexto(
+                            valor = servicio,
+                            onValorChange = { servicio = it },
+                            etiqueta = "Servicio o Motivo"
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (reservaConfirmada) {
+                Button(
+                    onClick = {
+                        abrirWhatsApp(
+                            context,
+                            tienda.whatsapp,
+                            "Hola ${tienda.nombre}! Acabo de reservar una hora para el ${nombreDiaLegible(fechaSeleccionada)} a las ${bloqueSeleccionado?.hora ?: ""} (${servicio}) a nombre de $nombreCliente."
+                        )
+                        onDismiss()
+                    },
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = NegroApple)
+                ) {
+                    Text("Avisar por WhatsApp", color = BlancoPuro, fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Button(
+                    onClick = {
+                        val bloque = bloqueSeleccionado
+                        if (bloque != null) {
+                            val exito = TramaStore.reservarHora(
+                                bloqueId = bloque.id,
+                                clienteNombre = nombreCliente,
+                                clienteTelefono = telefonoCliente,
+                                servicio = servicio
+                            )
+                            if (exito) {
+                                reservaConfirmada = true
+                                onCitaConfirmada("¡Cita agendada para el ${nombreDiaLegible(fechaSeleccionada)} a las ${bloque.hora}!")
+                            }
+                        }
+                    },
+                    enabled = bloqueSeleccionado != null && nombreCliente.isNotBlank(),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = NegroApple)
+                ) {
+                    Text("Confirmar Reserva", color = BlancoPuro, fontWeight = FontWeight.Bold)
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(if (reservaConfirmada) "Cerrar" else "Cancelar", color = GrisTexto)
             }
         }
     )

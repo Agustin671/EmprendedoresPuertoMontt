@@ -214,3 +214,15 @@ data class PreferenciasEmprendedora(
     val recordatoriosFeria: Boolean = true,
     val resumenVentas: Boolean = false
 )
+
+data class BloqueHorario(
+    val id: String,
+    val tiendaId: String,
+    val fecha: String,             // Formato YYYY-MM-DD
+    val hora: String,              // Formato HH:mm
+    val duracion: String = "45 min",
+    val reservado: Boolean = false,
+    val clienteNombre: String? = null,
+    val clienteTelefono: String? = null,
+    val servicio: String? = null
+)

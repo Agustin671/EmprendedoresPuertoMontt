@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Inventory2
@@ -38,6 +39,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -57,11 +59,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.trabajodea10.data.BloqueHorario
 import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.NecesidadesTienda
 import androidx.compose.foundation.BorderStroke
 import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.TramaStore
+import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
@@ -291,8 +295,17 @@ fun PantallaTienda(
                 }
             }
 
-            // SECCIÓN 2: DATOS DEL NEGOCIO
-            TituloSeccion(texto = "2. DATOS DE TU NEGOCIO")
+            // GESTIÓN DE AGENDA (Si tieneAgendamiento está activo)
+            if (tieneAgendamiento) {
+                TituloSeccion(texto = "2. GESTIÓN DE AGENDA (PRÓXIMAS 2 SEMANAS)")
+                SeccionGestionAgenda(
+                    tiendaId = tiendaBase.id,
+                    avisar = avisar
+                )
+            }
+
+            // SECCIÓN SIGUIENTE: DATOS DEL NEGOCIO
+            TituloSeccion(texto = if (tieneAgendamiento) "3. DATOS DE TU NEGOCIO" else "2. DATOS DE TU NEGOCIO")
             CampoTexto(valor = nombre, onValorChange = { nombre = it }, etiqueta = "Nombre de la Tienda")
             CampoTexto(valor = rubro, onValorChange = { rubro = it }, etiqueta = "Rubro (ej. Barbería, Minimarket, Artesanía)")
             CampoTexto(valor = sector, onValorChange = { sector = it }, etiqueta = "Sector (ej. Alerce Norte, Alerce Histórico)")
@@ -548,4 +561,301 @@ private fun SelectorColor(
         }
     }
 }
+
+@Composable
+private fun SeccionGestionAgenda(
+    tiendaId: String,
+    avisar: (String) -> Unit
+) {
+    val fechas = remember { TramaStore.proximos14Dias() }
+    var fechaSeleccionada by remember { mutableStateOf(fechas.firstOrNull() ?: "") }
+    var nuevaHora by remember { mutableStateOf("10:00") }
+    var nuevaDuracion by remember { mutableStateOf("45 min") }
+    val servicioDefecto = "Atención General"
+
+    val bloques = TramaStore.horariosDeTienda(tiendaId, fechaSeleccionada)
+
+    Tarjeta {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.CalendarMonth,
+                        contentDescription = null,
+                        tint = RojoAlerce,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Turnos Disponibles",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = NegroApple
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = RojoAlerceContenedor
+                ) {
+                    Text(
+                        text = "14 Días Activos",
+                        color = RojoAlerce,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = "Selecciona un día para revisar reservas o añadir nuevos cupos de atención para tus clientes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextoSecundario
+            )
+
+            // Selector horizontal de fechas (14 días)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                fechas.forEachIndexed { idx, fechaIso ->
+                    val esSeleccionado = fechaIso == fechaSeleccionada
+                    val etiqueta = if (idx == 0) "Hoy" else nombreDiaLegible(fechaIso)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (esSeleccionado) NegroApple else SuperficieVariante,
+                        border = BorderStroke(1.dp, if (esSeleccionado) NegroApple else LineaSuave),
+                        modifier = Modifier.clickable {
+                            fechaSeleccionada = fechaIso
+                        }
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = etiqueta,
+                                fontSize = 11.sp,
+                                fontWeight = if (esSeleccionado) FontWeight.Bold else FontWeight.Medium,
+                                color = if (esSeleccionado) Color.White else NegroApple
+                            )
+                            Text(
+                                text = fechaIso.takeLast(5).replace("-", "/"),
+                                fontSize = 10.sp,
+                                color = if (esSeleccionado) Color.White.copy(alpha = 0.8f) else TextoSecundario
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = LineaSuave)
+
+            Text(
+                text = "Horarios programados para ${nombreDiaLegible(fechaSeleccionada)}:",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = NegroApple
+            )
+
+            if (bloques.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = SuperficieVariante,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "No has configurado turnos para este día. Agrega uno abajo para habilitarlo en tu vitrina.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    bloques.forEach { bloque ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (bloque.reservado) Color(0xFFFEF2F2) else SuperficieVariante,
+                            border = BorderStroke(1.dp, if (bloque.reservado) Color(0xFFFCA5A5) else LineaSuave),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = bloque.hora,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = NegroApple
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "(${bloque.duracion})",
+                                            fontSize = 12.sp,
+                                            color = TextoSecundario
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(50.dp),
+                                            color = if (bloque.reservado) RojoAlerce else VerdeOk
+                                        ) {
+                                            Text(
+                                                text = if (bloque.reservado) "RESERVADO" else "DISPONIBLE",
+                                                color = Color.White,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Black,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+
+                                    if (bloque.reservado) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Cliente: ${bloque.clienteNombre ?: "Paul"} · ${bloque.clienteTelefono ?: ""}",
+                                            fontSize = 11.sp,
+                                            color = NegroApple,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = "Servicio: ${bloque.servicio ?: "Atención"}",
+                                            fontSize = 11.sp,
+                                            color = TextoSecundario
+                                        )
+                                    }
+                                }
+
+                                if (bloque.reservado) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            TramaStore.cancelarReserva(bloque.id)
+                                            avisar("Turno de las ${bloque.hora} liberado")
+                                        },
+                                        shape = RoundedCornerShape(50.dp),
+                                        border = BorderStroke(1.dp, LineaSuave)
+                                    ) {
+                                        Text("Liberar", fontSize = 11.sp, color = NegroApple)
+                                    }
+                                } else {
+                                    IconButton(
+                                        onClick = {
+                                            TramaStore.eliminarHorario(bloque.id)
+                                            avisar("Horario de las ${bloque.hora} eliminado")
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "Eliminar",
+                                            tint = TextoSecundario,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = LineaSuave)
+
+            // Formulario para agregar horario disponible
+            Text(
+                text = "Añadir Horario para ${nombreDiaLegible(fechaSeleccionada)}:",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = NegroApple
+            )
+
+            // Chips con presets rápidos de horas
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf("09:30", "11:00", "12:30", "15:00", "16:30", "18:00").forEach { preset ->
+                    Surface(
+                        shape = RoundedCornerShape(50.dp),
+                        color = if (nuevaHora == preset) NegroApple else SuperficieVariante,
+                        border = BorderStroke(1.dp, LineaSuave),
+                        modifier = Modifier.clickable { nuevaHora = preset }
+                    ) {
+                        Text(
+                            text = preset,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (nuevaHora == preset) Color.White else NegroApple,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    CampoTexto(
+                        valor = nuevaHora,
+                        onValorChange = { nuevaHora = it },
+                        etiqueta = "Hora (ej. 14:00)"
+                    )
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    CampoTexto(
+                        valor = nuevaDuracion,
+                        onValorChange = { nuevaDuracion = it },
+                        etiqueta = "Duración"
+                    )
+                }
+            }
+
+            Button(
+                onClick = {
+                    if (nuevaHora.isNotBlank()) {
+                        TramaStore.agregarHorario(
+                            tiendaId = tiendaId,
+                            fecha = fechaSeleccionada,
+                            hora = nuevaHora.trim(),
+                            duracion = nuevaDuracion.trim().ifBlank { "45 min" },
+                            servicio = servicioDefecto
+                        )
+                        avisar("¡Horario $nuevaHora agregado para ${nombreDiaLegible(fechaSeleccionada)}!")
+                    }
+                },
+                shape = RoundedCornerShape(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(42.dp)
+            ) {
+                Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("+ Agregar este Turno a la Agenda", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            }
+        }
+    }
+}
+
 

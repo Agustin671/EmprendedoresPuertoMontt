@@ -268,11 +268,33 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     )
 
                     mensajeError?.let {
-                        Text(
-                            text = it,
-                            color = RojoAlerce,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = if (it.contains("CONFIGURATION_NOT_FOUND"))
+                                    "Nota de Firebase: Se activó 'Correo/contraseña' en la consola. Si aún propaga, puedes entrar con tu nombre abajo:"
+                                else it,
+                                color = RojoAlerce,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            OutlinedButton(
+                                onClick = {
+                                    val nombre = nombreRegistro.ifBlank { correo.substringBefore("@").ifBlank { "Paul Ferrada" } }
+                                    val rol = if (pestañaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
+                                    FirebaseManager.entrarModoDemo(nombre, rol)
+                                    nav.iniciarSesion(rol)
+                                },
+                                shape = RoundedCornerShape(50.dp),
+                                border = BorderStroke(1.dp, NegroApple),
+                                modifier = Modifier.fillMaxWidth().height(42.dp)
+                            ) {
+                                Text(
+                                    text = "Continuar como ${nombreRegistro.ifBlank { correo.substringBefore("@").ifBlank { "Paul" } }} (Acceso Rápido)",
+                                    color = NegroApple,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
                     }
 
                     mensajeExito?.let {

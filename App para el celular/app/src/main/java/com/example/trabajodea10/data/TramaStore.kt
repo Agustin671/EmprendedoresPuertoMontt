@@ -55,6 +55,24 @@ fun List<Venta>.totalDelMes(): Double {
     return filter { it.fecha.startsWith(mesActual) }.sumOf { it.total }
 }
 
+fun fechaIsoEnDias(diasDesdeHoy: Int): String {
+    val cal = java.util.Calendar.getInstance()
+    cal.add(java.util.Calendar.DAY_OF_YEAR, diasDesdeHoy)
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+    return sdf.format(cal.time)
+}
+
+fun nombreDiaLegible(fechaIso: String): String {
+    return try {
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val date = sdf.parse(fechaIso) ?: return fechaIso
+        val salida = java.text.SimpleDateFormat("EEE d MMM", java.util.Locale("es", "CL"))
+        salida.format(date).replaceFirstChar { it.uppercase() }
+    } catch (_: Throwable) {
+        fechaIso
+    }
+}
+
 object TramaStore {
 
     var rol by mutableStateOf<Rol?>(null)
@@ -80,8 +98,42 @@ object TramaStore {
     // Personas que se anotaron como visitantes a una feria (id de la feria).
     val inscripcionesVisitante = mutableStateListOf<String>()
 
-    // Escala de texto del modo accesible (+A / -A). 1f = tamaño normal.
-    var escalaTexto by mutableStateOf(1f)
+    // Bloques horarios de agendamiento para las próximas 2 semanas
+    val citasHorarios = mutableStateListOf<BloqueHorario>()
+
+    init {
+        generarHorariosIniciales()
+    }
+
+    private fun generarHorariosIniciales() {
+        citasHorarios.clear()
+        val horasBase = listOf("10:00", "11:30", "15:00", "16:30", "18:00")
+        val tiendasConAgenda = listOf("t_barberia_alerce", "emp1", "t_minimarket_rosa")
+        for (i in 0..13) {
+            val fechaIso = fechaIsoEnDias(i)
+            horasBase.forEachIndexed { idx, hora ->
+                val esReservado = (i == 1 && idx == 1) || (i == 3 && idx == 2)
+                tiendasConAgenda.forEach { tId ->
+                    citasHorarios.add(
+                        BloqueHorario(
+                            id = "bloque_${tId}_${fechaIso}_${hora.replace(":", "")}",
+                            tiendaId = tId,
+                            fecha = fechaIso,
+                            hora = hora,
+                            duracion = "45 min",
+                            reservado = esReservado,
+                            clienteNombre = if (esReservado) "Carlos Almonacid" else null,
+                            clienteTelefono = if (esReservado) "+56988887777" else null,
+                            servicio = if (esReservado) "Atención Personalizada" else "Atención General"
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // Escala de texto del modo accesible (+A / -A). 0.90f = tamaño cómodo compacto editorial.
+    var escalaTexto by mutableStateOf(0.90f)
         private set
 
     val emprendedoraActual: Emprendedora
@@ -354,17 +406,77 @@ object TramaStore {
         inscripcionesVisitante.removeAll { it == feriaId }
     }
 
+    // ---------- Agendamiento de horas (Próximas 2 semanas) ----------
+
+    fun horariosDeTienda(tiendaId: String, fecha: String): List<BloqueHorario> {
+        return citasHorarios.filter { it.tiendaId == tiendaId && it.fecha == fecha }
+    }
+
+    fun proximos14Dias(): List<String> {
+        return (0..13).map { fechaIsoEnDias(it) }
+    }
+
+    fun reservarHora(bloqueId: String, clienteNombre: String, clienteTelefono: String, servicio: String): Boolean {
+        val index = citasHorarios.indexOfFirst { it.id == bloqueId }
+        if (index != -1 && !citasHorarios[index].reservado) {
+            val actual = citasHorarios[index]
+            citasHorarios[index] = actual.copy(
+                reservado = true,
+                clienteNombre = clienteNombre.trim().ifBlank { "Cliente Alerce" },
+                clienteTelefono = clienteTelefono.trim().ifBlank { "+56 9 0000 0000" },
+                servicio = servicio.trim().ifBlank { "Atención General" }
+            )
+            return true
+        }
+        return false
+    }
+
+    fun agregarHorario(
+        tiendaId: String,
+        fecha: String,
+        hora: String,
+        duracion: String = "45 min",
+        servicio: String = "Atención General"
+    ): BloqueHorario {
+        val nuevo = BloqueHorario(
+            id = "bloque_${fecha}_${hora.replace(":", "")}_${System.currentTimeMillis() % 1000}",
+            tiendaId = tiendaId,
+            fecha = fecha,
+            hora = hora,
+            duracion = duracion,
+            reservado = false,
+            servicio = servicio
+        )
+        citasHorarios.add(nuevo)
+        return nuevo
+    }
+
+    fun cancelarReserva(bloqueId: String) {
+        val index = citasHorarios.indexOfFirst { it.id == bloqueId }
+        if (index != -1) {
+            citasHorarios[index] = citasHorarios[index].copy(
+                reservado = false,
+                clienteNombre = null,
+                clienteTelefono = null
+            )
+        }
+    }
+
+    fun eliminarHorario(bloqueId: String) {
+        citasHorarios.removeAll { it.id == bloqueId }
+    }
+
     // ---------- Accesibilidad: tamaño de texto ----------
 
     fun aumentarTexto() {
-        escalaTexto = (escalaTexto + 0.15f).coerceAtMost(1.75f)
+        escalaTexto = (escalaTexto + 0.10f).coerceAtMost(1.75f)
     }
 
     fun reducirTexto() {
-        escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(0.85f)
+        escalaTexto = (escalaTexto - 0.10f).coerceAtLeast(0.80f)
     }
 
     fun restablecerTexto() {
-        escalaTexto = 1f
+        escalaTexto = 0.90f
     }
 }
