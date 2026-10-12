@@ -70,8 +70,8 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
         ItemNavegacion(Ruta.EmpTienda, "Tienda", Icons.Filled.Store)
     )
     Rol.VISITANTE -> listOf(
+        ItemNavegacion(Ruta.VisProductos, "Marketplace", Icons.Filled.Store),
         ItemNavegacion(Ruta.VisInicio, "Ferias", Icons.Filled.CalendarMonth),
-        ItemNavegacion(Ruta.VisProductos, "Productos", Icons.Filled.Store),
         ItemNavegacion(Ruta.VisAyuda, "Ayuda", Icons.Filled.Phone)
     )
 }
@@ -109,8 +109,8 @@ class ControladorNavegacion {
         pila.add(
             when (rol) {
                 Rol.ADMIN -> Ruta.AdminInicio
-                Rol.EMPRENDEDORA -> Ruta.EmpInicio
-                Rol.VISITANTE -> Ruta.VisInicio
+                Rol.EMPRENDEDORA -> Ruta.EmpTienda
+                Rol.VISITANTE -> Ruta.VisProductos
             }
         )
     }

@@ -34,6 +34,7 @@ import com.example.trabajodea10.ui.navegacion.BarraInferior
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.navegacion.rememberControladorNavegacion
+import com.example.trabajodea10.ui.publico.PantallaMarketplace
 import com.example.trabajodea10.ui.publico.PantallaVisAyuda
 import com.example.trabajodea10.ui.publico.PantallaVisFerias
 import com.example.trabajodea10.ui.publico.PantallaVisProductos
@@ -162,7 +163,7 @@ private fun ContenidoSegunRuta(
         )
 
         Ruta.VisInicio -> PantallaVisFerias(avisar = avisar)
-        Ruta.VisProductos -> PantallaVisProductos()
+        Ruta.VisProductos -> PantallaMarketplace(avisar = avisar)
         Ruta.VisAyuda -> PantallaVisAyuda()
     }
 }

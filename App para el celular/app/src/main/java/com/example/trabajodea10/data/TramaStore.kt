@@ -7,10 +7,10 @@ import androidx.compose.runtime.setValue
 import java.text.NumberFormat
 import java.util.Locale
 
-private val localeAR = Locale("es", "AR")
+private val localeCL = Locale.forLanguageTag("es-CL")
 
 fun formatearMoneda(valor: Double): String {
-    val formato = NumberFormat.getNumberInstance(localeAR)
+    val formato = NumberFormat.getNumberInstance(localeCL)
     formato.maximumFractionDigits = 0
     return "$ " + formato.format(valor)
 }

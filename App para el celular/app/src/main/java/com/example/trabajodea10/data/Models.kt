@@ -124,21 +124,88 @@ data class Venta(
     val total: Double
 )
 
+data class NecesidadesTienda(
+    val tieneStock: Boolean = true,
+    val tieneAgendamiento: Boolean = false,
+    val tieneVentaPorWhatsApp: Boolean = true,
+    val tieneProductosAPedido: Boolean = false,
+    val participaEnFerias: Boolean = true,
+    val tieneForoComunidad: Boolean = false
+) {
+    fun toMap(): Map<String, Any> = mapOf(
+        "tieneStock" to tieneStock,
+        "tieneAgendamiento" to tieneAgendamiento,
+        "tieneVentaPorWhatsApp" to tieneVentaPorWhatsApp,
+        "tieneProductosAPedido" to tieneProductosAPedido,
+        "participaEnFerias" to participaEnFerias,
+        "tieneForoComunidad" to tieneForoComunidad
+    )
+
+    companion object {
+        fun fromMap(map: Map<String, Any?>): NecesidadesTienda {
+            return NecesidadesTienda(
+                tieneStock = (map["tieneStock"] as? Boolean) ?: true,
+                tieneAgendamiento = (map["tieneAgendamiento"] as? Boolean) ?: false,
+                tieneVentaPorWhatsApp = (map["tieneVentaPorWhatsApp"] as? Boolean) ?: true,
+                tieneProductosAPedido = (map["tieneProductosAPedido"] as? Boolean) ?: false,
+                participaEnFerias = (map["participaEnFerias"] as? Boolean) ?: true,
+                tieneForoComunidad = (map["tieneForoComunidad"] as? Boolean) ?: false
+            )
+        }
+    }
+}
+
 data class Tienda(
-    val nombre: String,
-    val bio: String,
-    val whatsapp: String,
-    val instagram: String,
-    val colorPortada: Long,
-    val colorLogo: Long
-)
+    val id: String = "emp1",
+    val nombre: String = "Mi Tienda",
+    val rubro: String = "Artesanía y Comercio",
+    val sector: String = "Alerce",
+    val bio: String = "",
+    val whatsapp: String = "+56 9 1234 5678",
+    val instagram: String = "@tienda.alerce",
+    val colorPortada: Long = 0xFF5C315B,
+    val colorLogo: Long = 0xFF2E7D5B,
+    val necesidades: NecesidadesTienda = NecesidadesTienda()
+) {
+    fun toMap(): Map<String, Any> = mapOf(
+        "id" to id,
+        "nombre" to nombre,
+        "rubro" to rubro,
+        "sector" to sector,
+        "bio" to bio,
+        "whatsapp" to whatsapp,
+        "instagram" to instagram,
+        "colorPortada" to colorPortada,
+        "colorLogo" to colorLogo,
+        "necesidades" to necesidades.toMap()
+    )
+
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        fun fromMap(id: String, map: Map<String, Any?>): Tienda {
+            val necMap = map["necesidades"] as? Map<String, Any?> ?: emptyMap()
+            return Tienda(
+                id = id,
+                nombre = (map["nombre"] as? String) ?: "Comercio Local",
+                rubro = (map["rubro"] as? String) ?: "Comercio",
+                sector = (map["sector"] as? String) ?: "Alerce",
+                bio = (map["bio"] as? String) ?: "",
+                whatsapp = (map["whatsapp"] as? String) ?: "+56 9 1234 5678",
+                instagram = (map["instagram"] as? String) ?: "",
+                colorPortada = (map["colorPortada"] as? Number)?.toLong() ?: 0xFF5C315B,
+                colorLogo = (map["colorLogo"] as? Number)?.toLong() ?: 0xFF2E7D5B,
+                necesidades = NecesidadesTienda.fromMap(necMap)
+            )
+        }
+    }
+}
 
 data class ConfigSistema(
-    val moneda: String = "ARS – Peso argentino",
-    val zonaHoraria: String = "America/Argentina/Buenos_Aires",
+    val moneda: String = "CLP – Peso chileno",
+    val zonaHoraria: String = "America/Santiago",
     val registroPublico: Boolean = true,
     val catalogoPublico: Boolean = true,
-    val chatDirecto: Boolean = false,
+    val chatDirecto: Boolean = true,
     val feriasPublicas: Boolean = true
 )
 
