@@ -80,7 +80,7 @@ class ControladorNavegacion {
 
     val pila = mutableStateListOf<Ruta>(Ruta.Login)
 
-    val actual: Ruta get() = pila.last()
+    val actual: Ruta get() = pila.lastOrNull() ?: Ruta.Login
 
     fun irA(ruta: Ruta) {
         if (actual != ruta) pila.add(ruta)
@@ -88,7 +88,7 @@ class ControladorNavegacion {
 
     fun volver() {
         if (pila.size <= 1) return
-        val saliente = pila.last()
+        val saliente = pila.lastOrNull() ?: return
         pila.removeAt(pila.lastIndex)
         when (saliente) {
             is Ruta.FeriaDetalle -> TramaStore.descartarSiEstaVacio(saliente.feriaId)
@@ -99,26 +99,43 @@ class ControladorNavegacion {
 
     fun seleccionarTab(ruta: Ruta) {
         if (actual == ruta) return
-        pila.clear()
-        pila.add(ruta)
+        if (pila.isNotEmpty()) {
+            pila[0] = ruta
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
+            }
+        } else {
+            pila.add(ruta)
+        }
     }
 
     fun iniciarSesion(rol: Rol) {
         TramaStore.iniciarSesion(rol)
-        pila.clear()
-        pila.add(
-            when (rol) {
-                Rol.ADMIN -> Ruta.AdminInicio
-                Rol.EMPRENDEDORA -> Ruta.EmpTienda
-                Rol.VISITANTE -> Ruta.VisProductos
+        val destino = when (rol) {
+            Rol.ADMIN -> Ruta.AdminInicio
+            Rol.EMPRENDEDORA -> Ruta.EmpTienda
+            Rol.VISITANTE -> Ruta.VisProductos
+        }
+        if (pila.isNotEmpty()) {
+            pila[0] = destino
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
             }
-        )
+        } else {
+            pila.add(destino)
+        }
     }
 
     fun cerrarSesion() {
         TramaStore.cerrarSesion()
-        pila.clear()
-        pila.add(Ruta.Login)
+        if (pila.isNotEmpty()) {
+            pila[0] = Ruta.Login
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
+            }
+        } else {
+            pila.add(Ruta.Login)
+        }
     }
 }
 

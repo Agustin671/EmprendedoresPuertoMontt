@@ -15,8 +15,11 @@ object FirebaseManager {
     private const val TAG = "FirebaseManager"
     private const val COLECCION_TIENDAS = "tiendas"
 
-    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val auth: FirebaseAuth?
+        get() = runCatching { FirebaseAuth.getInstance() }.getOrNull()
+
+    private val firestore: FirebaseFirestore?
+        get() = runCatching { FirebaseFirestore.getInstance() }.getOrNull()
 
     // Estado reactivo de usuario actual
     var usuarioActual by mutableStateOf<FirebaseUser?>(null)
@@ -118,32 +121,38 @@ object FirebaseManager {
         // Inicializar tiendas en memoria con el set representativo de Alerce
         tiendas.clear()
         tiendas.addAll(TIENDAS_INICIALES_ALERCE)
-        usuarioActual = auth.currentUser
+        try {
+            usuarioActual = auth?.currentUser
+        } catch (e: Throwable) {
+            Log.w(TAG, "No se pudo leer currentUser de Auth: ${e.message}")
+        }
     }
 
     // ---------- Autenticación con Firebase Auth ----------
 
     suspend fun iniciarSesion(correo: String, clave: String): Result<FirebaseUser> {
+        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible en este dispositivo"))
         return try {
-            val resultado = auth.signInWithEmailAndPassword(correo.trim(), clave).await()
+            val resultado = fAuth.signInWithEmailAndPassword(correo.trim(), clave).await()
             val user = resultado.user
             usuarioActual = user
             nombreUsuarioDemo = user?.displayName ?: correo.substringBefore("@").replaceFirstChar { it.uppercase() }
             Result.success(user!!)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "Error iniciando sesión en Firebase Auth: ${e.message}")
             Result.failure(e)
         }
     }
 
     suspend fun registrarUsuario(correo: String, clave: String, nombre: String): Result<FirebaseUser> {
+        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible en este dispositivo"))
         return try {
-            val resultado = auth.createUserWithEmailAndPassword(correo.trim(), clave).await()
+            val resultado = fAuth.createUserWithEmailAndPassword(correo.trim(), clave).await()
             val user = resultado.user
             usuarioActual = user
             nombreUsuarioDemo = nombre.ifBlank { correo.substringBefore("@") }
             Result.success(user!!)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "Error registrando usuario en Firebase Auth: ${e.message}")
             Result.failure(e)
         }
@@ -151,13 +160,19 @@ object FirebaseManager {
 
     fun entrarModoDemo(nombre: String, rol: Rol) {
         nombreUsuarioDemo = nombre
+        if (rol == Rol.EMPRENDEDORA) {
+            val tiendaDemo = TIENDAS_INICIALES_ALERCE.find { it.id == "t_minimarket_rosa" }
+            if (tiendaDemo != null) {
+                TramaStore.guardarTienda(tiendaDemo)
+            }
+        }
         TramaStore.iniciarSesion(rol)
     }
 
     fun cerrarSesion() {
         try {
-            auth.signOut()
-        } catch (e: Exception) {
+            auth?.signOut()
+        } catch (e: Throwable) {
             Log.w(TAG, "Error al cerrar sesión en Auth: ${e.message}")
         }
         usuarioActual = null
@@ -169,8 +184,14 @@ object FirebaseManager {
     suspend fun cargarTiendasDesdeFirestore(): List<Tienda> {
         cargando = true
         mensajeError = null
+        val fStore = firestore
+        if (fStore == null) {
+            mensajeError = "Modo Local Alerce (Firebase desconectado)"
+            cargando = false
+            return tiendas
+        }
         return try {
-            val snapshot = firestore.collection(COLECCION_TIENDAS).get().await()
+            val snapshot = fStore.collection(COLECCION_TIENDAS).get().await()
             if (snapshot.isEmpty) {
                 Log.d(TAG, "Colección 'tiendas' vacía en Firestore. Sembrando 4 tiendas de Alerce...")
                 sembrarTiendasIniciales()
@@ -187,8 +208,8 @@ object FirebaseManager {
                 cargando = false
                 resultado
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "No se pudo conectar a Firestore (offline o reglas): ${e.message}. Usando datos locales de Alerce.")
+        } catch (e: Throwable) {
+            Log.w(TAG, "No se pudo conectar a Firestore: ${e.message}. Usando datos locales de Alerce.")
             mensajeError = "Modo sin conexión: mostrando tiendas locales de Alerce."
             cargando = false
             if (tiendas.isEmpty()) {
@@ -199,16 +220,17 @@ object FirebaseManager {
     }
 
     suspend fun sembrarTiendasIniciales(): Boolean {
+        val fStore = firestore ?: return false
         return try {
-            val batch = firestore.batch()
+            val batch = fStore.batch()
             TIENDAS_INICIALES_ALERCE.forEach { t ->
-                val ref = firestore.collection(COLECCION_TIENDAS).document(t.id)
+                val ref = fStore.collection(COLECCION_TIENDAS).document(t.id)
                 batch.set(ref, t.toMap())
             }
             batch.commit().await()
             Log.d(TAG, "4 tiendas sembradas exitosamente en Firestore")
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "Error sembrando tiendas en Firestore: ${e.message}")
             false
         }
@@ -224,14 +246,15 @@ object FirebaseManager {
         }
         TramaStore.guardarTienda(tienda)
 
+        val fStore = firestore ?: return false
         return try {
-            firestore.collection(COLECCION_TIENDAS)
+            fStore.collection(COLECCION_TIENDAS)
                 .document(tienda.id)
                 .set(tienda.toMap())
                 .await()
             Log.d(TAG, "Tienda ${tienda.id} guardada en Firestore")
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.w(TAG, "Error guardando en Firestore (se mantuvo localmente): ${e.message}")
             false
         }
