@@ -68,7 +68,9 @@ data class Feria(
     val precioEntrada: Double,
     val estado: EstadoFeria,
     val participaciones: List<Participacion> = emptyList(),
-    val organizadora: String = "Red Trama"
+    val organizadora: String = "Red Trama",
+    val fotoUrl: String? = null,
+    val estiloMapa: String = "Satelital"
 )
 
 @Serializable
@@ -101,6 +103,7 @@ data class Variante(
 @Serializable
 data class Producto(
     val id: String,
+    val tiendaId: String = "emp1",
     val nombre: String,
     val categoria: Categoria,
     val precio: Double,
@@ -135,14 +138,83 @@ data class Venta(
 )
 
 @Serializable
+data class NecesidadesTienda(
+    val tieneStock: Boolean = true,
+    val tieneAgendamiento: Boolean = false,
+    val tieneVentaPorWhatsApp: Boolean = true,
+    val tieneProductosAPedido: Boolean = false,
+    val participaEnFerias: Boolean = true,
+    val tieneForoComunidad: Boolean = false
+) {
+    fun toMap(): Map<String, Any> = mapOf(
+        "tieneStock" to tieneStock,
+        "tieneAgendamiento" to tieneAgendamiento,
+        "tieneVentaPorWhatsApp" to tieneVentaPorWhatsApp,
+        "tieneProductosAPedido" to tieneProductosAPedido,
+        "participaEnFerias" to participaEnFerias,
+        "tieneForoComunidad" to tieneForoComunidad
+    )
+
+    companion object {
+        fun fromMap(map: Map<String, Any?>): NecesidadesTienda {
+            return NecesidadesTienda(
+                tieneStock = (map["tieneStock"] as? Boolean) ?: true,
+                tieneAgendamiento = (map["tieneAgendamiento"] as? Boolean) ?: false,
+                tieneVentaPorWhatsApp = (map["tieneVentaPorWhatsApp"] as? Boolean) ?: true,
+                tieneProductosAPedido = (map["tieneProductosAPedido"] as? Boolean) ?: false,
+                participaEnFerias = (map["participaEnFerias"] as? Boolean) ?: true,
+                tieneForoComunidad = (map["tieneForoComunidad"] as? Boolean) ?: false
+            )
+        }
+    }
+}
+
+@Serializable
 data class Tienda(
-    val nombre: String,
-    val bio: String,
-    val whatsapp: String,
-    val instagram: String,
-    val colorPortada: Long,
-    val colorLogo: Long
-)
+data class Tienda(
+    val id: String = "emp1",
+    val nombre: String = "Mi Tienda",
+    val rubro: String = "Artesanía y Comercio",
+    val sector: String = "Alerce",
+    val bio: String = "",
+    val whatsapp: String = "+56 9 1234 5678",
+    val instagram: String = "@tienda.alerce",
+    val colorPortada: Long = 0xFF5C315B,
+    val colorLogo: Long = 0xFF2E7D5B,
+    val necesidades: NecesidadesTienda = NecesidadesTienda()
+) {
+    fun toMap(): Map<String, Any> = mapOf(
+        "id" to id,
+        "nombre" to nombre,
+        "rubro" to rubro,
+        "sector" to sector,
+        "bio" to bio,
+        "whatsapp" to whatsapp,
+        "instagram" to instagram,
+        "colorPortada" to colorPortada,
+        "colorLogo" to colorLogo,
+        "necesidades" to necesidades.toMap()
+    )
+
+    companion object {
+        @Suppress("UNCHECKED_CAST")
+        fun fromMap(id: String, map: Map<String, Any?>): Tienda {
+            val necMap = map["necesidades"] as? Map<String, Any?> ?: emptyMap()
+            return Tienda(
+                id = id,
+                nombre = (map["nombre"] as? String) ?: "Comercio Local",
+                rubro = (map["rubro"] as? String) ?: "Comercio",
+                sector = (map["sector"] as? String) ?: "Alerce",
+                bio = (map["bio"] as? String) ?: "",
+                whatsapp = (map["whatsapp"] as? String) ?: "+56 9 1234 5678",
+                instagram = (map["instagram"] as? String) ?: "",
+                colorPortada = (map["colorPortada"] as? Number)?.toLong() ?: 0xFF5C315B,
+                colorLogo = (map["colorLogo"] as? Number)?.toLong() ?: 0xFF2E7D5B,
+                necesidades = NecesidadesTienda.fromMap(necMap)
+            )
+        }
+    }
+}
 
 @Serializable
 data class ConfigSistema(
@@ -150,7 +222,7 @@ data class ConfigSistema(
     val zonaHoraria: String = "America/Santiago",
     val registroPublico: Boolean = true,
     val catalogoPublico: Boolean = true,
-    val chatDirecto: Boolean = false,
+    val chatDirecto: Boolean = true,
     val feriasPublicas: Boolean = true
 )
 
@@ -179,4 +251,35 @@ data class EstadoApp(
     val prefs: PreferenciasEmprendedora = PreferenciasEmprendedora(),
     val inscripcionesVisitante: List<String> = emptyList(),
     val escalaTexto: Float = 1f
+)
+
+data class BloqueHorario(
+    val id: String,
+    val tiendaId: String,
+    val fecha: String,             // Formato YYYY-MM-DD
+    val hora: String,              // Formato HH:mm
+    val duracion: String = "45 min",
+    val reservado: Boolean = false,
+    val clienteNombre: String? = null,
+    val clienteTelefono: String? = null,
+    val servicio: String? = null
+)
+
+data class RespuestaForo(
+    val id: String,
+    val autorNombre: String,
+    val esEmprendedor: Boolean = false,
+    val texto: String,
+    val fecha: String
+)
+
+data class PublicacionForo(
+    val id: String,
+    val tiendaId: String,
+    val autorNombre: String,
+    val esEmprendedor: Boolean = false,
+    val texto: String,
+    val fecha: String,
+    val respuestas: List<RespuestaForo> = emptyList()
+)
 )

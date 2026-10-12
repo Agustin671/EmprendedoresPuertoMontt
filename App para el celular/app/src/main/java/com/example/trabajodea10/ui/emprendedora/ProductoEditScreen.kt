@@ -339,7 +339,8 @@ private fun HojaNuevaVariante(
     onCerrar: () -> Unit,
     onAgregar: (String, Int) -> Unit
 ) {
-    var nombreVariante by remember { mutableStateOf("") }
+    var color by remember { mutableStateOf("") }
+    var talla by remember { mutableStateOf("") }
     var stock by remember { mutableStateOf("1") }
 
     ModalBottomSheet(
@@ -356,12 +357,22 @@ private fun HojaNuevaVariante(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TituloSeccion(texto = "Nueva variante", accion = "Cerrar", onAccion = onCerrar)
-            CampoTexto(
-                valor = nombreVariante,
-                onValorChange = { nombreVariante = it },
-                etiqueta = "Color / talle",
-                placeholder = "Verde / M"
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                CampoTexto(
+                    valor = color,
+                    onValorChange = { color = it },
+                    etiqueta = "Color",
+                    placeholder = "Ej: Negro, Café",
+                    modifier = Modifier.weight(1f)
+                )
+                CampoTexto(
+                    valor = talla,
+                    onValorChange = { talla = it },
+                    etiqueta = "Talla o Medida",
+                    placeholder = "Ej: M, L, 42",
+                    modifier = Modifier.weight(1f)
+                )
+            }
             CampoTexto(
                 valor = stock,
                 onValorChange = { stock = it.filter { c -> c.isDigit() } },
@@ -370,7 +381,11 @@ private fun HojaNuevaVariante(
             )
             BotonPrimario(
                 texto = "Agregar",
-                onClick = { onAgregar(nombreVariante, stock.toIntOrNull() ?: 0) }
+                onClick = {
+                    val partes = listOf(color.trim(), talla.trim()).filter { it.isNotBlank() }
+                    val nombreFinal = if (partes.isEmpty()) "Estándar" else partes.joinToString(" · ")
+                    onAgregar(nombreFinal, stock.toIntOrNull() ?: 1)
+                }
             )
         }
     }

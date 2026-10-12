@@ -6,10 +6,9 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
-import androidx.compose.material.icons.filled.EventAvailable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -65,13 +64,13 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
     Rol.EMPRENDEDORA -> listOf(
         ItemNavegacion(Ruta.EmpInicio, "Inicio", Icons.Filled.Home),
         ItemNavegacion(Ruta.EmpCatalogo, "Catálogo", Icons.Filled.Inventory2),
-        ItemNavegacion(Ruta.EmpVenta, "Venta", Icons.Filled.PointOfSale),
-        ItemNavegacion(Ruta.EmpFerias, "Ferias", Icons.Filled.EventAvailable),
+        ItemNavegacion(Ruta.EmpVenta, "Venta", Icons.Filled.ShoppingCart),
+        ItemNavegacion(Ruta.EmpFerias, "Ferias", Icons.Filled.CalendarMonth),
         ItemNavegacion(Ruta.EmpTienda, "Tienda", Icons.Filled.Store)
     )
     Rol.VISITANTE -> listOf(
+        ItemNavegacion(Ruta.VisProductos, "Marketplace", Icons.Filled.Store),
         ItemNavegacion(Ruta.VisInicio, "Ferias", Icons.Filled.CalendarMonth),
-        ItemNavegacion(Ruta.VisProductos, "Productos", Icons.Filled.Store),
         ItemNavegacion(Ruta.VisAyuda, "Ayuda", Icons.Filled.Phone)
     )
 }
@@ -80,7 +79,7 @@ class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
 
     val pila = mutableStateListOf<Ruta>(rutaInicial)
 
-    val actual: Ruta get() = pila.last()
+    val actual: Ruta get() = pila.lastOrNull() ?: Ruta.Login
 
     fun irA(ruta: Ruta) {
         if (actual != ruta) pila.add(ruta)
@@ -88,7 +87,7 @@ class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
 
     fun volver() {
         if (pila.size <= 1) return
-        val saliente = pila.last()
+        val saliente = pila.lastOrNull() ?: return
         pila.removeAt(pila.lastIndex)
         when (saliente) {
             is Ruta.FeriaDetalle -> TramaStore.descartarSiEstaVacio(saliente.feriaId)
@@ -99,26 +98,43 @@ class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
 
     fun seleccionarTab(ruta: Ruta) {
         if (actual == ruta) return
-        pila.clear()
-        pila.add(ruta)
+        if (pila.isNotEmpty()) {
+            pila[0] = ruta
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
+            }
+        } else {
+            pila.add(ruta)
+        }
     }
 
     fun iniciarSesion(rol: Rol) {
         TramaStore.iniciarSesion(rol)
-        pila.clear()
-        pila.add(
-            when (rol) {
-                Rol.ADMIN -> Ruta.AdminInicio
-                Rol.EMPRENDEDORA -> Ruta.EmpInicio
-                Rol.VISITANTE -> Ruta.VisInicio
+        val destino = when (rol) {
+            Rol.ADMIN -> Ruta.AdminInicio
+            Rol.EMPRENDEDORA -> Ruta.EmpTienda
+            Rol.VISITANTE -> Ruta.VisProductos
+        }
+        if (pila.isNotEmpty()) {
+            pila[0] = destino
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
             }
-        )
+        } else {
+            pila.add(destino)
+        }
     }
 
     fun cerrarSesion() {
         TramaStore.cerrarSesion()
-        pila.clear()
-        pila.add(Ruta.Login)
+        if (pila.isNotEmpty()) {
+            pila[0] = Ruta.Login
+            while (pila.size > 1) {
+                pila.removeAt(pila.lastIndex)
+            }
+        } else {
+            pila.add(Ruta.Login)
+        }
     }
 }
 

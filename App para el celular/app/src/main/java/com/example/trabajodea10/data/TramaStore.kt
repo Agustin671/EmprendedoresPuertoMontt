@@ -9,7 +9,7 @@ import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
 
-private val localeCL = Locale("es", "CL")
+private val localeCL = Locale.forLanguageTag("es-CL")
 
 fun formatearMoneda(valor: Double): String {
     val formato = NumberFormat.getNumberInstance(localeCL)
@@ -76,6 +76,24 @@ fun List<Venta>.totalDelMes(): Double {
     return filter { it.fecha.startsWith(mes) }.sumOf { it.total }
 }
 
+fun fechaIsoEnDias(diasDesdeHoy: Int): String {
+    val cal = java.util.Calendar.getInstance()
+    cal.add(java.util.Calendar.DAY_OF_YEAR, diasDesdeHoy)
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+    return sdf.format(cal.time)
+}
+
+fun nombreDiaLegible(fechaIso: String): String {
+    return try {
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        val date = sdf.parse(fechaIso) ?: return fechaIso
+        val salida = java.text.SimpleDateFormat("EEE d MMM", java.util.Locale("es", "CL"))
+        salida.format(date).replaceFirstChar { it.uppercase() }
+    } catch (_: Throwable) {
+        fechaIso
+    }
+}
+
 object TramaStore {
 
     var rol by mutableStateOf<Rol?>(null)
@@ -101,8 +119,104 @@ object TramaStore {
     // Personas que se anotaron como visitantes a una feria (id de la feria).
     val inscripcionesVisitante = mutableStateListOf<String>()
 
-    // Escala de texto del modo accesible (+A / -A). 1f = tamaño normal.
-    var escalaTexto by mutableStateOf(1f)
+    // Bloques horarios de agendamiento para las próximas 2 semanas
+    val citasHorarios = mutableStateListOf<BloqueHorario>()
+
+    // Publicaciones del muro y foro de comunidad
+    val publicacionesForo = mutableStateListOf<PublicacionForo>()
+
+    init {
+        generarHorariosIniciales()
+        generarPublicacionesForoIniciales()
+    }
+
+    private fun generarHorariosIniciales() {
+        citasHorarios.clear()
+        val horasBase = listOf("10:00", "11:30", "15:00", "16:30", "18:00")
+        val tiendasConAgenda = listOf("t_barberia_alerce", "emp1", "t_minimarket_rosa")
+        for (i in 0..13) {
+            val fechaIso = fechaIsoEnDias(i)
+            horasBase.forEachIndexed { idx, hora ->
+                val esReservado = (i == 1 && idx == 1) || (i == 3 && idx == 2)
+                tiendasConAgenda.forEach { tId ->
+                    citasHorarios.add(
+                        BloqueHorario(
+                            id = "bloque_${tId}_${fechaIso}_${hora.replace(":", "")}",
+                            tiendaId = tId,
+                            fecha = fechaIso,
+                            hora = hora,
+                            duracion = "45 min",
+                            reservado = esReservado,
+                            clienteNombre = if (esReservado) "Carlos Almonacid" else null,
+                            clienteTelefono = if (esReservado) "+56988887777" else null,
+                            servicio = if (esReservado) "Atención Personalizada" else "Atención General"
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun generarPublicacionesForoIniciales() {
+        publicacionesForo.clear()
+        publicacionesForo.addAll(
+            listOf(
+                PublicacionForo(
+                    id = "pub_rosa_1",
+                    tiendaId = "t_minimarket_rosa",
+                    autorNombre = "Minimarket Doña Rosa",
+                    esEmprendedor = true,
+                    texto = "🥖 ¡Aviso a los vecinos de Alerce! Acaba de salir la primera tanda de pan amasado bien calentito y recibimos huevos frescos de campo. ¡Los esperamos!",
+                    fecha = "Hoy, 16:30",
+                    respuestas = listOf(
+                        RespuestaForo(
+                            id = "resp_rosa_1_1",
+                            autorNombre = "Paul M.",
+                            esEmprendedor = false,
+                            texto = "¿Doña Rosa, le queda queso de campo artesanal para acompañar el pancito?",
+                            fecha = "Hoy, 16:45"
+                        ),
+                        RespuestaForo(
+                            id = "resp_rosa_1_2",
+                            autorNombre = "Minimarket Doña Rosa",
+                            esEmprendedor = true,
+                            texto = "¡Hola Paul! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Te guardo una si gustas.",
+                            fecha = "Hoy, 16:50"
+                        )
+                    )
+                ),
+                PublicacionForo(
+                    id = "pub_rosa_2",
+                    tiendaId = "t_minimarket_rosa",
+                    autorNombre = "Marta Gómez",
+                    esEmprendedor = false,
+                    texto = "¿Vecina Doña Rosa, hasta qué hora atiende hoy domingo? Necesito pasar por abarrotes y bebidas para la once familiar.",
+                    fecha = "Ayer, 18:20",
+                    respuestas = listOf(
+                        RespuestaForo(
+                            id = "resp_rosa_2_1",
+                            autorNombre = "Minimarket Doña Rosa",
+                            esEmprendedor = true,
+                            texto = "¡Hola Marta! Atendemos de corrido hasta las 21:30 hrs todos los días.",
+                            fecha = "Ayer, 18:35"
+                        )
+                    )
+                ),
+                PublicacionForo(
+                    id = "pub_barberia_1",
+                    tiendaId = "t_barberia_alerce",
+                    autorNombre = "Barbería & Estilo Alerce",
+                    esEmprendedor = true,
+                    texto = "💈 Vecinos, esta semana abrimos turnos especiales para corte degradado y perfilado de barba. Recuerden reservar su hora en la app.",
+                    fecha = "Hoy, 11:00",
+                    respuestas = emptyList()
+                )
+            )
+        )
+    }
+
+    // Escala de texto del modo accesible (+A / -A). 0.90f = tamaño cómodo compacto editorial.
+    var escalaTexto by mutableStateOf(0.90f)
         private set
 
     val emprendedoraActual: Emprendedora
@@ -301,6 +415,12 @@ object TramaStore {
 
     fun productoPorId(id: String): Producto? = productos.firstOrNull { it.id == id }
 
+    fun productosDeTienda(tiendaId: String): List<Producto> {
+        val prods = productos.filter { it.tiendaId == tiendaId && it.publicado }
+        if (prods.isNotEmpty()) return prods
+        return productos.filter { it.publicado }.take(4)
+    }
+
     fun crearProductoBorrador(): String {
         val id = "p${System.currentTimeMillis()}"
         productos.add(
@@ -460,6 +580,120 @@ object TramaStore {
         persistir()
     }
 
+    // ---------- Agendamiento de horas (Próximas 2 semanas) ----------
+
+    fun horariosDeTienda(tiendaId: String, fecha: String): List<BloqueHorario> {
+        return citasHorarios.filter { it.tiendaId == tiendaId && it.fecha == fecha }
+    }
+
+    fun proximos14Dias(): List<String> {
+        return (0..13).map { fechaIsoEnDias(it) }
+    }
+
+    fun reservarHora(bloqueId: String, clienteNombre: String, clienteTelefono: String, servicio: String): Boolean {
+        val index = citasHorarios.indexOfFirst { it.id == bloqueId }
+        if (index != -1 && !citasHorarios[index].reservado) {
+            val actual = citasHorarios[index]
+            citasHorarios[index] = actual.copy(
+                reservado = true,
+                clienteNombre = clienteNombre.trim().ifBlank { "Cliente Alerce" },
+                clienteTelefono = clienteTelefono.trim().ifBlank { "+56 9 0000 0000" },
+                servicio = servicio.trim().ifBlank { "Atención General" }
+            )
+            return true
+        }
+        return false
+    }
+
+    fun agregarHorario(
+        tiendaId: String,
+        fecha: String,
+        hora: String,
+        duracion: String = "45 min",
+        servicio: String = "Atención General"
+    ): BloqueHorario {
+        val nuevo = BloqueHorario(
+            id = "bloque_${fecha}_${hora.replace(":", "")}_${System.currentTimeMillis() % 1000}",
+            tiendaId = tiendaId,
+            fecha = fecha,
+            hora = hora,
+            duracion = duracion,
+            reservado = false,
+            servicio = servicio
+        )
+        citasHorarios.add(nuevo)
+        return nuevo
+    }
+
+    fun cancelarReserva(bloqueId: String) {
+        val index = citasHorarios.indexOfFirst { it.id == bloqueId }
+        if (index != -1) {
+            citasHorarios[index] = citasHorarios[index].copy(
+                reservado = false,
+                clienteNombre = null,
+                clienteTelefono = null
+            )
+        }
+    }
+
+    fun eliminarHorario(bloqueId: String) {
+        citasHorarios.removeAll { it.id == bloqueId }
+    }
+
+    // ---------- Muro y Foro Comunitario ----------
+
+    var versionForo by mutableStateOf(0)
+        private set
+
+    fun publicacionesDeTienda(tiendaId: String): List<PublicacionForo> {
+        @Suppress("UNUSED_VARIABLE")
+        val v = versionForo
+        return publicacionesForo.filter { it.tiendaId == tiendaId }
+    }
+
+    fun agregarPublicacionForo(
+        tiendaId: String,
+        autorNombre: String,
+        esEmprendedor: Boolean,
+        texto: String
+    ): PublicacionForo {
+        val nueva = PublicacionForo(
+            id = "pub_${tiendaId}_${System.currentTimeMillis()}",
+            tiendaId = tiendaId,
+            autorNombre = autorNombre,
+            esEmprendedor = esEmprendedor,
+            texto = texto,
+            fecha = "Recién",
+            respuestas = emptyList()
+        )
+        publicacionesForo.add(0, nueva)
+        versionForo++
+        return nueva
+    }
+
+    fun responderPublicacionForo(
+        publicacionId: String,
+        autorNombre: String,
+        esEmprendedor: Boolean,
+        texto: String
+    ) {
+        val index = publicacionesForo.indexOfFirst { it.id == publicacionId }
+        if (index != -1) {
+            val actual = publicacionesForo[index]
+            val nuevaResp = RespuestaForo(
+                id = "resp_${System.currentTimeMillis()}",
+                autorNombre = autorNombre,
+                esEmprendedor = esEmprendedor,
+                texto = texto,
+                fecha = "Recién"
+            )
+            publicacionesForo[index] = actual.copy(
+                respuestas = actual.respuestas + nuevaResp
+            )
+            versionForo++
+        }
+    }
+
     // ---------- Accesibilidad: tamaño de texto ----------
 
     fun aumentarTexto() {
@@ -493,5 +727,6 @@ object TramaStore {
         inscripcionesVisitante.clear()
         escalaTexto = 1f
         persistir()
+    }
     }
 }

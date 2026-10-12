@@ -43,6 +43,9 @@ import com.example.trabajodea10.ui.componentes.Vacio
 import com.example.trabajodea10.ui.componentes.colorDeFeria
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
+import androidx.compose.foundation.background
+import com.example.trabajodea10.ui.theme.FondoLimpio
+import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
 
@@ -55,13 +58,17 @@ fun PantallaAdminFerias(
     val todas = TramaStore.ferias
     val visibles = if (filtro == null) todas else todas.filter { it.estado == filtro }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoLimpio)
+    ) {
         BarraSuperior(
             titulo = "Ferias",
             subtitulo = "${todas.size} eventos creados",
             acciones = {
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
+                    Icon(Icons.Filled.Settings, contentDescription = "Ajustes", tint = NegroApple)
                 }
             }
         )

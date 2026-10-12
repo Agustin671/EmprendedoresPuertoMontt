@@ -63,6 +63,9 @@ import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.componentes.colorDeAsistencia
 import com.example.trabajodea10.ui.componentes.colorDeFeria
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
+import com.example.trabajodea10.ui.navegacion.Ruta
+import androidx.compose.foundation.background
+import com.example.trabajodea10.ui.theme.FondoLimpio
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
 import com.example.trabajodea10.ui.theme.RojoError
@@ -84,7 +87,11 @@ fun PantallaFeriaDetalle(
     var mostrarInvitaciones by remember { mutableStateOf(false) }
 
     if (feria == null) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FondoLimpio)
+        ) {
             BarraSuperior(titulo = "Feria", onVolver = { nav.volver() })
             com.example.trabajodea10.ui.componentes.Vacio(
                 titulo = "Feria no encontrada",
@@ -95,7 +102,11 @@ fun PantallaFeriaDetalle(
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FondoLimpio)
+    ) {
         BarraSuperior(
             titulo = feria.nombre.ifBlank { "Nueva feria" },
             subtitulo = rangoDeFechas(feria.fechaInicio, feria.fechaFin),
@@ -433,6 +444,8 @@ private fun PestañaDatos(
     var cupos by remember(feria.id) { mutableStateOf(feria.cupos.toString()) }
     var precio by remember(feria.id) { mutableStateOf(feria.precioEntrada.toInt().toString()) }
     var estado by remember(feria.id) { mutableStateOf(feria.estado) }
+    var fotoUrl by remember(feria.id) { mutableStateOf(feria.fotoUrl ?: "") }
+    var estiloMapa by remember(feria.id) { mutableStateOf(feria.estiloMapa) }
 
     Column(
         modifier = Modifier
@@ -478,6 +491,28 @@ private fun PestañaDatos(
             )
         }
 
+        TituloSeccion(texto = "Foto y Estilo Google Maps")
+        CampoTexto(
+            valor = fotoUrl,
+            onValorChange = { fotoUrl = it },
+            etiqueta = "Foto o enlace del lugar (Opcional)",
+            placeholder = "URL o descripción de la plaza"
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+        ) {
+            listOf("Satelital", "Terreno", "Calles").forEach { estilo ->
+                ChipFiltro(
+                    texto = "Vista $estilo",
+                    seleccionado = estiloMapa == estilo,
+                    onClick = { estiloMapa = estilo }
+                )
+            }
+        }
+
         TituloSeccion(texto = "Estado")
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -507,7 +542,9 @@ private fun PestañaDatos(
                         fechaFin = nuevoFin,
                         cupos = cupos.toIntOrNull() ?: feria.cupos,
                         precioEntrada = precio.toDoubleOrNull() ?: feria.precioEntrada,
-                        estado = estado
+                        estado = estado,
+                        fotoUrl = fotoUrl.trim().ifBlank { null },
+                        estiloMapa = estiloMapa
                     )
                 )
             }

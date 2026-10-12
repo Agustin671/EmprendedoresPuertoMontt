@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -34,10 +34,12 @@ import com.example.trabajodea10.ui.navegacion.BarraInferior
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.navegacion.rememberControladorNavegacion
+import com.example.trabajodea10.ui.publico.PantallaMarketplace
 import com.example.trabajodea10.ui.publico.PantallaVisAyuda
 import com.example.trabajodea10.ui.publico.PantallaVisFerias
 import com.example.trabajodea10.ui.publico.PantallaVisProductos
 import com.example.trabajodea10.ui.theme.Berenjena
+import com.example.trabajodea10.ui.theme.FondoLimpio
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,6 +60,7 @@ fun TramaApp() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = FondoLimpio,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (rol != null && ruta.grafica != null) {
@@ -99,7 +102,7 @@ private fun FabSegunRuta(
 
         Ruta.EmpInicio -> Fab(
             descripcion = "Registrar venta",
-            icono = { Icon(Icons.Filled.PointOfSale, contentDescription = "Registrar venta") },
+            icono = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Registrar venta") },
             onClick = { nav.seleccionarTab(Ruta.EmpVenta) }
         )
 
@@ -162,7 +165,7 @@ private fun ContenidoSegunRuta(
         )
 
         Ruta.VisInicio -> PantallaVisFerias(avisar = avisar)
-        Ruta.VisProductos -> PantallaVisProductos()
+        Ruta.VisProductos -> PantallaMarketplace(nav = nav, avisar = avisar)
         Ruta.VisAyuda -> PantallaVisAyuda()
     }
 }

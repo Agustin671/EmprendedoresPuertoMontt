@@ -12,34 +12,34 @@ import androidx.compose.ui.unit.Density
 import com.example.trabajodea10.data.TramaStore
 
 private val EsquemaClaro = lightColorScheme(
-    primary = Berenjena,
-    onPrimary = Color.White,
-    primaryContainer = BerenjenaContenedor,
-    onPrimaryContainer = SobreBerenjenaContenedor,
-    secondary = VerdeOk,
-    onSecondary = Color.White,
-    secondaryContainer = VerdeContenedor,
-    onSecondaryContainer = Color(0xFF1C4A37),
-    tertiary = NaranjaAlerta,
-    onTertiary = Color.White,
-    tertiaryContainer = NaranjaContenedor,
-    onTertiaryContainer = Color(0xFF5A3208),
+    primary = NegroApple,
+    onPrimary = BlancoPuro,
+    primaryContainer = GrisChip,
+    onPrimaryContainer = NegroApple,
+    secondary = RojoAlerce,
+    onSecondary = BlancoPuro,
+    secondaryContainer = RojoAlerceContenedor,
+    onSecondaryContainer = RojoAlerceOscuro,
+    tertiary = NegroSuave,
+    onTertiary = BlancoPuro,
+    tertiaryContainer = GrisChip,
+    onTertiaryContainer = NegroApple,
     error = RojoError,
-    onError = Color.White,
+    onError = BlancoPuro,
     errorContainer = RojoContenedor,
-    onErrorContainer = Color(0xFF6A1A12),
-    background = FondoNeutro,
-    onBackground = Color(0xFF221E22),
+    onErrorContainer = RojoAlerceOscuro,
+    background = FondoLimpio,
+    onBackground = NegroApple,
     surface = SuperficieBlanca,
-    onSurface = Color(0xFF221E22),
+    onSurface = NegroApple,
     surfaceVariant = SuperficieVariante,
     onSurfaceVariant = TextoSecundario,
     outline = LineaSuave,
     outlineVariant = LineaSuave,
     surfaceContainer = SuperficieBlanca,
-    surfaceContainerLow = Color(0xFFFCFAFC),
-    surfaceContainerHigh = Color(0xFFF2EEF2),
-    surfaceContainerHighest = Color(0xFFECE6EC)
+    surfaceContainerLow = BlancoPuro,
+    surfaceContainerHigh = Color(0xFFF4F4F5),
+    surfaceContainerHighest = Color(0xFFE4E4E7)
 )
 
 private val EsquemaOscuro = darkColorScheme(
@@ -69,7 +69,7 @@ private val EsquemaOscuro = darkColorScheme(
 
 @Composable
 fun TramaAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
     // Modo accesible: si la persona toca "+A", multiplicamos la escala de fuente
