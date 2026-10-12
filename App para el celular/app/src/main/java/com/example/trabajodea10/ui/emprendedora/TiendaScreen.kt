@@ -893,7 +893,9 @@ private fun SeccionGestionForo(
     var respuestaTextoPorPubId by remember { mutableStateOf(mapOf<String, String>()) }
     var mostrandoResponderPorPubId by remember { mutableStateOf(mapOf<String, Boolean>()) }
 
-    val publicaciones = TramaStore.publicacionesDeTienda(tiendaId)
+    val publicaciones = remember(tiendaId, TramaStore.versionForo) {
+        TramaStore.publicacionesDeTienda(tiendaId)
+    }
 
     Tarjeta {
         Column(

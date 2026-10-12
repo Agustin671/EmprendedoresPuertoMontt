@@ -22,6 +22,7 @@ import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
+import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.theme.VerdeContenedor
 import com.example.trabajodea10.ui.theme.VerdeOk
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +49,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ShoppingBag
@@ -106,7 +108,10 @@ private val CATEGORIAS = listOf(
 )
 
 @Composable
-fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
+fun PantallaMarketplace(
+    nav: ControladorNavegacion? = null,
+    avisar: ((String) -> Unit)? = null
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var busqueda by remember { mutableStateOf("") }
@@ -175,34 +180,65 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                         )
                     }
 
-                    // Botón circular para refrescar (sin texto "Firestore")
-                    Surface(
-                        shape = CircleShape,
-                        color = if (FirebaseManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
-                        border = BorderStroke(1.dp, GrisBorde),
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .clickable {
-                                coroutineScope.launch {
-                                    sembrando = true
-                                    val exito = FirebaseManager.sembrarTiendasIniciales()
-                                    FirebaseManager.cargarTiendasDesdeFirestore()
-                                    sembrando = false
-                                    avisar?.invoke(if (exito) "¡Vitrina sincronizada!" else "Tiendas actualizadas")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Botón circular para refrescar (sin texto "Firestore")
+                        Surface(
+                            shape = CircleShape,
+                            color = if (FirebaseManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
+                            border = BorderStroke(1.dp, GrisBorde),
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    coroutineScope.launch {
+                                        sembrando = true
+                                        val exito = FirebaseManager.sembrarTiendasIniciales()
+                                        FirebaseManager.cargarTiendasDesdeFirestore()
+                                        sembrando = false
+                                        avisar?.invoke(if (exito) "¡Vitrina sincronizada!" else "Tiendas actualizadas")
+                                    }
+                                }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (sembrando) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = NegroApple)
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Filled.Refresh,
+                                        contentDescription = "Actualizar tiendas",
+                                        tint = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple,
+                                        modifier = Modifier.size(18.dp)
+                                    )
                                 }
                             }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (sembrando) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = NegroApple)
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Filled.Refresh,
-                                    contentDescription = "Actualizar tiendas",
-                                    tint = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                        }
+
+                        // Botón circular de Cerrar Sesión (Logout)
+                        if (nav != null) {
+                            Surface(
+                                shape = CircleShape,
+                                color = GrisChip,
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        FirebaseManager.cerrarSesion()
+                                        nav.cerrarSesion()
+                                        avisar?.invoke("Sesión cerrada")
+                                    }
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Logout,
+                                        contentDescription = "Cerrar sesión",
+                                        tint = NegroApple,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -615,7 +651,9 @@ private fun DialogoDetalleTienda(
     val productos = remember(tienda.id) { TramaStore.productosDeTienda(tienda.id) }
     var nuevaPreguntaCliente by remember { mutableStateOf("") }
     var pestanaDetalle by remember { mutableStateOf(0) }
-    val publicaciones = TramaStore.publicacionesDeTienda(tienda.id)
+    val publicaciones = remember(tienda.id, TramaStore.versionForo) {
+        TramaStore.publicacionesDeTienda(tienda.id)
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,

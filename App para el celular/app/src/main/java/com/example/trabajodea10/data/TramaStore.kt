@@ -536,7 +536,12 @@ object TramaStore {
 
     // ---------- Muro y Foro Comunitario ----------
 
+    var versionForo by mutableStateOf(0)
+        private set
+
     fun publicacionesDeTienda(tiendaId: String): List<PublicacionForo> {
+        @Suppress("UNUSED_VARIABLE")
+        val v = versionForo
         return publicacionesForo.filter { it.tiendaId == tiendaId }
     }
 
@@ -556,6 +561,7 @@ object TramaStore {
             respuestas = emptyList()
         )
         publicacionesForo.add(0, nueva)
+        versionForo++
         return nueva
     }
 
@@ -578,6 +584,7 @@ object TramaStore {
             publicacionesForo[index] = actual.copy(
                 respuestas = actual.respuestas + nuevaResp
             )
+            versionForo++
         }
     }
 

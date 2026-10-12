@@ -161,7 +161,8 @@ object FirebaseManager {
     fun entrarModoDemo(nombre: String, rol: Rol) {
         nombreUsuarioDemo = nombre
         if (rol == Rol.EMPRENDEDORA) {
-            val tiendaDemo = TIENDAS_INICIALES_ALERCE.find { it.id == "t_minimarket_rosa" }
+            val tiendaDemo = tiendas.find { it.id == "t_minimarket_rosa" }
+                ?: TIENDAS_INICIALES_ALERCE.find { it.id == "t_minimarket_rosa" }
             if (tiendaDemo != null) {
                 TramaStore.guardarTienda(tiendaDemo)
             }

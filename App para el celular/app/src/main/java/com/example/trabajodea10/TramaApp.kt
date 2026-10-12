@@ -165,7 +165,7 @@ private fun ContenidoSegunRuta(
         )
 
         Ruta.VisInicio -> PantallaVisFerias(avisar = avisar)
-        Ruta.VisProductos -> PantallaMarketplace(avisar = avisar)
+        Ruta.VisProductos -> PantallaMarketplace(nav = nav, avisar = avisar)
         Ruta.VisAyuda -> PantallaVisAyuda()
     }
 }
