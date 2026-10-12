@@ -21,19 +21,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.SettingsSuggest
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Store
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -86,8 +85,16 @@ import com.example.trabajodea10.ui.theme.VerdeOk
 import kotlinx.coroutines.launch
 
 private val COLORES_TEMA = listOf(
-    0xFF111111, 0xFFDC2626, 0xFF18181B, 0xFF059669, 0xFF2563EB, 0xFFD97706
+    0xFF111111L, 0xFFDC2626L, 0xFF18181BL, 0xFF059669L, 0xFF2563EBL, 0xFFD97706L
 )
+
+private fun colorSeguro(valor: Long, porDefecto: Color = RojoAlerce): Color {
+    return try {
+        Color(valor)
+    } catch (_: Throwable) {
+        porDefecto
+    }
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -213,7 +220,7 @@ fun PantallaTienda(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.SettingsSuggest, contentDescription = null, tint = Berenjena, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Filled.Settings, contentDescription = null, tint = Berenjena, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "¿Qué funciones necesita tu pyme?",
@@ -252,7 +259,7 @@ fun PantallaTienda(
                     FilaSwitchNecesidad(
                         titulo = "Ventas por Encargo / A Pedido",
                         descripcion = "Para artesanías o repostería elaborada a pedido sin stock inmediato.",
-                        icono = Icons.Filled.ContentCut,
+                        icono = Icons.Filled.Edit,
                         activo = tieneProductosAPedido,
                         onCheckedChange = { tieneProductosAPedido = it }
                     )
@@ -261,7 +268,7 @@ fun PantallaTienda(
                     FilaSwitchNecesidad(
                         titulo = "Pedidos Directos por WhatsApp",
                         descripcion = "Botón con mensaje precargado para facilitar la compra a clientes que no usan carrito.",
-                        icono = Icons.Filled.Chat,
+                        icono = Icons.Filled.Phone,
                         activo = tieneVentaPorWhatsApp,
                         onCheckedChange = { tieneVentaPorWhatsApp = it }
                     )
@@ -279,7 +286,7 @@ fun PantallaTienda(
                     FilaSwitchNecesidad(
                         titulo = "Muro de Novedades y Foro con Clientes",
                         descripcion = "Publicar avisos de nuevo stock y responder consultas abiertas.",
-                        icono = Icons.Filled.Forum,
+                        icono = Icons.Filled.Email,
                         activo = tieneForoComunidad,
                         onCheckedChange = { tieneForoComunidad = it }
                     )
@@ -342,7 +349,7 @@ fun PantallaTienda(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(44.dp)
-                            .background(Color(colorPortada)),
+                            .background(colorSeguro(colorPortada, NegroApple)),
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
@@ -354,10 +361,11 @@ fun PantallaTienda(
                     }
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = CircleShape, color = Color(colorLogo), modifier = Modifier.size(42.dp)) {
+                            Surface(shape = CircleShape, color = colorSeguro(colorLogo, RojoAlerce), modifier = Modifier.size(42.dp)) {
                                 Box(contentAlignment = Alignment.Center) {
+                                    val letraInicial = remember(nombre) { (nombre.trim().firstOrNull() ?: 'T').uppercaseChar().toString() }
                                     Text(
-                                        text = nombre.firstOrNull()?.uppercase() ?: "T",
+                                        text = letraInicial,
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 18.sp
@@ -421,7 +429,7 @@ fun PantallaTienda(
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(22.dp))
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.CloudUpload, contentDescription = null, tint = Color.White)
+                        Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Guardar Cambios en Firebase", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                     }
@@ -436,7 +444,7 @@ fun PantallaTienda(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Icon(Icons.Filled.Visibility, contentDescription = null, tint = NegroApple)
+                Icon(Icons.Filled.Search, contentDescription = null, tint = NegroApple)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Ver en el Marketplace como Comprador", color = NegroApple, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
             }
@@ -496,7 +504,7 @@ private fun FilaSwitchNecesidad(
 @Composable
 private fun InsigniaPreview(texto: String, fondo: Color, textoColor: Color) {
     Surface(
-        shape = RoundedCornerShape(6.dp),
+        shape = RoundedCornerShape(50.dp),
         color = fondo
     ) {
         Text(
@@ -504,7 +512,7 @@ private fun InsigniaPreview(texto: String, fondo: Color, textoColor: Color) {
             color = textoColor,
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp,
-            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
         )
     }
 }
@@ -529,7 +537,7 @@ private fun SelectorColor(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(color), CircleShape),
+                .background(colorSeguro(color, NegroApple), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (seleccionado) {

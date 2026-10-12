@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -100,7 +100,7 @@ private fun FabSegunRuta(
 
         Ruta.EmpInicio -> Fab(
             descripcion = "Registrar venta",
-            icono = { Icon(Icons.Filled.PointOfSale, contentDescription = "Registrar venta") },
+            icono = { Icon(Icons.Filled.ShoppingCart, contentDescription = "Registrar venta") },
             onClick = { nav.seleccionarTab(Ruta.EmpVenta) }
         )
 
