@@ -14,13 +14,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import com.example.trabajodea10.data.BloqueHorario
+import com.example.trabajodea10.data.Producto
 import com.example.trabajodea10.data.TramaStore
+import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
 import com.example.trabajodea10.ui.theme.VerdeContenedor
 import com.example.trabajodea10.ui.theme.VerdeOk
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -168,42 +171,35 @@ fun PantallaMarketplace(avisar: ((String) -> Unit)? = null) {
                         )
                     }
 
-                    // Botón para refrescar o sembrar en Firebase (Pill minimalista)
+                    // Botón circular para refrescar (sin texto "Firestore")
                     Surface(
-                        shape = RoundedCornerShape(50.dp),
+                        shape = CircleShape,
                         color = if (FirebaseManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
                         border = BorderStroke(1.dp, GrisBorde),
-                        modifier = Modifier.clickable {
-                            coroutineScope.launch {
-                                sembrando = true
-                                val exito = FirebaseManager.sembrarTiendasIniciales()
-                                FirebaseManager.cargarTiendasDesdeFirestore()
-                                sembrando = false
-                                avisar?.invoke(if (exito) "¡Firestore sincronizado con éxito!" else "Tiendas cargadas en memoria")
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .clickable {
+                                coroutineScope.launch {
+                                    sembrando = true
+                                    val exito = FirebaseManager.sembrarTiendasIniciales()
+                                    FirebaseManager.cargarTiendasDesdeFirestore()
+                                    sembrando = false
+                                    avisar?.invoke(if (exito) "¡Vitrina sincronizada!" else "Tiendas actualizadas")
+                                }
                             }
-                        }
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Box(contentAlignment = Alignment.Center) {
                             if (sembrando) {
-                                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp, color = NegroApple)
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = NegroApple)
                             } else {
                                 Icon(
-                                    imageVector = Icons.Filled.CloudSync,
-                                    contentDescription = "Sincronizar",
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = "Actualizar tiendas",
                                     tint = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple,
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Firestore",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple
-                            )
                         }
                     }
                 }
@@ -598,63 +594,231 @@ private fun DialogoDetalleTienda(
     onAgendarCita: (() -> Unit)? = null,
     onContactarWhatsApp: () -> Unit
 ) {
+    val context = LocalContext.current
+    val productos = remember(tienda.id) { TramaStore.productosDeTienda(tienda.id) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = BlancoPuro,
         shape = RoundedCornerShape(24.dp),
         title = {
-            Column {
-                Text(tienda.nombre, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = NegroApple)
-                Text(tienda.rubro, style = MaterialTheme.typography.bodySmall, color = GrisTexto)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color(tienda.colorLogo),
+                    modifier = Modifier.size(38.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = tienda.nombre.firstOrNull()?.uppercase() ?: "T",
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 17.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(tienda.nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = NegroApple)
+                    Text("${tienda.rubro} · ${tienda.sector}", style = MaterialTheme.typography.bodySmall, color = GrisTexto)
+                }
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(tienda.bio, style = MaterialTheme.typography.bodyMedium, color = NegroApple)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (tienda.bio.isNotBlank()) {
+                    Text(tienda.bio, style = MaterialTheme.typography.bodySmall, color = GrisTexto)
+                }
+
+                // Opción destacada de agendamiento si la tienda lo ofrece
+                if (tienda.necesidades.tieneAgendamiento && onAgendarCita != null) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFF0F9FF),
+                        border = BorderStroke(1.dp, Color(0xFFBAE6FD)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onAgendarCita)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = Color(0xFF0369A1), modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text("Agendar Cita de Atención", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0369A1))
+                                    Text("Turnos en las próximas 2 semanas", fontSize = 11.sp, color = GrisTexto)
+                                }
+                            }
+                            Text("Agendar ➔", fontWeight = FontWeight.Bold, fontSize = 11.sp, color = Color(0xFF0369A1))
+                        }
+                    }
+                }
 
                 HorizontalDivider(color = GrisBorde)
 
-                Text("Servicios y facilidades activas:", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = NegroApple)
-
-                if (tienda.necesidades.tieneAgendamiento) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Permite agendar horas de atención.", fontSize = 13.sp, color = GrisTexto)
-                    }
-                }
-
-                if (tienda.necesidades.tieneStock) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Dispone de stock para entrega inmediata.", fontSize = 13.sp, color = GrisTexto)
-                    }
-                }
-
-                if (tienda.necesidades.tieneProductosAPedido) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Acepta pedidos y encargos personalizados.", fontSize = 13.sp, color = GrisTexto)
-                    }
-                }
-
-                if (tienda.necesidades.tieneAgendamiento && onAgendarCita != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        onClick = onAgendarCita,
+                // CATÁLOGO DE PRODUCTOS DE LA VITRINA
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Productos en Vitrina (${productos.size}):",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = NegroApple
+                    )
+                    Surface(
                         shape = RoundedCornerShape(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
-                        modifier = Modifier.fillMaxWidth().height(42.dp)
+                        color = GrisChip
                     ) {
-                        Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = BlancoPuro, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Agendar Cita (Próximas 2 Semanas)", color = BlancoPuro, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(
+                            text = "Catálogo Directo",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = NegroApple,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
                     }
                 }
 
-                Text("Ubicación: ${tienda.sector}, Puerto Montt", fontSize = 12.sp, color = GrisTexto)
+                if (productos.isEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = GrisChip,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Esta tienda aún no tiene productos publicados en vitrina. Puedes consultar por WhatsApp.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = GrisTexto,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        productos.forEach { producto ->
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = BlancoPuro,
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = producto.nombre,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp,
+                                                color = NegroApple
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = formatearMoneda(producto.precio),
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 15.sp,
+                                                color = RojoAlerce
+                                            )
+                                        }
+
+                                        Surface(
+                                            shape = RoundedCornerShape(50.dp),
+                                            color = if (producto.stockTotal > 0) VerdeContenedor else RojoAlerceContenedor
+                                        ) {
+                                            Text(
+                                                text = if (producto.stockTotal > 0) "Stock Disponible" else "A Pedido",
+                                                color = if (producto.stockTotal > 0) VerdeOk else RojoAlerce,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+
+                                    if (producto.variantes.isNotEmpty() && producto.variantes.firstOrNull()?.nombre != "Único") {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            producto.variantes.take(2).forEach { v ->
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = GrisChip
+                                                ) {
+                                                    Text(
+                                                        text = v.nombre,
+                                                        fontSize = 10.sp,
+                                                        color = GrisTexto,
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Botón para pedir directamente este producto
+                                    OutlinedButton(
+                                        onClick = {
+                                            abrirWhatsApp(
+                                                context,
+                                                tienda.whatsapp,
+                                                "Hola ${tienda.nombre}! Me interesa comprar '${producto.nombre}' (${formatearMoneda(producto.precio)}) que vi en tu vitrina de Alerce Emprende."
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(50.dp),
+                                        border = BorderStroke(1.dp, NegroApple),
+                                        modifier = Modifier.fillMaxWidth().height(36.dp)
+                                    ) {
+                                        Text(
+                                            text = "Pedir este producto por WhatsApp",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = NegroApple
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = GrisBorde)
+
+                // Facilidades y ubicación
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (tienda.necesidades.tieneStock) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Entrega inmediata en Alerce.", fontSize = 12.sp, color = GrisTexto)
+                        }
+                    }
+                    if (tienda.necesidades.tieneProductosAPedido) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Check, contentDescription = null, tint = VerdeOk, modifier = Modifier.size(15.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Acepta encargos y pedidos personalizados.", fontSize = 12.sp, color = GrisTexto)
+                        }
+                    }
+                    Text("Ubicación: ${tienda.sector}, Puerto Montt", fontSize = 11.sp, color = GrisTexto)
+                }
             }
         },
         confirmButton = {
@@ -666,7 +830,7 @@ private fun DialogoDetalleTienda(
                 shape = RoundedCornerShape(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = NegroApple)
             ) {
-                Text("Contactar por WhatsApp", color = BlancoPuro, fontWeight = FontWeight.Bold)
+                Text("Chat General WhatsApp", color = BlancoPuro, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         },
         dismissButton = {

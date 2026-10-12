@@ -260,6 +260,12 @@ object TramaStore {
 
     fun productoPorId(id: String): Producto? = productos.firstOrNull { it.id == id }
 
+    fun productosDeTienda(tiendaId: String): List<Producto> {
+        val prods = productos.filter { it.tiendaId == tiendaId && it.publicado }
+        if (prods.isNotEmpty()) return prods
+        return productos.filter { it.publicado }.take(4)
+    }
+
     fun crearProductoBorrador(): String {
         val id = "p${System.currentTimeMillis()}"
         productos.add(

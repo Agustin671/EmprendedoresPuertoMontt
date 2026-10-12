@@ -446,6 +446,8 @@ private fun PestañaDatos(
     var cupos by remember(feria.id) { mutableStateOf(feria.cupos.toString()) }
     var precio by remember(feria.id) { mutableStateOf(feria.precioEntrada.toInt().toString()) }
     var estado by remember(feria.id) { mutableStateOf(feria.estado) }
+    var fotoUrl by remember(feria.id) { mutableStateOf(feria.fotoUrl ?: "") }
+    var estiloMapa by remember(feria.id) { mutableStateOf(feria.estiloMapa) }
 
     Column(
         modifier = Modifier
@@ -491,6 +493,28 @@ private fun PestañaDatos(
             )
         }
 
+        TituloSeccion(texto = "Foto y Estilo Google Maps")
+        CampoTexto(
+            valor = fotoUrl,
+            onValorChange = { fotoUrl = it },
+            etiqueta = "Foto o enlace del lugar (Opcional)",
+            placeholder = "URL o descripción de la plaza"
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+        ) {
+            listOf("Satelital", "Terreno", "Calles").forEach { estilo ->
+                ChipFiltro(
+                    texto = "Vista $estilo",
+                    seleccionado = estiloMapa == estilo,
+                    onClick = { estiloMapa = estilo }
+                )
+            }
+        }
+
         TituloSeccion(texto = "Estado")
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -520,7 +544,9 @@ private fun PestañaDatos(
                         fechaFin = nuevoFin,
                         cupos = cupos.toIntOrNull() ?: feria.cupos,
                         precioEntrada = precio.toDoubleOrNull() ?: feria.precioEntrada,
-                        estado = estado
+                        estado = estado,
+                        fotoUrl = fotoUrl.trim().ifBlank { null },
+                        estiloMapa = estiloMapa
                     )
                 )
             }

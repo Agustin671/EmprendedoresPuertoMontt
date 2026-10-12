@@ -263,6 +263,7 @@ object MockData {
         ),
         Producto(
             id = "p10",
+            tiendaId = "emp1",
             nombre = "Pañuelo de seda pintado",
             categoria = Categoria.TEXTIL,
             precio = 15400.0,
@@ -270,6 +271,167 @@ object MockData {
             destacado = false,
             colorFoto = 0xFFA0546B,
             variantes = listOf(Variante("p10v1", "Único", 1))
+        ),
+        // Productos para Repostería Tradición Sureña
+        Producto(
+            id = "p_rep_1",
+            tiendaId = "t_reposteria_surena",
+            nombre = "Kuchen Tradicional de Murta y Frambuesa",
+            categoria = Categoria.GOURMET,
+            precio = 12000.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFFD69E2E,
+            variantes = listOf(Variante("v_rep1", "Molde Familiar (8 porciones)", 4))
+        ),
+        Producto(
+            id = "p_rep_2",
+            tiendaId = "t_reposteria_surena",
+            nombre = "Torta de Hojarasca con Manjar Casero",
+            categoria = Categoria.GOURMET,
+            precio = 18500.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFFC53030,
+            variantes = listOf(Variante("v_rep2", "15 Personas", 2))
+        ),
+        Producto(
+            id = "p_rep_3",
+            tiendaId = "t_reposteria_surena",
+            nombre = "Pack 6 Alfajores Artesanales con Nuez",
+            categoria = Categoria.GOURMET,
+            precio = 5500.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFF8A5A3B,
+            variantes = listOf(Variante("v_rep3", "Caja 6 un.", 8))
+        ),
+        Producto(
+            id = "p_rep_4",
+            tiendaId = "t_reposteria_surena",
+            nombre = "Galletas Horneadas de Avena y Miel de Ulmo",
+            categoria = Categoria.GOURMET,
+            precio = 3800.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFFC07A3E,
+            variantes = listOf(Variante("v_rep4", "Bolsa 250g", 12))
+        ),
+        // Productos para Minimarket Doña Rosa
+        Producto(
+            id = "p_mini_1",
+            tiendaId = "t_minimarket_rosa",
+            nombre = "Pan Amasado Caliente (Salida 17:00 hrs)",
+            categoria = Categoria.GOURMET,
+            precio = 2500.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFFDD6B20,
+            variantes = listOf(Variante("v_min1", "Bolsa 5 unidades", 20))
+        ),
+        Producto(
+            id = "p_mini_2",
+            tiendaId = "t_minimarket_rosa",
+            nombre = "Canasta de Verduras Frescas de Alerce",
+            categoria = Categoria.GOURMET,
+            precio = 7000.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFF2E7D5B,
+            variantes = listOf(Variante("v_min2", "Surtido Semanal", 5))
+        ),
+        Producto(
+            id = "p_mini_3",
+            tiendaId = "t_minimarket_rosa",
+            nombre = "Huevos de Campo Libres (Docena)",
+            categoria = Categoria.GOURMET,
+            precio = 4200.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFFD69E2E,
+            variantes = listOf(Variante("v_min3", "Docena", 15))
+        ),
+        Producto(
+            id = "p_mini_4",
+            tiendaId = "t_minimarket_rosa",
+            nombre = "Miel de Ulmo Pura de Bosque Nativo 1kg",
+            categoria = Categoria.GOURMET,
+            precio = 6500.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFFC07A3E,
+            variantes = listOf(Variante("v_min4", "Frasco 1kg", 6))
+        ),
+        // Productos para Tejidos Alerce Austral
+        Producto(
+            id = "p_tej_1",
+            tiendaId = "t_tejidos_austral",
+            nombre = "Chaleco de Lana Chilota a Palillo",
+            categoria = Categoria.TEXTIL,
+            precio = 38000.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFF5C315B,
+            variantes = listOf(
+                Variante("v_tej1", "Gris Natural · Talla M", 2),
+                Variante("v_tej2", "Blanco Crudo · Talla L", 1)
+            )
+        ),
+        Producto(
+            id = "p_tej_2",
+            tiendaId = "t_tejidos_austral",
+            nombre = "Gorro y Cuello de Lana Pura de Oveja",
+            categoria = Categoria.TEXTIL,
+            precio = 14000.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFF2E7D5B,
+            variantes = listOf(Variante("v_tej3", "Talla Única", 6))
+        ),
+        Producto(
+            id = "p_tej_3",
+            tiendaId = "t_tejidos_austral",
+            nombre = "Piecera Rústica en Telar Tradicional",
+            categoria = Categoria.DECORACION,
+            precio = 45000.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFFC07A3E,
+            variantes = listOf(Variante("v_tej4", "2 Plazas", 2))
+        ),
+        // Servicios / Productos para Barbería & Estilo Alerce
+        Producto(
+            id = "p_bar_1",
+            tiendaId = "t_barberia_alerce",
+            nombre = "Corte de Cabello Clásico / Degrade Moderno",
+            categoria = Categoria.COSMETICA,
+            precio = 8000.0,
+            publicado = true,
+            destacado = true,
+            colorFoto = 0xFF2D3748,
+            variantes = listOf(Variante("v_bar1", "Sesión 40 min", 10))
+        ),
+        Producto(
+            id = "p_bar_2",
+            tiendaId = "t_barberia_alerce",
+            nombre = "Perfilado y Ritual de Barba con Toalla Caliente",
+            categoria = Categoria.COSMETICA,
+            precio = 6500.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFF319795,
+            variantes = listOf(Variante("v_bar2", "Sesión 30 min", 8))
+        ),
+        Producto(
+            id = "p_bar_3",
+            tiendaId = "t_barberia_alerce",
+            nombre = "Cera y Pomada Modeladora Capilar",
+            categoria = Categoria.COSMETICA,
+            precio = 7500.0,
+            publicado = true,
+            destacado = false,
+            colorFoto = 0xFF4A5568,
+            variantes = listOf(Variante("v_bar3", "Pote 100g", 12))
         )
     )
 

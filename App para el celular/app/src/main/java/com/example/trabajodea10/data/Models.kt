@@ -64,7 +64,9 @@ data class Feria(
     val precioEntrada: Double,
     val estado: EstadoFeria,
     val participaciones: List<Participacion> = emptyList(),
-    val organizadora: String = "Red Trama"
+    val organizadora: String = "Red Trama",
+    val fotoUrl: String? = null,
+    val estiloMapa: String = "Satelital"
 )
 
 data class Asociacion(
@@ -93,6 +95,7 @@ data class Variante(
 
 data class Producto(
     val id: String,
+    val tiendaId: String = "emp1",
     val nombre: String,
     val categoria: Categoria,
     val precio: Double,
