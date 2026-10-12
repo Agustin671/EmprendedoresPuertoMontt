@@ -101,8 +101,12 @@ object TramaStore {
     // Bloques horarios de agendamiento para las próximas 2 semanas
     val citasHorarios = mutableStateListOf<BloqueHorario>()
 
+    // Publicaciones del muro y foro de comunidad
+    val publicacionesForo = mutableStateListOf<PublicacionForo>()
+
     init {
         generarHorariosIniciales()
+        generarPublicacionesForoIniciales()
     }
 
     private fun generarHorariosIniciales() {
@@ -130,6 +134,64 @@ object TramaStore {
                 }
             }
         }
+    }
+
+    private fun generarPublicacionesForoIniciales() {
+        publicacionesForo.clear()
+        publicacionesForo.addAll(
+            listOf(
+                PublicacionForo(
+                    id = "pub_rosa_1",
+                    tiendaId = "t_minimarket_rosa",
+                    autorNombre = "Minimarket Doña Rosa",
+                    esEmprendedor = true,
+                    texto = "🥖 ¡Aviso a los vecinos de Alerce! Acaba de salir la primera tanda de pan amasado bien calentito y recibimos huevos frescos de campo. ¡Los esperamos!",
+                    fecha = "Hoy, 16:30",
+                    respuestas = listOf(
+                        RespuestaForo(
+                            id = "resp_rosa_1_1",
+                            autorNombre = "Paul M.",
+                            esEmprendedor = false,
+                            texto = "¿Doña Rosa, le queda queso de campo artesanal para acompañar el pancito?",
+                            fecha = "Hoy, 16:45"
+                        ),
+                        RespuestaForo(
+                            id = "resp_rosa_1_2",
+                            autorNombre = "Minimarket Doña Rosa",
+                            esEmprendedor = true,
+                            texto = "¡Hola Paul! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Te guardo una si gustas.",
+                            fecha = "Hoy, 16:50"
+                        )
+                    )
+                ),
+                PublicacionForo(
+                    id = "pub_rosa_2",
+                    tiendaId = "t_minimarket_rosa",
+                    autorNombre = "Marta Gómez",
+                    esEmprendedor = false,
+                    texto = "¿Vecina Doña Rosa, hasta qué hora atiende hoy domingo? Necesito pasar por abarrotes y bebidas para la once familiar.",
+                    fecha = "Ayer, 18:20",
+                    respuestas = listOf(
+                        RespuestaForo(
+                            id = "resp_rosa_2_1",
+                            autorNombre = "Minimarket Doña Rosa",
+                            esEmprendedor = true,
+                            texto = "¡Hola Marta! Atendemos de corrido hasta las 21:30 hrs todos los días.",
+                            fecha = "Ayer, 18:35"
+                        )
+                    )
+                ),
+                PublicacionForo(
+                    id = "pub_barberia_1",
+                    tiendaId = "t_barberia_alerce",
+                    autorNombre = "Barbería & Estilo Alerce",
+                    esEmprendedor = true,
+                    texto = "💈 Vecinos, esta semana abrimos turnos especiales para corte degradado y perfilado de barba. Recuerden reservar su hora en la app.",
+                    fecha = "Hoy, 11:00",
+                    respuestas = emptyList()
+                )
+            )
+        )
     }
 
     // Escala de texto del modo accesible (+A / -A). 0.90f = tamaño cómodo compacto editorial.
@@ -470,6 +532,53 @@ object TramaStore {
 
     fun eliminarHorario(bloqueId: String) {
         citasHorarios.removeAll { it.id == bloqueId }
+    }
+
+    // ---------- Muro y Foro Comunitario ----------
+
+    fun publicacionesDeTienda(tiendaId: String): List<PublicacionForo> {
+        return publicacionesForo.filter { it.tiendaId == tiendaId }
+    }
+
+    fun agregarPublicacionForo(
+        tiendaId: String,
+        autorNombre: String,
+        esEmprendedor: Boolean,
+        texto: String
+    ): PublicacionForo {
+        val nueva = PublicacionForo(
+            id = "pub_${tiendaId}_${System.currentTimeMillis()}",
+            tiendaId = tiendaId,
+            autorNombre = autorNombre,
+            esEmprendedor = esEmprendedor,
+            texto = texto,
+            fecha = "Recién",
+            respuestas = emptyList()
+        )
+        publicacionesForo.add(0, nueva)
+        return nueva
+    }
+
+    fun responderPublicacionForo(
+        publicacionId: String,
+        autorNombre: String,
+        esEmprendedor: Boolean,
+        texto: String
+    ) {
+        val index = publicacionesForo.indexOfFirst { it.id == publicacionId }
+        if (index != -1) {
+            val actual = publicacionesForo[index]
+            val nuevaResp = RespuestaForo(
+                id = "resp_${System.currentTimeMillis()}",
+                autorNombre = autorNombre,
+                esEmprendedor = esEmprendedor,
+                texto = texto,
+                fecha = "Recién"
+            )
+            publicacionesForo[index] = actual.copy(
+                respuestas = actual.respuestas + nuevaResp
+            )
+        }
     }
 
     // ---------- Accesibilidad: tamaño de texto ----------

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import com.example.trabajodea10.data.BloqueHorario
 import com.example.trabajodea10.data.Producto
+import com.example.trabajodea10.data.PublicacionForo
+import com.example.trabajodea10.data.RespuestaForo
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.data.nombreDiaLegible
@@ -41,11 +43,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
@@ -516,6 +520,15 @@ private fun TarjetaTiendaMarketplace(
                             colorTexto = VerdeOk
                         )
                     }
+
+                    if (tienda.necesidades.tieneForoComunidad) {
+                        InsigniaNecesidadEditorial(
+                            texto = "Muro y Foro",
+                            icono = Icons.Filled.Email,
+                            colorFondo = Color(0xFFFCE7F3),
+                            colorTexto = Color(0xFF9D174D)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -596,6 +609,8 @@ private fun DialogoDetalleTienda(
 ) {
     val context = LocalContext.current
     val productos = remember(tienda.id) { TramaStore.productosDeTienda(tienda.id) }
+    var nuevaPreguntaCliente by remember { mutableStateOf("") }
+    val publicaciones = TramaStore.publicacionesDeTienda(tienda.id)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -800,6 +815,215 @@ private fun DialogoDetalleTienda(
                 }
 
                 HorizontalDivider(color = GrisBorde)
+
+                if (tienda.necesidades.tieneForoComunidad) {
+                    // SECCIÓN MURO Y FORO COMUNITARIO
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Email, contentDescription = null, tint = RojoAlerce, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Muro Comunitario & Consultas",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = NegroApple
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(50.dp),
+                            color = Color(0xFFFCE7F3)
+                        ) {
+                            Text(
+                                text = "En Vivo",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF9D174D),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    if (publicaciones.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = GrisChip,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Aún no hay publicaciones en el muro. ¡Sé el primero en hacer una pregunta a ${tienda.nombre}!",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTexto,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            publicaciones.forEach { pub ->
+                                val esOficial = pub.esEmprendedor
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (esOficial) Color(0xFFFFFBEB) else GrisChip,
+                                    border = BorderStroke(1.dp, if (esOficial) Color(0xFFFDE68A) else GrisBorde),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = if (esOficial) Color(0xFFD97706) else Color(0xFF4B5563),
+                                                    modifier = Modifier.size(22.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Text(
+                                                            text = pub.autorNombre.firstOrNull()?.uppercase() ?: "U",
+                                                            color = Color.White,
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = pub.autorNombre,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.sp,
+                                                    color = NegroApple
+                                                )
+                                                if (esOficial) {
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Surface(
+                                                        shape = RoundedCornerShape(50.dp),
+                                                        color = Color(0xFFFEF3C7)
+                                                    ) {
+                                                        Text(
+                                                            text = "Oficial",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color(0xFFB45309),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Text(
+                                                text = pub.fecha,
+                                                fontSize = 10.sp,
+                                                color = GrisTexto
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = pub.texto,
+                                            fontSize = 12.sp,
+                                            color = NegroApple,
+                                            lineHeight = 16.sp
+                                        )
+
+                                        // Respuestas de la tienda
+                                        if (pub.respuestas.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(start = 10.dp),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                pub.respuestas.forEach { resp ->
+                                                    Surface(
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        color = if (resp.esEmprendedor) Color(0xFFFEF2F2) else BlancoPuro,
+                                                        border = BorderStroke(0.5.dp, if (resp.esEmprendedor) Color(0xFFFECACA) else GrisBorde),
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    ) {
+                                                        Column(modifier = Modifier.padding(6.dp)) {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Text(
+                                                                    text = resp.autorNombre,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    fontSize = 11.sp,
+                                                                    color = if (resp.esEmprendedor) RojoAlerce else NegroApple
+                                                                )
+                                                                if (resp.esEmprendedor) {
+                                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                                    Text("· Respuesta de la Tienda", fontSize = 9.sp, color = RojoAlerce, fontWeight = FontWeight.SemiBold)
+                                                                }
+                                                                Spacer(modifier = Modifier.width(6.dp))
+                                                                Text(text = resp.fecha, fontSize = 9.sp, color = GrisTexto)
+                                                            }
+                                                            Spacer(modifier = Modifier.height(2.dp))
+                                                            Text(text = resp.texto, fontSize = 11.sp, color = NegroApple)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Formulario para que el cliente (Paul) pregunte
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFF9FAFB),
+                        border = BorderStroke(1.dp, GrisBorde),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "Pregúntale a ${tienda.nombre} en el Muro:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NegroApple
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            CampoTexto(
+                                valor = nuevaPreguntaCliente,
+                                onValorChange = { nuevaPreguntaCliente = it },
+                                etiqueta = "Tu consulta pública",
+                                placeholder = "Ej: ¿Vecina, tiene pan amasado o stock hoy?",
+                                esMultilinea = false
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    if (nuevaPreguntaCliente.isNotBlank()) {
+                                        TramaStore.agregarPublicacionForo(
+                                            tiendaId = tienda.id,
+                                            autorNombre = "Paul M. (Vecino)",
+                                            esEmprendedor = false,
+                                            texto = nuevaPreguntaCliente.trim()
+                                        )
+                                        nuevaPreguntaCliente = ""
+                                    }
+                                },
+                                enabled = nuevaPreguntaCliente.isNotBlank(),
+                                shape = RoundedCornerShape(50.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(38.dp)
+                            ) {
+                                Icon(Icons.Filled.Send, contentDescription = null, tint = BlancoPuro, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Publicar Consulta como Paul", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BlancoPuro)
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = GrisBorde)
+                }
 
                 // Facilidades y ubicación
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

@@ -74,7 +74,7 @@ object FirebaseManager {
                 tieneVentaPorWhatsApp = true,
                 tieneProductosAPedido = false,
                 participaEnFerias = false,
-                tieneForoComunidad = false
+                tieneForoComunidad = true
             )
         ),
         Tienda(

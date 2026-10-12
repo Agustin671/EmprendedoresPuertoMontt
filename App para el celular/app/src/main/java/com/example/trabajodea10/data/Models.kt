@@ -229,3 +229,21 @@ data class BloqueHorario(
     val clienteTelefono: String? = null,
     val servicio: String? = null
 )
+
+data class RespuestaForo(
+    val id: String,
+    val autorNombre: String,
+    val esEmprendedor: Boolean = false,
+    val texto: String,
+    val fecha: String
+)
+
+data class PublicacionForo(
+    val id: String,
+    val tiendaId: String,
+    val autorNombre: String,
+    val esEmprendedor: Boolean = false,
+    val texto: String,
+    val fecha: String,
+    val respuestas: List<RespuestaForo> = emptyList()
+)

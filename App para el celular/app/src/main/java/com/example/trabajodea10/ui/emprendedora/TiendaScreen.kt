@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Store
@@ -62,6 +63,8 @@ import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.BloqueHorario
 import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.NecesidadesTienda
+import com.example.trabajodea10.data.PublicacionForo
+import com.example.trabajodea10.data.RespuestaForo
 import androidx.compose.foundation.BorderStroke
 import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.TramaStore
@@ -304,8 +307,30 @@ fun PantallaTienda(
                 )
             }
 
+            // GESTIÓN DE FORO Y MURO (Si tieneForoComunidad está activo)
+            if (tieneForoComunidad) {
+                Spacer(modifier = Modifier.height(10.dp))
+                TituloSeccion(
+                    texto = when {
+                        tieneAgendamiento -> "3. MURO Y FORO COMUNITARIO"
+                        else -> "2. MURO Y FORO COMUNITARIO"
+                    }
+                )
+                SeccionGestionForo(
+                    tiendaId = tiendaBase.id,
+                    nombreTienda = nombre,
+                    avisar = avisar
+                )
+            }
+
             // SECCIÓN SIGUIENTE: DATOS DEL NEGOCIO
-            TituloSeccion(texto = if (tieneAgendamiento) "3. DATOS DE TU NEGOCIO" else "2. DATOS DE TU NEGOCIO")
+            TituloSeccion(
+                texto = when {
+                    tieneAgendamiento && tieneForoComunidad -> "4. DATOS DE TU NEGOCIO"
+                    tieneAgendamiento || tieneForoComunidad -> "3. DATOS DE TU NEGOCIO"
+                    else -> "2. DATOS DE TU NEGOCIO"
+                }
+            )
             CampoTexto(valor = nombre, onValorChange = { nombre = it }, etiqueta = "Nombre de la Tienda")
             CampoTexto(valor = rubro, onValorChange = { rubro = it }, etiqueta = "Rubro (ej. Barbería, Minimarket, Artesanía)")
             CampoTexto(valor = sector, onValorChange = { sector = it }, etiqueta = "Sector (ej. Alerce Norte, Alerce Histórico)")
@@ -857,5 +882,338 @@ private fun SeccionGestionAgenda(
         }
     }
 }
+
+@Composable
+private fun SeccionGestionForo(
+    tiendaId: String,
+    nombreTienda: String,
+    avisar: (String) -> Unit
+) {
+    var nuevoAviso by remember { mutableStateOf("") }
+    var respuestaTextoPorPubId by remember { mutableStateOf(mapOf<String, String>()) }
+    var mostrandoResponderPorPubId by remember { mutableStateOf(mapOf<String, Boolean>()) }
+
+    val publicaciones = TramaStore.publicacionesDeTienda(tiendaId)
+
+    Tarjeta {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Email,
+                        contentDescription = null,
+                        tint = RojoAlerce,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Muro y Foro Comunitario",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = NegroApple
+                    )
+                }
+                Surface(
+                    shape = RoundedCornerShape(50.dp),
+                    color = Color(0xFFFCE7F3)
+                ) {
+                    Text(
+                        text = "En Vivo",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF9D174D),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = "Publica avisos oficiales para tus vecinos (ej. pan caliente, ofertas del día) y responde consultas vecinales.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextoSecundario,
+                fontSize = 12.sp
+            )
+
+            // CAJA PARA PUBLICAR AVISO OFICIAL
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = SuperficieVariante,
+                border = BorderStroke(1.dp, LineaSuave),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Nuevo Comunicado Oficial de $nombreTienda",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = NegroApple
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    CampoTexto(
+                        valor = nuevoAviso,
+                        onValorChange = { nuevoAviso = it },
+                        etiqueta = "Mensaje a la comunidad",
+                        placeholder = "Ej: ¡Acaba de salir pan amasado calentito y llegaron huevos frescos de campo! 🥖🥚",
+                        esMultilinea = true
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        onClick = {
+                            if (nuevoAviso.isNotBlank()) {
+                                TramaStore.agregarPublicacionForo(
+                                    tiendaId = tiendaId,
+                                    autorNombre = nombreTienda,
+                                    esEmprendedor = true,
+                                    texto = nuevoAviso.trim()
+                                )
+                                nuevoAviso = ""
+                                avisar("¡Aviso oficial publicado en el Muro!")
+                            }
+                        },
+                        enabled = nuevoAviso.isNotBlank(),
+                        shape = RoundedCornerShape(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = NegroApple),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                    ) {
+                        Icon(Icons.Filled.Send, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Publicar en el Muro de la Comunidad", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            }
+
+            HorizontalDivider(color = LineaSuave)
+
+            // LISTA DE PUBLICACIONES DEL MURO
+            Text(
+                text = "Mensajes y Consultas Vecinales (${publicaciones.size}):",
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = NegroApple
+            )
+
+            if (publicaciones.isEmpty()) {
+                Text(
+                    text = "Aún no hay publicaciones en el muro. Redacta tu primer aviso oficial arriba para que lo vean en tu vitrina.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextoSecundario,
+                    fontSize = 12.sp
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    publicaciones.forEach { pub ->
+                        val esAvisoOficial = pub.esEmprendedor
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (esAvisoOficial) Color(0xFFFFFBEB) else SuperficieBlanca,
+                            border = BorderStroke(1.dp, if (esAvisoOficial) Color(0xFFFDE68A) else LineaSuave),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = if (esAvisoOficial) Color(0xFFD97706) else Color(0xFF4B5563),
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    text = pub.autorNombre.firstOrNull()?.uppercase() ?: "U",
+                                                    color = Color.White,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = pub.autorNombre,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.sp,
+                                                    color = NegroApple
+                                                )
+                                                if (esAvisoOficial) {
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Surface(
+                                                        shape = RoundedCornerShape(50.dp),
+                                                        color = Color(0xFFFEF3C7)
+                                                    ) {
+                                                        Text(
+                                                            text = "Oficial",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = Color(0xFFB45309),
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Text(
+                                                text = pub.fecha,
+                                                fontSize = 10.sp,
+                                                color = TextoSecundario
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = pub.texto,
+                                    fontSize = 13.sp,
+                                    color = NegroApple,
+                                    lineHeight = 18.sp
+                                )
+
+                                // RESPUESTAS
+                                if (pub.respuestas.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        pub.respuestas.forEach { resp ->
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = if (resp.esEmprendedor) Color(0xFFFEF2F2) else SuperficieVariante,
+                                                border = BorderStroke(0.5.dp, if (resp.esEmprendedor) Color(0xFFFECACA) else LineaSuave),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Column(modifier = Modifier.padding(8.dp)) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Text(
+                                                            text = resp.autorNombre,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 11.sp,
+                                                            color = if (resp.esEmprendedor) RojoAlerce else NegroApple
+                                                        )
+                                                        if (resp.esEmprendedor) {
+                                                            Spacer(modifier = Modifier.width(4.dp))
+                                                            Text(
+                                                                text = "· Tu respuesta",
+                                                                fontSize = 10.sp,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                color = RojoAlerce
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Text(
+                                                            text = resp.fecha,
+                                                            fontSize = 9.sp,
+                                                            color = TextoSecundario
+                                                        )
+                                                    }
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = resp.texto,
+                                                        fontSize = 12.sp,
+                                                        color = NegroApple
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // BOTÓN / FORMULARIO PARA RESPONDER
+                                val mostrando = mostrandoResponderPorPubId[pub.id] ?: false
+                                val textoResp = respuestaTextoPorPubId[pub.id] ?: ""
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                if (!mostrando) {
+                                    Text(
+                                        text = "Responder como $nombreTienda ➔",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = RojoAlerce,
+                                        modifier = Modifier
+                                            .clickable {
+                                                mostrandoResponderPorPubId = mostrandoResponderPorPubId + (pub.id to true)
+                                            }
+                                            .padding(vertical = 4.dp)
+                                    )
+                                } else {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp)
+                                    ) {
+                                        CampoTexto(
+                                            valor = textoResp,
+                                            onValorChange = {
+                                                respuestaTextoPorPubId = respuestaTextoPorPubId + (pub.id to it)
+                                            },
+                                            etiqueta = "Tu respuesta a ${pub.autorNombre}",
+                                            placeholder = "Escribe tu respuesta..."
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    mostrandoResponderPorPubId = mostrandoResponderPorPubId + (pub.id to false)
+                                                },
+                                                shape = RoundedCornerShape(50.dp),
+                                                border = BorderStroke(1.dp, LineaSuave),
+                                                modifier = Modifier.height(34.dp)
+                                            ) {
+                                                Text("Cancelar", fontSize = 11.sp, color = TextoSecundario)
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Button(
+                                                onClick = {
+                                                    if (textoResp.isNotBlank()) {
+                                                        TramaStore.responderPublicacionForo(
+                                                            publicacionId = pub.id,
+                                                            autorNombre = nombreTienda,
+                                                            esEmprendedor = true,
+                                                            texto = textoResp.trim()
+                                                        )
+                                                        respuestaTextoPorPubId = respuestaTextoPorPubId + (pub.id to "")
+                                                        mostrandoResponderPorPubId = mostrandoResponderPorPubId + (pub.id to false)
+                                                        avisar("¡Respuesta enviada!")
+                                                    }
+                                                },
+                                                enabled = textoResp.isNotBlank(),
+                                                shape = RoundedCornerShape(50.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = RojoAlerce),
+                                                modifier = Modifier.height(34.dp)
+                                            ) {
+                                                Text("Enviar Respuesta", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 
