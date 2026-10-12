@@ -555,7 +555,11 @@ private fun TarjetaTiendaMarketplace(
                             .height(42.dp)
                     ) {
                         Text(
-                            text = if (tienda.necesidades.tieneAgendamiento) "Agendar Cita" else "Ver Vitrina",
+                            text = when {
+                                tienda.necesidades.tieneAgendamiento -> "Agendar Cita"
+                                tienda.necesidades.tieneForoComunidad -> "Vitrina y Foro"
+                                else -> "Ver Vitrina"
+                            },
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = NegroApple
@@ -610,6 +614,7 @@ private fun DialogoDetalleTienda(
     val context = LocalContext.current
     val productos = remember(tienda.id) { TramaStore.productosDeTienda(tienda.id) }
     var nuevaPreguntaCliente by remember { mutableStateOf("") }
+    var pestanaDetalle by remember { mutableStateOf(0) }
     val publicaciones = TramaStore.publicacionesDeTienda(tienda.id)
 
     AlertDialog(
@@ -683,12 +688,58 @@ private fun DialogoDetalleTienda(
 
                 HorizontalDivider(color = GrisBorde)
 
-                // CATÁLOGO DE PRODUCTOS DE LA VITRINA
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                // SELECTOR DE PESTAÑAS (Si la tienda tiene foro de comunidad)
+                if (tienda.necesidades.tieneForoComunidad) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(GrisChip, RoundedCornerShape(50.dp))
+                            .padding(3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(if (pestanaDetalle == 0) BlancoPuro else Color.Transparent)
+                                .clickable { pestanaDetalle = 0 }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Catálogo (${productos.size})",
+                                fontSize = 12.sp,
+                                fontWeight = if (pestanaDetalle == 0) FontWeight.Bold else FontWeight.Medium,
+                                color = NegroApple
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(if (pestanaDetalle == 1) NegroApple else Color.Transparent)
+                                .clickable { pestanaDetalle = 1 }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Muro y Foro (${publicaciones.size})",
+                                fontSize = 12.sp,
+                                fontWeight = if (pestanaDetalle == 1) FontWeight.Bold else FontWeight.Medium,
+                                color = if (pestanaDetalle == 1) BlancoPuro else NegroApple
+                            )
+                        }
+                    }
+                }
+
+                if (!tienda.necesidades.tieneForoComunidad || pestanaDetalle == 0) {
+                    // CATÁLOGO DE PRODUCTOS DE LA VITRINA
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                     Text(
                         text = "Productos en Vitrina (${productos.size}):",
                         fontWeight = FontWeight.Bold,
@@ -813,10 +864,9 @@ private fun DialogoDetalleTienda(
                         }
                     }
                 }
+                }
 
-                HorizontalDivider(color = GrisBorde)
-
-                if (tienda.necesidades.tieneForoComunidad) {
+                if (tienda.necesidades.tieneForoComunidad && pestanaDetalle == 1) {
                     // SECCIÓN MURO Y FORO COMUNITARIO
                     Row(
                         modifier = Modifier.fillMaxWidth(),
