@@ -8,9 +8,9 @@
       la página completa usa el nuevo color.
         - --color-texto      : color de los textos
         - --color-fondo      : color de fondo de la página
-        - --color-principal  : verde de Trama (botones principales)
-        - --color-acento     : color de énfasis (botones de ayuda)
-        - --color-peligro    : rojo de alerta
+        - --color-principal  : berenjena de Trama (botones principales)
+        - --color-acento     : naranja de énfasis (botones de ayuda)
+        - --color-atencion   : rojo de alerta
 
    2) TAMAÑO DE LETRA: se controla con "em".
       - El tamaño NORMAL está en la etiqueta body (--tamano-normal).
@@ -19,26 +19,29 @@
       Para agrandar TODO: sube solo el valor de --tamano-normal.
 
    3) CONTRASTE: por defecto este diseño ya tiene alto contraste
-      (texto oscuro casi negro sobre fondo blanco y verde oscuro.
+      (texto oscuro casi negro sobre fondo blanco y berenjena oscura.
       La clase .alto-contraste (que activa el botón flotante)
       hace el contraste aún más fuerte.
    ============================================================ */
 
 /* ---------- VARIABLES DE COLOR Y TAMAÑO ---------- */
 :root {
-  /* Colores principales (contraste alto, pensado para adultos mayores) */
+  /* Colores principales (paleta "Berenjena" de la app Trama; contraste alto) */
   --color-texto: #1a1a1a;              /* Texto casi negro: alto contraste */
   --color-texto-claro: #ffffff;        /* Texto blanco sobre botones de color */
   --color-fondo: #ffffff;              /* Fondo blanco de la página */
-  --color-fondo-suave: #eef4f0;        /* Fondo gris-verde muy claro */
-  --color-principal: #1e7a46;          /* Verde oscuro de Trama (botones) */
-  --color-principal-oscuro: #145a30;   /* Verde más oscuro (al pasar el mouse) */
-  --color-acento: #b3541e;             /* Naranja/terracota (botones de ayuda) */
-  --color-acento-oscuro: #8a3c12;      /* Naranja más oscuro (hover) */
-  --color-whatsapp: #128c4a;           /* Verde de WhatsApp */
-  --color-whatsapp-oscuro: #0d6b38;    /* Verde WhatsApp más oscuro */
-  --color-borde: #7a7a7a;              /* Gris para bordes (visible) */
-  --color-atencion: #b3261e;           /* Rojo para avisos importantes */
+  --color-fondo-suave: #f7f5f7;        /* Fondo neutro muy claro */
+  --color-principal: #5c315b;          /* Berenjena de Trama (botones) */
+  --color-principal-oscuro: #3e1f3e;   /* Berenjena oscura (encabezado, hover) */
+  --color-contenedor: #eadfea;         /* Berenjena muy claro (fondos suaves) */
+  --color-acento: #e07a2b;             /* Naranja de la app (botones de ayuda) */
+  --color-acento-oscuro: #c05219;      /* Naranja más oscuro (hover) */
+  --color-acento-suave: #ffe9cf;       /* Naranja muy claro (fondos de ayuda) */
+  --color-whatsapp: #2e7d5b;           /* Verde de la app (botón WhatsApp) */
+  --color-whatsapp-oscuro: #216043;    /* Verde de la app más oscuro */
+  --color-borde: #ddd5dc;              /* Línea suave para bordes */
+  --color-atencion: #c0392b;           /* Rojo de error para avisos */
+  --color-atencion-suave: #fbe0dc;     /* Rojo muy claro (fondos de aviso) */
 
   /* Tamaños de letra (en em para crecer todo junto) */
   --tamano-normal: 1.125rem;           /* Letra de base (18px): grande y clara */
@@ -339,7 +342,7 @@ input:focus-visible {
 }
 
 .boton-cerrar:hover {
-  background-color: #7e1a14;
+  background-color: #96281d;
 }
 
 /* ============================================================
@@ -395,7 +398,7 @@ input:focus-visible {
    BIENVENIDA (inicio)
    ============================================================ */
 .bienvenida {
-  background-color: #eaf2ec;
+  background-color: var(--color-contenedor);
   padding: 3rem 0;
 }
 
@@ -489,7 +492,7 @@ input:focus-visible {
    SECCIÓN DE AYUDA
    ============================================================ */
 .ayuda {
-  background-color: #fdf3ec;        /* Fondo anaranjado muy suave */
+  background-color: var(--color-acento-suave);        /* Fondo anaranjado muy suave */
   text-align: center;
   border-top: 4px solid var(--color-acento);
   border-bottom: 4px solid var(--color-acento);
@@ -510,8 +513,8 @@ input:focus-visible {
    MENSAJE DE CONFIRMACIÓN (aparece al guardar o asistir)
    ============================================================ */
 .confirmacion {
-  background-color: #f6fbf8;
-  border: 4px solid #b3261e;        /* Borde rojo para llamar la atención */
+  background-color: var(--color-atencion-suave);
+  border: 4px solid var(--color-atencion);        /* Borde rojo para llamar la atención */
   border-radius: 0.9rem;
   color: var(--color-texto);
   font-size: 1.5rem;
@@ -535,7 +538,7 @@ input:focus-visible {
 
 /* Aviso cuando el buscador no encuentra ferias */
 .aviso-sin-resultados {
-  background-color: #fff4f4;
+  background-color: var(--color-atencion-suave);
   border: 4px solid var(--color-atencion);
   border-radius: 0.75rem;
   color: var(--color-texto);
@@ -954,7 +957,7 @@ body.alto-contraste .boton-flotante {
   border: 3px solid var(--color-borde);
   border-radius: 0.75rem;
   margin: 1rem 0;
-  background-color: #eef1f5;
+  background-color: var(--color-fondo-suave);
 }
 
 .mapa iframe {
@@ -998,7 +1001,7 @@ body.alto-contraste .boton-flotante {
 }
 
 .boton-integrante:hover {
-  background-color: #eaf2ec;
+  background-color: var(--color-contenedor);
 }
 
 /* Muestra del catálogo de las participantes (RF-FER-10) */
@@ -1075,7 +1078,7 @@ body.alto-contraste .boton-flotante {
   font-size: 1.3rem;
   font-weight: bold;
   color: var(--color-principal-oscuro);
-  background-color: #eaf2ec;
+  background-color: var(--color-contenedor);
   border: 3px solid var(--color-principal);
   border-radius: 0.6rem;
   padding: 0.75rem 1rem;

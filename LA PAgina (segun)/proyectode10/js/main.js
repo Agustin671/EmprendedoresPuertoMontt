@@ -57,69 +57,56 @@
   */
   var EMPRENDEDORAS = [
     {
-      id: "e1",
-      nombre: "Cerámica de la Casa",
-      tipo: "Artesanía y manualidades",
-      sector: "Alerce",
-      asociacionId: "a1",
-      descripcion: "Jarrones, tazas y platos pintados a mano por la artesana Marta.",
-      logo: "https://picsum.photos/seed/cer-casa/640/360",
-      whatsapp: "56910000001",
-      contacto: "ambos",
-      mostrarPrecios: true,
-      calificacionesActivas: true
-    },
-    {
-      id: "e2",
-      nombre: "Tejidos del Valle",
-      tipo: "Artesanía y manualidades",
-      sector: "Angelmó",
-      asociacionId: "a1",
-      descripcion: "Bufandas, gorros y mantas de lana tejidos a mano con lana de oveja.",
-      logo: "https://picsum.photos/seed/tej-valle/640/360",
-      whatsapp: "56910000002",
-      contacto: "whatsapp",
-      mostrarPrecios: true,
-      calificacionesActivas: true
-    },
-    {
-      id: "e3",
-      nombre: "Dulces y Miel del Sur",
-      tipo: "Alimentos y repostería",
-      sector: "Mirasol",
-      asociacionId: "a2",
-      descripcion: "Miel pura, mermeladas y dulces caseros sin conservantes.",
-      logo: "https://picsum.photos/seed/dul-sur/640/360",
-      whatsapp: "56910000003",
-      contacto: "formulario",
-      mostrarPrecios: false,
-      calificacionesActivas: false
-    },
-    {
-      id: "e4",
-      nombre: "Aromas de Puerto Montt",
-      tipo: "Cosmética natural",
-      sector: "Pelluco",
+      id: "t_barberia_alerce",
+      nombre: "Barbería & Estilo Alerce",
+      tipo: "Servicios y Peluquería",
+      sector: "Alerce Norte",
       asociacionId: "",
-      descripcion: "Jabones y cremas naturales hechos con hierbas de la zona.",
-      logo: "https://picsum.photos/seed/arom-pm/640/360",
-      whatsapp: "56910000004",
+      descripcion: "Cortes de cabello clásicos y modernos, perfilado de barba y tratamientos capilares. Atención personalizada en local y a domicilio.",
+      logo: "https://picsum.photos/seed/barberia-alerce/640/360",
+      whatsapp: "56987654321",
       contacto: "whatsapp",
       mostrarPrecios: true,
       calificacionesActivas: true
     },
     {
-      id: "e5",
-      nombre: "Verde Huerta",
-      tipo: "Plantas y huerta",
-      sector: "Alerce",
-      asociacionId: "a1",
-      descripcion: "Plantas de temporada, hierbas y maceteros para la huerta de casa.",
-      logo: "https://picsum.photos/seed/verde-huerta/640/360",
-      whatsapp: "56910000005",
-      contacto: "ambos",
+      id: "t_minimarket_rosa",
+      nombre: "Minimarket y Provisiones Doña Rosa",
+      tipo: "Abarrotes y Alimentos",
+      sector: "Alerce Histórico",
+      asociacionId: "",
+      descripcion: "Frutas y verduras frescas, pan amasado caliente todos los días a las 17:00 hrs, abarrotes, cecinas y bebidas.",
+      logo: "https://picsum.photos/seed/minimarket-rosa/640/360",
+      whatsapp: "56991234567",
+      contacto: "whatsapp",
       mostrarPrecios: true,
-      calificacionesActivas: false
+      calificacionesActivas: true
+    },
+    {
+      id: "t_tejidos_austral",
+      nombre: "Tejidos & Lanares Alerce Austral",
+      tipo: "Artesanía y Textil",
+      sector: "Alerce Sur",
+      asociacionId: "",
+      descripcion: "Piezas únicas tejidas a palillo y telar con lana 100% natural de oveja chilota, teñida con tintes de cortezas nativas.",
+      logo: "https://picsum.photos/seed/tejidos-austral/640/360",
+      whatsapp: "56976543210",
+      contacto: "whatsapp",
+      mostrarPrecios: true,
+      calificacionesActivas: true
+    },
+    {
+      id: "t_reposteria_surena",
+      nombre: "Repostería Casera Tradición Sureña",
+      tipo: "Pastelería y Gastronomía",
+      sector: "Senda Central",
+      asociacionId: "",
+      descripcion: "Kuchenes tradicionales de murta y frambuesa, tortas de hojarasca a pedido, alfajores caseros y galletas horneadas con amor.",
+      logo: "https://picsum.photos/seed/reposteria-surena/640/360",
+      whatsapp: "56965432109",
+      contacto: "whatsapp",
+      mostrarPrecios: true,
+      calificacionesActivas: true
     }
   ];
 
@@ -129,21 +116,30 @@
   var ASOCIACIONES = [
     {
       id: "a1",
-      nombre: "Manos de Alerce",
-      sector: "Alerce",
-      descripcion: "Agrupación de artesanas y viveristas de Alerce que participan juntas en ferias.",
-      logo: "https://picsum.photos/seed/manos-alerce/640/360",
-      contacto: "56910000006",
-      integrantes: ["e1", "e2", "e5"]
+      nombre: "Manos del Sur",
+      sector: "Puerto Montt",
+      descripcion: "Agrupación de emprendedoras de Puerto Montt que trabajan juntas en ferias y comparten su vitrina.",
+      logo: "https://picsum.photos/seed/manos-del-sur/640/360",
+      contacto: "56961230000",
+      integrantes: []
     },
     {
       id: "a2",
-      nombre: "Tierra que Alimenta",
-      sector: "Puerto Montt",
-      descripcion: "Productoras de alimentos caseros: mermeladas, miel, panes y repostería.",
-      logo: "https://picsum.photos/seed/tierra-alimenta/640/360",
-      contacto: "56910000007",
-      integrantes: ["e3"]
+      nombre: "Red del Lago",
+      sector: "Puerto Varas",
+      descripcion: "Red de emprendedoras de Puerto Varas dedicada a la artesanía y los productos locales.",
+      logo: "https://picsum.photos/seed/red-del-lago/640/360",
+      contacto: "56961230000",
+      integrantes: []
+    },
+    {
+      id: "a3",
+      nombre: "Taller Costero",
+      sector: "Frutillar",
+      descripcion: "Taller de emprendedoras de Frutillar enfocado en artesanía y gastronomía de la zona.",
+      logo: "https://picsum.photos/seed/taller-costero/640/360",
+      contacto: "56961230000",
+      integrantes: []
     }
   ];
 
@@ -165,88 +161,145 @@
   */
   var PRODUCTOS = [
     {
-      id: "p1", emprendedoraId: "e1", nombre: "Jarro de greda pintado",
-      descripcion: "Jarro hecho a mano y pintado con motivos del sur. Pieza única.",
-      categoria: "Cerámica", tipoProducto: "Cerámica",
-      precio: 18000, modalidad: "pieza-unica", estado: "disponible",
-      imagen: "https://picsum.photos/seed/jarro/640/640", variantes: []
-    },
-    {
-      id: "p2", emprendedoraId: "e1", nombre: "Tazas esmaltadas",
-      descripcion: "Juego de tazas esmaltadas. Puedes elegir el color.",
-      categoria: "Cerámica", tipoProducto: "Cerámica",
-      precio: 12000, modalidad: "regular", estado: "disponible",
-      imagen: "https://picsum.photos/seed/tazas-azul/640/640",
+      id: "p_rep_1", emprendedoraId: "t_reposteria_surena", nombre: "Kuchen Tradicional de Murta y Frambuesa",
+      descripcion: "Kuchen artesanal relleno con murta y frambuesa de la zona.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 12000, modalidad: "a-pedido", estado: "disponible",
+      imagen: "https://picsum.photos/seed/kuchen-murta/640/640",
       variantes: [
-        { nombre: "Azul", precio: 12000, imagen: "https://picsum.photos/seed/tazas-azul/640/640" },
-        { nombre: "Verde", precio: 12000, imagen: "https://picsum.photos/seed/tazas-verde/640/640" },
-        { nombre: "Blanco", precio: 13000, imagen: "https://picsum.photos/seed/tazas-blanco/640/640" }
+        { nombre: "Molde Familiar (8 porciones)", precio: 12000, imagen: "https://picsum.photos/seed/kuchen-murta/640/640" }
       ]
     },
     {
-      id: "p3", emprendedoraId: "e2", nombre: "Bufanda de lana",
-      descripcion: "Tejida a mano en lana de oveja. Se hace por encargo en tu color y tamaño.",
+      id: "p_rep_2", emprendedoraId: "t_reposteria_surena", nombre: "Torta de Hojarasca con Manjar Casero",
+      descripcion: "Torta de hojarasca rellena con manjar casero, hecha a pedido.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 18500, modalidad: "a-pedido", estado: "disponible",
+      imagen: "https://picsum.photos/seed/torta-hojarasca/640/640",
+      variantes: [
+        { nombre: "15 Personas", precio: 18500, imagen: "https://picsum.photos/seed/torta-hojarasca/640/640" }
+      ]
+    },
+    {
+      id: "p_rep_3", emprendedoraId: "t_reposteria_surena", nombre: "Pack 6 Alfajores Artesanales con Nuez",
+      descripcion: "Caja con 6 alfajores artesanales rellenos y cubiertos con nuez.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 5500, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/alfajores-nuez/640/640",
+      variantes: [
+        { nombre: "Caja 6 un.", precio: 5500, imagen: "https://picsum.photos/seed/alfajores-nuez/640/640" }
+      ]
+    },
+    {
+      id: "p_rep_4", emprendedoraId: "t_reposteria_surena", nombre: "Galletas Horneadas de Avena y Miel de Ulmo",
+      descripcion: "Galletas horneadas con avena y miel de ulmo, en bolsa de 250 g.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 3800, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/galletas-avena/640/640",
+      variantes: [
+        { nombre: "Bolsa 250g", precio: 3800, imagen: "https://picsum.photos/seed/galletas-avena/640/640" }
+      ]
+    },
+    {
+      id: "p_mini_1", emprendedoraId: "t_minimarket_rosa", nombre: "Pan Amasado Caliente (Salida 17:00 hrs)",
+      descripcion: "Pan amasado recién horneado, sale caliente todos los días a las 17:00 hrs.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 2500, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/pan-amasado/640/640",
+      variantes: [
+        { nombre: "Bolsa 5 unidades", precio: 2500, imagen: "https://picsum.photos/seed/pan-amasado/640/640" }
+      ]
+    },
+    {
+      id: "p_mini_2", emprendedoraId: "t_minimarket_rosa", nombre: "Canasta de Verduras Frescas de Alerce",
+      descripcion: "Canasta semanal con verduras frescas de la zona.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 7000, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/verduras-alerce/640/640",
+      variantes: [
+        { nombre: "Surtido Semanal", precio: 7000, imagen: "https://picsum.photos/seed/verduras-alerce/640/640" }
+      ]
+    },
+    {
+      id: "p_mini_3", emprendedoraId: "t_minimarket_rosa", nombre: "Huevos de Campo Libres (Docena)",
+      descripcion: "Docena de huevos de campo, de gallinas libres.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 4200, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/huevos-campo/640/640",
+      variantes: [
+        { nombre: "Docena", precio: 4200, imagen: "https://picsum.photos/seed/huevos-campo/640/640" }
+      ]
+    },
+    {
+      id: "p_mini_4", emprendedoraId: "t_minimarket_rosa", nombre: "Miel de Ulmo Pura de Bosque Nativo 1kg",
+      descripcion: "Miel de ulmo pura, de bosque nativo, en frasco de 1 kg.",
+      categoria: "Gourmet", tipoProducto: "Gourmet",
+      precio: 6500, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/miel-ulmo/640/640",
+      variantes: [
+        { nombre: "Frasco 1kg", precio: 6500, imagen: "https://picsum.photos/seed/miel-ulmo/640/640" }
+      ]
+    },
+    {
+      id: "p_tej_1", emprendedoraId: "t_tejidos_austral", nombre: "Chaleco de Lana Chilota a Palillo",
+      descripcion: "Chaleco tejido a palillo con lana 100% natural de oveja chilota.",
       categoria: "Textil", tipoProducto: "Textil",
-      precio: 15000, modalidad: "a-pedido", estado: "disponible",
-      imagen: "https://picsum.photos/seed/bufanda/640/640",
+      precio: 38000, modalidad: "a-pedido", estado: "disponible",
+      imagen: "https://picsum.photos/seed/chaleco-chilote/640/640",
       variantes: [
-        { nombre: "Gris", precio: 15000, imagen: "https://picsum.photos/seed/bufanda-gris/640/640" },
-        { nombre: "Terracota", precio: 15000, imagen: "https://picsum.photos/seed/bufanda-terracota/640/640" }
+        { nombre: "Gris Natural · Talla M", precio: 38000, imagen: "https://picsum.photos/seed/chaleco-chilote/640/640" },
+        { nombre: "Blanco Crudo · Talla L", precio: 38000, imagen: "https://picsum.photos/seed/chaleco-chilote-l/640/640" }
       ]
     },
     {
-      id: "p4", emprendedoraId: "e2", nombre: "Gorro tejido",
-      descripcion: "Gorro clásico de lana. Agotado hasta la próxima temporada.",
+      id: "p_tej_2", emprendedoraId: "t_tejidos_austral", nombre: "Gorro y Cuello de Lana Pura de Oveja",
+      descripcion: "Conjunto de gorro y cuello tejidos en lana pura de oveja.",
       categoria: "Textil", tipoProducto: "Textil",
-      precio: 8000, modalidad: "regular", estado: "agotado",
-      imagen: "https://picsum.photos/seed/gorro/640/640", variantes: []
-    },
-    {
-      id: "p5", emprendedoraId: "e3", nombre: "Mermelada artesanal",
-      descripcion: "Preparada con fruta de la zona y azúcar de caña. Elige el sabor.",
-      categoria: "Alimentos", tipoProducto: "Mermeladas",
-      precio: 4500, modalidad: "regular", estado: "disponible",
-      imagen: "https://picsum.photos/seed/mermelada/640/640",
+      precio: 14000, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/gorro-cuello/640/640",
       variantes: [
-        { nombre: "Frutos rojos", precio: 4500, imagen: "https://picsum.photos/seed/mermelada-rojos/640/640" },
-        { nombre: "Ciruela", precio: 4500, imagen: "https://picsum.photos/seed/mermelada-ciruela/640/640" },
-        { nombre: "Mora", precio: 4800, imagen: "https://picsum.photos/seed/mermelada-mora/640/640" }
+        { nombre: "Talla Única", precio: 14000, imagen: "https://picsum.photos/seed/gorro-cuello/640/640" }
       ]
     },
     {
-      id: "p6", emprendedoraId: "e3", nombre: "Miel pura de abeja",
-      descripcion: "Miel sin mezclas, envasada en frasco de vidrio de 500 g.",
-      categoria: "Alimentos", tipoProducto: "Miel",
+      id: "p_tej_3", emprendedoraId: "t_tejidos_austral", nombre: "Piecera Rústica en Telar Tradicional",
+      descripcion: "Piecera rústica tejida en telar tradicional, para cama de 2 plazas.",
+      categoria: "Decoración", tipoProducto: "Textil",
+      precio: 45000, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/piecera-telar/640/640",
+      variantes: [
+        { nombre: "2 Plazas", precio: 45000, imagen: "https://picsum.photos/seed/piecera-telar/640/640" }
+      ]
+    },
+    {
+      id: "p_bar_1", emprendedoraId: "t_barberia_alerce", nombre: "Corte de Cabello Clásico / Degrade Moderno",
+      descripcion: "Corte de cabello clásico o degradado moderno, sesión de 40 minutos.",
+      categoria: "Cosmética", tipoProducto: "Cosmética",
       precio: 8000, modalidad: "regular", estado: "disponible",
-      imagen: "https://picsum.photos/seed/miel/640/640", variantes: []
+      imagen: "https://picsum.photos/seed/corte-cabello/640/640",
+      variantes: [
+        { nombre: "Sesión 40 min", precio: 8000, imagen: "https://picsum.photos/seed/corte-cabello/640/640" }
+      ]
     },
     {
-      id: "p7", emprendedoraId: "e4", nombre: "Jabón de hierbas",
-      descripcion: "Jabón natural con hierbas aromáticas. Ideal para piel sensible.",
-      categoria: "Cosmética", tipoProducto: "Cosmética natural",
-      precio: 3000, modalidad: "regular", estado: "disponible",
-      imagen: "https://picsum.photos/seed/jabon/640/640", variantes: []
+      id: "p_bar_2", emprendedoraId: "t_barberia_alerce", nombre: "Perfilado y Ritual de Barba con Toalla Caliente",
+      descripcion: "Perfilado y ritual de barba con toalla caliente, sesión de 30 minutos.",
+      categoria: "Cosmética", tipoProducto: "Cosmética",
+      precio: 6500, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/barba-ritual/640/640",
+      variantes: [
+        { nombre: "Sesión 30 min", precio: 6500, imagen: "https://picsum.photos/seed/barba-ritual/640/640" }
+      ]
     },
     {
-      id: "p8", emprendedoraId: "e4", nombre: "Bálsamo de caléndula",
-      descripcion: "Cremita reparadora hecha con caléndula y aceites naturales.",
-      categoria: "Cosmética", tipoProducto: "Cosmética natural",
-      precio: 9000, modalidad: "a-pedido", estado: "disponible",
-      imagen: "https://picsum.photos/seed/balasamo/640/640", variantes: []
-    },
-    {
-      id: "p9", emprendedoraId: "e5", nombre: "Planta de temporada",
-      descripcion: "Plantas de la huerta listas para plantar en casa.",
-      categoria: "Plantas", tipoProducto: "Plantas y huerta",
-      precio: 4000, modalidad: "regular", estado: "disponible",
-      imagen: "https://picsum.photos/seed/planta/640/640", variantes: []
-    },
-    {
-      id: "p10", emprendedoraId: "e5", nombre: "Macetero de hierbas",
-      descripcion: "Macetero surtido con hierbas para cocina (menta, orégano, tomillo).",
-      categoria: "Plantas", tipoProducto: "Plantas y huerta",
-      precio: 6000, modalidad: "pieza-unica", estado: "disponible",
-      imagen: "https://picsum.photos/seed/hierbas/640/640", variantes: []
+      id: "p_bar_3", emprendedoraId: "t_barberia_alerce", nombre: "Cera y Pomada Modeladora Capilar",
+      descripcion: "Cera y pomada modeladora para el cabello, pote de 100 g.",
+      categoria: "Cosmética", tipoProducto: "Cosmética",
+      precio: 7500, modalidad: "regular", estado: "disponible",
+      imagen: "https://picsum.photos/seed/cera-capilar/640/640",
+      variantes: [
+        { nombre: "Pote 100g", precio: 7500, imagen: "https://picsum.photos/seed/cera-capilar/640/640" }
+      ]
     }
   ];
 
