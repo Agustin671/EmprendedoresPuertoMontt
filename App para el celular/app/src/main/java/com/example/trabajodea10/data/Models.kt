@@ -171,7 +171,6 @@ data class NecesidadesTienda(
 
 @Serializable
 data class Tienda(
-data class Tienda(
     val id: String = "emp1",
     val nombre: String = "Mi Tienda",
     val rubro: String = "Artesanía y Comercio",
@@ -281,5 +280,4 @@ data class PublicacionForo(
     val texto: String,
     val fecha: String,
     val respuestas: List<RespuestaForo> = emptyList()
-)
 )

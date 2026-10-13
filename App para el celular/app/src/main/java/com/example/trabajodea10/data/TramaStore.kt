@@ -728,5 +728,4 @@ object TramaStore {
         escalaTexto = 1f
         persistir()
     }
-    }
 }
