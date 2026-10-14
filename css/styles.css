@@ -27,12 +27,15 @@
   --dorado-oficial: #b45309;
   --dorado-contenedor: #fef3c7;
 
-  /* Tipografía y Escalas */
+  /* Tipografía y Escalas (Estilo Apple Pro: sobrio, limpio y estructurado) */
   --tamano-base: 16px;
-  --radio-card: 20px;
-  --radio-pill: 50px;
-  --sombra-sutil: 0 4px 20px rgba(0, 0, 0, 0.04);
-  --sombra-elevada: 0 12px 36px rgba(0, 0, 0, 0.09);
+  --radio-card: 8px;
+  --radio-pill: 6px;
+  --radio-badge: 4px;
+  --radio-avatar: 8px;
+  --radio-boton: 6px;
+  --sombra-sutil: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --sombra-elevada: 0 4px 14px rgba(0, 0, 0, 0.08);
   --fuente-sistema: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -449,37 +452,39 @@ select:focus-visible {
   margin-bottom: 40px;
 }
 
-/* Tarjeta Tienda */
+/* Tarjeta Tienda (Apple Pro Style: sobria, limpia y cuadrada) */
 .tarjeta-tienda {
   background: var(--blanco-puro);
   border: 1px solid var(--gris-borde);
   border-radius: var(--radio-card);
   overflow: hidden;
   box-shadow: var(--sombra-sutil);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   display: flex;
   flex-direction: column;
 }
 
 .tarjeta-tienda:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: var(--sombra-elevada);
+  border-color: #d1d1d6;
 }
 
 /* Franja superior de color */
 .tarjeta-franja-color {
-  height: 48px;
-  padding: 0 16px;
+  height: 38px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: #ffffff;
+  border-radius: 7px 7px 0 0;
 }
 
 .franja-rubro {
-  font-size: 10.5px;
-  font-weight: 900;
-  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
@@ -490,27 +495,27 @@ select:focus-visible {
 }
 
 .franja-sector-chip {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.28);
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 8px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radio-badge);
 }
 
 .btn-favorito-corazon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radio-badge);
+  background: rgba(255, 255, 255, 0.22);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.2s ease;
 }
 .btn-favorito-corazon:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.35);
 }
 .btn-favorito-corazon.activo {
   color: var(--rojo-alerce);
@@ -533,16 +538,17 @@ select:focus-visible {
 }
 
 .avatar-circulo {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radio-avatar);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 20px;
-  font-weight: 900;
+  font-size: 18px;
+  font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .tarjeta-titulos {
@@ -550,8 +556,8 @@ select:focus-visible {
 }
 
 .tarjeta-nombre {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 15.5px;
+  font-weight: 700;
   color: var(--negro-apple);
   line-height: 1.25;
 }
@@ -564,13 +570,13 @@ select:focus-visible {
 
 .tarjeta-descripcion {
   font-size: 12.5px;
-  color: var(--gris-texto);
+  color: #48484a;
   line-height: 1.45;
   margin-bottom: 14px;
   flex: 1;
 }
 
-/* Badges de capacidades / necesidades */
+/* Badges de capacidades / necesidades (Chips rectangulares técnicos sobrios) */
 .tarjeta-badges-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -580,12 +586,13 @@ select:focus-visible {
 
 .badge-necesidad {
   font-size: 10.5px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: var(--radio-pill);
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radio-badge);
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  letter-spacing: 0.1px;
 }
 
 .badge-stock { background: var(--verde-contenedor); color: var(--verde-ok); }
@@ -601,7 +608,7 @@ select:focus-visible {
   margin-bottom: 14px;
 }
 
-/* Botones de acción de la tarjeta */
+/* Botones de acción de la tarjeta (Cuadrados, sobrios y profesionales estilo Apple) */
 .tarjeta-acciones-fila {
   display: flex;
   gap: 8px;
@@ -609,56 +616,64 @@ select:focus-visible {
 
 .btn-accion-pill {
   flex: 1;
-  height: 40px;
-  border-radius: var(--radio-pill);
-  font-size: 12px;
-  font-weight: 700;
+  height: 38px;
+  border-radius: var(--radio-boton);
+  font-size: 12.5px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: all 0.2s ease;
-  border: 1px solid var(--gris-borde);
-  color: var(--negro-apple);
+  transition: all 0.15s ease;
+  border: 1px solid #d2d2d7;
+  color: #1d1d1f;
   background: var(--blanco-puro);
 }
 
 .btn-accion-pill:hover {
   background: var(--gris-chip);
+  border-color: #b0b0b8;
 }
 
 .btn-accion-pill.btn-negro {
   background: var(--negro-apple);
   color: var(--blanco-puro);
-  border-color: var(--negro-apple);
+  border: 1px solid var(--negro-apple);
+  border-radius: var(--radio-boton);
 }
 .btn-accion-pill.btn-negro:hover {
-  background: var(--negro-suave);
+  background: #2c2c2e;
+  border-color: #2c2c2e;
 }
 
 .btn-accion-pill.btn-agenda {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-  color: var(--azul-agenda);
+  background: #f0f7ff;
+  border: 1px solid #cce3ff;
+  color: #0066cc;
+  border-radius: var(--radio-boton);
+}
+.btn-accion-pill.btn-agenda:hover {
+  background: #e0effe;
 }
 
 .btn-qr-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--gris-borde);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radio-boton);
+  border: 1px solid #d2d2d7;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: var(--negro-apple);
+  color: #1d1d1f;
   background: var(--gris-chip);
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 .btn-qr-icon:hover {
   background: var(--negro-apple);
   color: var(--blanco-puro);
+  border-color: var(--negro-apple);
 }
 
 /* ============================================================
@@ -687,7 +702,7 @@ select:focus-visible {
 
 .modal-panel-editorial {
   background: var(--blanco-puro);
-  border-radius: 24px;
+  border-radius: 12px;
   width: 100%;
   max-width: 680px;
   max-height: 88vh;
@@ -787,7 +802,7 @@ select:focus-visible {
 .producto-fila-card {
   background: var(--blanco-puro);
   border: 1px solid var(--gris-borde);
-  border-radius: 16px;
+  border-radius: var(--radio-card);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -882,7 +897,7 @@ select:focus-visible {
 }
 
 .mensaje-muro-card {
-  border-radius: 14px;
+  border-radius: var(--radio-card);
   padding: 12px;
   border: 1px solid var(--gris-borde);
   background: var(--gris-chip);
@@ -909,7 +924,7 @@ select:focus-visible {
 .autor-avatar-mini {
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--radio-badge);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
@@ -924,7 +939,7 @@ select:focus-visible {
   font-size: 9.5px;
   font-weight: 800;
   padding: 2px 6px;
-  border-radius: 50px;
+  border-radius: var(--radio-badge);
 }
 
 .muro-texto {
@@ -951,7 +966,7 @@ select:focus-visible {
 .respuesta-card {
   background: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 10px;
+  border-radius: var(--radio-boton);
   padding: 8px 10px;
 }
 
@@ -969,7 +984,7 @@ select:focus-visible {
 .caja-publicar-muro {
   background: #f9fafb;
   border: 1px solid var(--gris-borde);
-  border-radius: 16px;
+  border-radius: var(--radio-card);
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -979,7 +994,7 @@ select:focus-visible {
 .textarea-muro {
   width: 100%;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: var(--radio-boton);
   border: 1px solid var(--gris-borde);
   font-family: inherit;
   font-size: 13px;
@@ -1113,9 +1128,9 @@ select:focus-visible {
 .qr-contenedor {
   padding: 16px;
   background: var(--blanco-puro);
-  border-radius: 20px;
+  border-radius: var(--radio-card);
   border: 1px solid var(--gris-borde);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   margin-bottom: 20px;
 }
 

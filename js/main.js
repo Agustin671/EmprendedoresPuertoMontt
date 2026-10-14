@@ -628,13 +628,15 @@
       // Botones de acción inferiores
       html += '    <div class="tarjeta-acciones-fila">';
       if (tienda.necesidades.tieneAgendamiento) {
-        html += '      <button type="button" class="btn-accion-pill btn-agenda" onclick="TramaWeb.abrirAgendamientoDirecto(\'' + tienda.id + '\')">📅 Agendar Cita</button>';
+        html += '      <button type="button" class="btn-accion-pill btn-agenda" onclick="TramaWeb.abrirAgendamientoDirecto(\'' + tienda.id + '\')">Agendar Cita</button>';
       } else {
         html += '      <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirVitrinaTienda(\'' + tienda.id + '\')">' + (tienda.necesidades.tieneForoComunidad ? 'Vitrina y Foro' : 'Ver Vitrina') + '</button>';
       }
 
       html += '      <a href="https://wa.me/' + tienda.whatsapp.replace(/[^0-9]/g, "") + '?text=' + encodeURIComponent("Hola " + tienda.nombre + "! Vi tu tienda en Alerce Emprende y me gustaría hacer una consulta.") + '" target="_blank" rel="noopener" class="btn-accion-pill">WhatsApp</a>';
-      html += '      <button type="button" class="btn-qr-icon" onclick="TramaWeb.abrirQRTienda(\'' + tienda.id + '\')" title="Ver Código QR de la tienda">📲</button>';
+      html += '      <button type="button" class="btn-qr-icon" onclick="TramaWeb.abrirQRTienda(\'' + tienda.id + '\')" title="Ver Código QR de la tienda" aria-label="Código QR">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>' +
+        '</button>';
       html += '    </div>';
 
       html += '  </div>';
