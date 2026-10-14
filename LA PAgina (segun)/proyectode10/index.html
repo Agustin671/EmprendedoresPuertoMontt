@@ -1,389 +1,517 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  TRAMA — Vitrina pública web (prototipo navegable)
-  Sistema que conecta ferias, emprendedoras y asociaciones de
-  Puerto Montt. Página pensada para personas mayores: letra
-  grande, alto contraste, botones grandes con texto claro.
+  TRAMA ALERCE — Vitrina Pública Web (Farfetch & Apple Style)
+  Sincronizada con la aplicación móvil Android
+  Incluye: Carrito de Compras, Código QR, Muro y Foro en Vivo,
+  Vitrina Editorial, Agendamiento de Citas y Accesibilidad.
   ============================================================
-
-  CÓMO EDITAR ESTA PÁGINA (guía rápida):
-  1) CAMBIAR TEXTOS: busca el texto en este archivo y escríbelo de nuevo.
-  2) AGREGAR UNA FERIA: copia un bloque <article class="tarjeta"> de la
-     sección "Próximas ferias" y pégalo debajo. Cambia el texto visible y
-     TODOS los atributos data-feria-* (nombre, fecha, lugar, mapa, etc.).
-  3) AGREGAR EMPRENDEDORAS, ASOCIACIONES Y PRODUCTOS: se editan en el
-     archivo js/main.js, en las listas EMPRENDEDORAS, ASOCIACIONES y
-     PRODUCTOS (ahí está explicado paso a paso).
-  4) CAMBIAR COLORES O TAMAÑO DE LETRA: abre css/styles.css (está comentado).
-  5) CAMBIAR LAS OPCIONES DEL MENÚ: edita la lista <ul class="menu">.
-
-  TRAZABILIDAD CON LOS REQUISITOS (ficha v1.1):
-   - RF-CMP-01 directorio con búsqueda y filtros
-   - RF-CMP-02 tienda, detalle de producto y ficha de asociación
-   - RF-CMP-03 variante cambia foto y precio
-   - RF-CMP-04 calendario de próximas ferias y ficha de cada una
-   - RF-CMP-05 contacto según forma configurada (WhatsApp / formulario)
-   - RF-CMP-06 seguir y dejar de seguir tienda o asociación
-   - RF-CMP-08 avisos del navegador o correo (simulado)
-   - RF-CMP-09 calificar (si la tienda lo tiene activo)
-   - RF-FER-10 ficha pública de feria con participantes y muestra de catálogo
-   - RF-MAP-02 mapa de la feria con opción "Cómo llegar"
-   - RF-ACC-08 seguir/calificar pide iniciar sesión y luego completa la acción
-   - RF-CFG-01 mostrar precios o "consultar precio"
-   - RF-CFG-02 forma de contacto configurable
-   - RNF-USA-01/02 usabilidad y tamaño táctil; RNF-CPT-02 web adaptable
-   - RNF-PRI-04 la ubicación se pide solo al usar el mapa
-   - RNF-IDI-01 toda la interfaz en español de Chile
 -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trama — Ferias y Emprendedoras de Puerto Montt</title>
+  <title>ALERCE · Vitrina y Marketplace de Emprendedores de Puerto Montt</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-  <!-- Enlace de accesibilidad: permite saltar al contenido con el teclado -->
+  <!-- Salto de accesibilidad para lectores de pantalla -->
   <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
 
   <!-- ============================================================
-       ENCABEZADO: logo, buscador de ferias, tamaño de letra y acceso
+       CABECERA EDITORIAL (FARFETCH / APPLE STYLE)
        ============================================================ -->
   <header class="encabezado">
-    <div class="contenedor encabezado-fila">
-
-      <a class="logo" href="#inicio" aria-label="Trama, volver al inicio">
-        <span class="logo-nombre">TRAMA</span>
-        <span class="logo-subtitulo">Emprendedoras de Puerto Montt</span>
-      </a>
-
-      <!-- Buscador simplificado de ferias (nombre o lugar) -->
-      <form class="buscador" id="formulario-buscador" action="#" method="get" role="search">
-        <label class="solo-lector" for="campo-busqueda">Buscar feria por nombre o ciudad</label>
-        <input type="search"
-               id="campo-busqueda"
-               name="busqueda"
-               placeholder="Buscar feria por nombre o lugar"
-               autocomplete="off">
-        <button type="submit" class="boton boton-buscar">Buscar</button>
-      </form>
-
-      <!-- Botón para abrir menú de tamaño de letra -->
-      <div class="tamano-menu">
-        <button type="button" class="boton boton-tamano-menu" id="boton-tamano-menu" aria-haspopup="true" aria-expanded="false" aria-controls="menu-tamano-opciones">
-          Tamaño de letra
-        </button>
-        <div class="menu-tamano-opciones" id="menu-tamano-opciones" role="menu" aria-labelledby="boton-tamano-menu" hidden>
-          <button type="button" class="boton opcion-tamano boton-tamano-activo" data-tamano="normal" role="menuitemradio" aria-checked="true">Normal</button>
-          <button type="button" class="boton opcion-tamano" data-tamano="grande" role="menuitemradio" aria-checked="false">Grande</button>
-          <button type="button" class="boton opcion-tamano" data-tamano="muy-grande" role="menuitemradio" aria-checked="false">Muy grande</button>
+    
+    <!-- Barra superior de sincronización y accesibilidad -->
+    <div class="barra-superior-info">
+      <div class="contenedor barra-superior-flex">
+        <div class="info-status">
+          <span class="punto-verde"></span>
+          <span>Sincronizado con Firebase Firestore & App Android · Alerce, Puerto Montt</span>
+        </div>
+        <div class="controles-accesibilidad">
+          <span>Accesibilidad:</span>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-normal" title="Tamaño normal">A</button>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-grande" title="Tamaño grande">A+</button>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-muy-grande" title="Tamaño muy grande">A++</button>
+          <span>|</span>
+          <button type="button" class="btn-acc-mini" id="btn-alto-contraste" aria-pressed="false">Alto Contraste</button>
         </div>
       </div>
-
-      <!-- Acceso del comprador en la web (RF-ACC-04). Navegar sin cuenta
-           siempre está permitido (RF-ACC-07); solo seguir y calificar
-           piden iniciar sesión (RF-ACC-08). -->
-      <div class="acceso-cuenta" id="acceso-cuenta">
-        <button type="button" class="boton boton-entrar" id="boton-entrar">Iniciar sesión</button>
-        <div class="usuario-logueado" id="usuario-logueado" hidden>
-          <span class="usuario-saludo" id="usuario-saludo">Hola</span>
-          <button type="button" class="boton boton-salir" id="boton-salir">Cerrar sesión</button>
-        </div>
-      </div>
-
     </div>
 
-    <!-- Menú de navegación: pocas opciones, siempre visibles -->
-    <nav class="navegacion" aria-label="Menú principal">
-      <ul class="contenedor menu">
-        <li><a href="#inicio" class="menu-enlace">Inicio</a></li>
-        <li><a href="#ferias" class="menu-enlace">Ver Ferias</a></li>
-        <li><a href="#emprendedoras" class="menu-enlace">Emprendedoras</a></li>
-        <li><a href="#ayuda" class="menu-enlace">Contacto y Ayuda</a></li>
+    <!-- Fila principal de la cabecera -->
+    <div class="contenedor encabezado-fila">
+      <div class="logo-marca">
+        <a href="#vitrina" class="logo-titulo-grupo" aria-label="Alerce Trama Inicio">
+          <span class="logo-alerce">ALERCE</span>
+          <span class="punto-rojo"></span>
+        </a>
+        <span class="logo-subtitulo" id="saludo-usuario-cabecera">Bienvenido, Paul · Vitrina de Alerce</span>
+      </div>
+
+      <!-- Buscador tipo Apple / Pinterest -->
+      <div class="buscador-central" role="search">
+        <span class="icono-lupa" aria-hidden="true">🔍</span>
+        <input type="search"
+               id="campo-busqueda-principal"
+               class="input-buscador-pill"
+               placeholder="Buscar barberías, panaderías, artesanía, repostería..."
+               autocomplete="off"
+               aria-label="Buscar en la vitrina">
+      </div>
+
+      <!-- Acciones de cabecera: Carrito y Usuario -->
+      <div class="header-acciones">
+        <!-- Botón de Carrito con Contador Dinámico -->
+        <button type="button" class="btn-carrito-pill" id="btn-abrir-carrito" aria-label="Abrir carrito de compras">
+          <span>🛒</span>
+          <span>Carrito</span>
+          <span class="contador-carrito" id="contador-carrito-badge">0</span>
+        </button>
+
+        <!-- Indicador de Usuario y Cierre de Sesión -->
+        <span class="tag-usuario" id="tag-nombre-usuario">Paul (Vecino)</span>
+        
+        <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+          🚪
+        </button>
+      </div>
+    </div>
+
+    <!-- Pestañas de navegación de secciones -->
+    <nav class="navegacion-principal" aria-label="Navegación principal">
+      <ul class="contenedor menu-navegacion">
+        <li><a href="#vitrina" class="enlace-seccion activo" data-nav="vitrina">Vitrina y Tiendas</a></li>
+        <li><a href="#ferias" class="enlace-seccion" data-nav="ferias">Próximas Ferias</a></li>
+        <li><a href="#directorio" class="enlace-seccion" data-nav="directorio">Directorio y Asociaciones</a></li>
+        <li><a href="#ayuda" class="enlace-seccion" data-nav="ayuda">Ayuda y Contacto</a></li>
       </ul>
     </nav>
   </header>
 
-  <main id="contenido-principal">
+  <!-- ============================================================
+       CONTENIDO PRINCIPAL
+       ============================================================ -->
+  <main id="contenido-principal" class="contenedor">
 
-    <!-- Mensaje grande de confirmación (lo muestra js/main.js) -->
-    <div id="mensaje-confirmacion" class="confirmacion" role="status" aria-live="polite" hidden>
-      <p id="texto-confirmacion">¡Listo!</p>
-      <button type="button" class="boton boton-cerrar" id="boton-cerrar-mensaje">Cerrar</button>
+    <!-- Mensaje de confirmación flotante -->
+    <div id="toast-alerta" class="banner-conexion-app" style="display:none; margin-top: 14px; background: #ecfdf5; border-color: #a7f3d0;" role="status">
+      <div class="conexion-texto">
+        <span style="font-size: 18px;">✅</span>
+        <span id="toast-texto">¡Operación realizada con éxito!</span>
+      </div>
+      <button type="button" class="btn-cerrar-x" onclick="document.getElementById('toast-alerta').style.display='none'">✕</button>
     </div>
 
     <!-- ============================================================
-         INICIO / BIENVENIDA
+         SECCIÓN 1: VITRINA Y MARKETPLACE DE TIENDAS
          ============================================================ -->
-    <section id="inicio" class="bienvenida" aria-labelledby="titulo-bienvenida">
-      <div class="contenedor">
-        <h1 id="titulo-bienvenida">Bienvenida y bienvenido a Trama</h1>
-        <p>
-          Aquí encuentras las próximas ferias de Puerto Montt, las emprendedoras
-          y asociaciones locales, y una forma fácil de contactarlas o pedir ayuda.
-          Puedes mirar todo sin iniciar sesión.
+    <section id="vitrina" class="seccion-hero" aria-labelledby="titulo-vitrina">
+      
+      <!-- Banner de estado de la vitrina -->
+      <div class="banner-conexion-app" style="margin-bottom: 16px;">
+        <div class="conexion-texto">
+          <span style="font-size: 16px;">🏪</span>
+          <span>Vitrina Comunitaria de Alerce · Catálogo en vivo y muro vecinal interactivo</span>
+        </div>
+        <span class="insignia-live">EN LÍNEA</span>
+      </div>
+
+      <!-- Filtros horizontales por rubro (Pills Farfetch) -->
+      <nav class="barra-categorias-pills" id="barra-categorias-pills" aria-label="Filtro por categorías">
+        <button type="button" class="pill-categoria activa" data-categoria="Todos">Todos</button>
+        <button type="button" class="pill-categoria" data-categoria="Servicios y Peluquería">Servicios y Peluquería</button>
+        <button type="button" class="pill-categoria" data-categoria="Abarrotes y Alimentos">Abarrotes y Alimentos</button>
+        <button type="button" class="pill-categoria" data-categoria="Artesanía y Textil">Artesanía y Textil</button>
+        <button type="button" class="pill-categoria" data-categoria="Pastelería y Gastronomía">Pastelería y Gastronomía</button>
+      </nav>
+
+      <!-- Encabezado de la lista -->
+      <h2 id="titulo-vitrina" class="titulo-seccion-editorial">
+        <span>Tiendas y Emprendimientos de Alerce</span>
+      </h2>
+      <p class="subtitulo-seccion" id="subtitulo-conteo-tiendas">Explora las vitrinas, haz consultas en el muro comunitario o pide directo por WhatsApp y Carrito.</p>
+
+      <!-- Grilla de Tarjetas de Tiendas (Renderizado dinámico con JS) -->
+      <div class="grilla-tarjetas" id="grilla-tiendas-marketplace" role="region" aria-live="polite">
+        <!-- Renderizado dinámico desde main.js -->
+      </div>
+      <p id="aviso-sin-tiendas" class="subtitulo-seccion" style="display:none; text-align:center; padding: 40px 0;">No encontramos tiendas que coincidan con la búsqueda.</p>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 2: PRÓXIMAS FERIAS
+         ============================================================ -->
+    <section id="ferias" class="seccion-ferias" aria-labelledby="titulo-ferias">
+      <h2 id="titulo-ferias" class="titulo-seccion-editorial">
+        <span>📅 Próximas Ferias Comunales</span>
+      </h2>
+      <p class="subtitulo-seccion">Encuentros presenciales en Puerto Montt y alrededores. Revisa lugares, mapas y participantes.</p>
+
+      <div class="grilla-tarjetas" id="grilla-ferias-container">
+        <!-- FERIA 1 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-valle/640/360" alt="Feria de Emprendedoras del Valle">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-stock" style="align-self: flex-start;">En curso</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Feria de Emprendedoras del Valle</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Miércoles 7 de octubre</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Plaza de Armas, Puerto Montt</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('valle')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Plaza+de+Armas+Puerto+Montt" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- FERIA 2 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-rio/640/360" alt="Artesanías del Río – Primavera">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-agenda" style="align-self: flex-start;">Próxima feria</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Artesanías del Río – Primavera</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Domingo 8 y lunes 9 de nov</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Costanera, Puerto Varas</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('rio')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Costanera+Puerto+Varas" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- FERIA 3 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-diseno/640/360" alt="Mercado de Diseño Independiente">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-pedido" style="align-self: flex-start;">Próxima feria</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Mercado de Diseño Independiente</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Sábado 5 y domingo 6 de dic</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Centro Cultural, Puerto Montt</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('diseno')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Centro+Cultural+Puerto+Montt" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 3: DIRECTORIO DE ASOCIACIONES
+         ============================================================ -->
+    <section id="directorio" class="seccion-ferias" aria-labelledby="titulo-directorio">
+      <h2 id="titulo-directorio" class="titulo-seccion-editorial">
+        <span>🤝 Asociaciones y Redes de Emprendimiento</span>
+      </h2>
+      <p class="subtitulo-seccion">Agrupaciones de Puerto Montt que colaboran y fomentan el comercio local.</p>
+
+      <div class="grilla-tarjetas" id="grilla-asociaciones-container">
+        <!-- Renderizado dinámico de asociaciones -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 4: CONTACTO Y AYUDA
+         ============================================================ -->
+    <section id="ayuda" class="seccion-ferias" aria-labelledby="titulo-ayuda">
+      <h2 id="titulo-ayuda" class="titulo-seccion-editorial">
+        <span>📞 Asistencia y Mesa de Ayuda</span>
+      </h2>
+      <p class="subtitulo-seccion">¿Tienes dudas para comprar, contactar a una tienda o saber los horarios de ferias? Te asistimos con gusto.</p>
+
+      <div class="tarjeta-tienda" style="padding: 24px; max-width: 600px;">
+        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">Mesa Telefónica Alerce Emprende</h3>
+        <p style="font-size: 13.5px; color: var(--gris-texto); margin-bottom: 16px;">
+          Llámanos directamente sin costo. Atención de lunes a viernes de 09:00 a 18:00 hrs.
         </p>
-        <div class="pasos">
-          <p><strong>Tres pasos para encontrar lo que buscas:</strong></p>
-          <ol>
-            <li>Mira las próximas ferias más abajo y presiona "Ver ficha".</li>
-            <li>Revisa el directorio de emprendedoras y filtran por tipo o sector.</li>
-            <li>Presiona "WhatsApp" o "Enviar mensaje" para contactar a quien te guste.</li>
-          </ol>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="tel:+56961230000" class="btn-accion-pill btn-negro" style="max-width: 260px; height: 44px; font-size: 13px;">
+            Llamar al +56 9 6123 0000
+          </a>
+          <a href="https://wa.me/56961230000?text=Hola,%20necesito%20ayuda%20con%20la%20vitrina%20de%20Alerce" target="_blank" rel="noopener" class="btn-accion-pill" style="max-width: 220px; height: 44px; font-size: 13px;">
+            WhatsApp Soporte
+          </a>
         </div>
-        <div class="bienvenida-botones">
-          <a class="boton boton-principal" href="#ferias">Ver las próximas ferias</a>
-          <a class="boton boton-secundario" href="#emprendedoras">Ver emprendedoras</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         PRÓXIMAS FERIAS (RF-CMP-04, RF-FER-10, RF-MAP-02)
-         Cada tarjeta lleva los datos en atributos data-feria-* para que
-         js/main.js arme la ficha pública en una ventana.
-         ============================================================ -->
-    <section id="ferias" class="seccion" aria-labelledby="titulo-ferias">
-      <div class="contenedor">
-        <h2 id="titulo-ferias">Próximas ferias</h2>
-        <p class="ayuda-tarea">Presiona "Ver ficha" para conocer el lugar, el mapa, cómo llegar y quiénes participan.</p>
-
-        <div class="grilla-ferias" id="grilla-ferias">
-
-          <!-- FERIA 1 -->
-          <article class="tarjeta"
-            data-feria-nombre="Feria de Emprendedoras del Valle"
-            data-feria-fecha="Miércoles 7 de octubre de 2026"
-            data-feria-horario="9 a 18 hs"
-            data-feria-lugar="Plaza de Armas, Puerto Montt"
-            data-feria-direccion="Plaza de Armas, Puerto Montt"
-            data-feria-organizador="Red Trama"
-            data-feria-descripcion="Encuentro de emprendedoras de la zona con artesanía, productos locales y gastronomía. Entrada $ 2.000."
-            data-feria-imagen="https://picsum.photos/seed/feria-valle/640/360"
-            data-feria-imagen-alt="Feria de emprendedoras al aire libre en la plaza"
-            data-feria-lat="-41.4717"
-            data-feria-lng="-72.9396"
-            data-feria-participantes="t_tejidos_austral,t_reposteria_surena">
-            <img src="https://picsum.photos/seed/feria-valle/640/360" alt="Feria de emprendedoras al aire libre en la plaza">
-            <div class="tarjeta-contenido">
-              <span class="etiqueta etiqueta-feria">En curso</span>
-              <h3>Feria de Emprendedoras del Valle</h3>
-              <p class="fecha"><strong>Miércoles 7 de octubre</strong> de 9 a 18 hs</p>
-              <p class="lugar">Plaza de Armas, Puerto Montt</p>
-              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
-              <div class="tarjeta-botones">
-                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- FERIA 2 -->
-          <article class="tarjeta"
-            data-feria-nombre="Artesanías del Río – Primavera"
-            data-feria-fecha="Domingo 8 y lunes 9 de noviembre de 2026"
-            data-feria-horario="9 a 18 hs"
-            data-feria-lugar="Costanera, Puerto Varas"
-            data-feria-direccion="Costanera, Puerto Varas"
-            data-feria-organizador="Red Trama"
-            data-feria-descripcion="Feria de artesanía junto al lago, con tejidos, cerámica y productos de la zona. Entrada $ 1.500."
-            data-feria-imagen="https://picsum.photos/seed/feria-rio/640/360"
-            data-feria-imagen-alt="Puestos de artesanía junto a la costanera del lago"
-            data-feria-lat="-41.3185"
-            data-feria-lng="-72.9856"
-            data-feria-participantes="t_tejidos_austral,t_reposteria_surena">
-            <img src="https://picsum.photos/seed/feria-rio/640/360" alt="Puestos de artesanía junto a la costanera del lago">
-            <div class="tarjeta-contenido">
-              <span class="etiqueta etiqueta-feria">Próxima feria</span>
-              <h3>Artesanías del Río – Primavera</h3>
-              <p class="fecha"><strong>Domingo 8 y lunes 9 de noviembre</strong> de 9 a 18 hs</p>
-              <p class="lugar">Costanera, Puerto Varas</p>
-              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
-              <div class="tarjeta-botones">
-                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
-              </div>
-            </div>
-          </article>
-
-          <!-- FERIA 3 -->
-          <article class="tarjeta"
-            data-feria-nombre="Mercado de Diseño Independiente"
-            data-feria-fecha="Sábado 5 y domingo 6 de diciembre de 2026"
-            data-feria-horario="9 a 18 hs"
-            data-feria-lugar="Centro Cultural, Puerto Montt"
-            data-feria-direccion="Centro Cultural, Puerto Montt"
-            data-feria-organizador="Red Trama"
-            data-feria-descripcion="Mercado de diseño y emprendimiento local. Entrada gratuita."
-            data-feria-imagen="https://picsum.photos/seed/feria-diseno/640/360"
-            data-feria-imagen-alt="Puestos de diseño independiente en el centro cultural"
-            data-feria-lat="-41.4730"
-            data-feria-lng="-72.9410"
-            data-feria-participantes="t_tejidos_austral,t_reposteria_surena">
-            <img src="https://picsum.photos/seed/feria-diseno/640/360" alt="Puestos de diseño independiente en el centro cultural">
-            <div class="tarjeta-contenido">
-              <span class="etiqueta etiqueta-feria">Próxima feria</span>
-              <h3>Mercado de Diseño Independiente</h3>
-              <p class="fecha"><strong>Sábado 5 y domingo 6 de diciembre</strong> de 9 a 18 hs</p>
-              <p class="lugar">Centro Cultural, Puerto Montt</p>
-              <p class="participantes-linea">Participan: <span class="participantes-texto">—</span></p>
-              <div class="tarjeta-botones">
-                <button type="button" class="boton boton-principal boton-ver-feria">Ver ficha</button>
-              </div>
-            </div>
-          </article>
-
-        </div>
-
-        <!-- Bloque para avisar cuando la búsqueda no encuentra ferias -->
-        <p id="aviso-sin-resultados" class="aviso-sin-resultados" role="alert" hidden></p>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         DIRECTORIO DE EMPRENDEDORAS Y ASOCIACIONES (RF-CMP-01)
-         Con búsqueda y filtros por tipo de emprendimiento, sector y
-         asociación. El contenido lo genera js/main.js.
-         ============================================================ -->
-    <section id="emprendedoras" class="seccion seccion-clara" aria-labelledby="titulo-emprendedoras">
-      <div class="contenedor">
-        <h2 id="titulo-emprendedoras">Emprendedoras y asociaciones</h2>
-        <p class="ayuda-tarea">Busca por nombre y usa los filtros. Presiona "Ver tienda" para ver los productos y contactar.</p>
-
-        <!-- Pestañas para elegir qué ver -->
-        <div class="tabs" role="tablist" aria-label="Tipo de directorio">
-          <button type="button" class="boton tab tab-activo" id="tab-emprendedoras" role="tab" aria-selected="true" aria-controls="grilla-directorio" data-vista="emprendedoras">Emprendedoras</button>
-          <button type="button" class="boton tab" id="tab-asociaciones" role="tab" aria-selected="false" aria-controls="grilla-directorio" data-vista="asociaciones">Asociaciones</button>
-        </div>
-
-        <!-- Filtros (fáciles de ver y tocar) -->
-        <div class="filtros">
-          <div class="campo-filtro campo-filtro-ancho">
-            <label for="buscador-directorio">Buscar por nombre</label>
-            <input type="search" id="buscador-directorio" placeholder="Ejemplo: Cerámica, Tejidos, Miel">
-          </div>
-          <div class="campo-filtro">
-            <label for="filtro-tipo">Tipo de emprendimiento</label>
-            <select id="filtro-tipo"><option value="">Todos</option></select>
-          </div>
-          <div class="campo-filtro">
-            <label for="filtro-sector">Sector de Puerto Montt</label>
-            <select id="filtro-sector"><option value="">Todos</option></select>
-          </div>
-          <div class="campo-filtro">
-            <label for="filtro-asociacion">Asociación</label>
-            <select id="filtro-asociacion"><option value="">Todas</option></select>
-          </div>
-          <button type="button" class="boton boton-secundario boton-limpiar" id="boton-limpiar-filtros">Borrar filtros</button>
-        </div>
-
-        <!-- Aquí js/main.js muestra las tarjetas del directorio -->
-        <div class="grilla-directorio" id="grilla-directorio" role="tabpanel" aria-live="polite"></div>
-        <p id="aviso-directorio-vacio" class="aviso-sin-resultados" role="alert" hidden></p>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         AYUDA (RNF-OPE / RF-CMP-05 alternativo)
-         Teléfono de asistencia siempre visible.
-         Número alineado con la app Trama: +56 9 6123 0000.
-         ============================================================ -->
-    <section id="ayuda" class="seccion ayuda" aria-labelledby="titulo-ayuda">
-      <div class="contenedor">
-        <h2 id="titulo-ayuda">¿Necesitas ayuda?</h2>
-        <p class="ayuda-tarea">
-          Si tienes dudas para usar la página, contactar a una emprendedora o
-          saber cuándo es una feria, llámanos. Te ayudamos por teléfono, sin apuro.
-        </p>
-        <a class="boton boton-ayuda-telefono" href="tel:+56961230000">Pedir ayuda por teléfono: +56 9 6123 0000</a>
-        <p class="horario-ayuda">Disponible de lunes a viernes, de 9:00 a 18:00 hrs.</p>
       </div>
     </section>
 
   </main>
 
   <!-- ============================================================
-       PIE DE PÁGINA
+       BOTÓN FLOTANTE DEL CARRITO DE COMPRAS (Bottom Right)
        ============================================================ -->
-  <footer class="pie">
-    <div class="contenedor">
-      <p><strong>Trama</strong> — Ferias y emprendedoras de Puerto Montt.</p>
-      <p>Si esta página te presenta alguna dificultad, escríbenos o llámanos y lo solucionamos juntos.</p>
-      <p class="pie-enlaces">
-        <a href="#ferias">Ferias</a> ·
-        <a href="#emprendedoras">Emprendedoras</a> ·
-        <a href="#ayuda">Ayuda</a>
-      </p>
-      <p class="pie-legal">Los datos personales se tratan según la normativa chilena de protección de datos. Puedes dejar de seguir una tienda cuando quieras.</p>
+  <button type="button" class="btn-carrito-flotante" id="btn-flotante-carrito" aria-label="Abrir carrito flotante">
+    <span>🛒</span>
+    <span>Ver Carrito</span>
+    <span class="contador-carrito" id="contador-carrito-flotante">0</span>
+    <span id="total-carrito-flotante" style="font-weight: 800;">$ 0</span>
+  </button>
+
+  <!-- ============================================================
+       PIE DE PÁGINA EDITORIAL
+       ============================================================ -->
+  <footer class="pie-pagina">
+    <div class="contenedor pie-fila">
+      <div>
+        <div class="logo-titulo-grupo" style="margin-bottom: 4px;">
+          <span class="logo-alerce" style="font-size: 18px;">ALERCE</span>
+          <span class="punto-rojo"></span>
+        </div>
+        <p>Plataforma oficial de vinculación con el medio para ferias y emprendimientos de Puerto Montt.</p>
+      </div>
+      <div>
+        <p>© 2026 Trama Alerce · Sistema adaptado con Carrito, Código QR y Muro en Vivo.</p>
+      </div>
     </div>
   </footer>
 
-  <!-- Botón flotante permanente: Modo alto contraste -->
-  <button type="button" class="boton-flotante" id="boton-alto-contraste" aria-pressed="false">Modo alto contraste</button>
-
   <!-- ============================================================
-       VENTANAS (MODALES). Están ocultas y js/main.js las abre.
+       VENTANAS MODALES INTERACTIVAS
        ============================================================ -->
 
-  <!-- Ficha pública de la feria -->
-  <div class="modal" id="modal-feria" hidden role="dialog" aria-modal="true" aria-labelledby="modal-feria-titulo">
-    <div class="modal-panel">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <div id="modal-feria-cuerpo"></div>
+  <!-- 1. MODAL DETALLE DE TIENDA / VITRINA Y FORO -->
+  <div class="modal-overlay" id="modal-tienda-vitrina" role="dialog" aria-modal="true" aria-labelledby="modal-tienda-titulo">
+    <div class="modal-panel-editorial">
+      <div class="modal-cabecera">
+        <div class="modal-perfil-info">
+          <div class="avatar-circulo" id="modal-tienda-avatar" style="background: #111;">T</div>
+          <div>
+            <h2 id="modal-tienda-titulo" style="font-size: 18px; font-weight: 900; line-height: 1.2;">Tienda</h2>
+            <p id="modal-tienda-rubro-sector" style="font-size: 12px; color: var(--gris-texto);">Rubro · Sector</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-tienda-vitrina')" aria-label="Cerrar modal">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <!-- Bio de la tienda -->
+        <p id="modal-tienda-bio" style="font-size: 13px; color: var(--gris-texto); line-height: 1.5;"></p>
+
+        <!-- Bloque destacado de agendamiento si aplica -->
+        <div id="modal-tienda-banner-agenda" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 14px; padding: 12px 16px; cursor: pointer;" onclick="TramaWeb.abrirAgendamientoActual()">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">📅</span>
+              <div>
+                <strong style="font-size: 13.5px; color: var(--azul-agenda);">Agendar Cita de Atención</strong>
+                <p style="font-size: 11.5px; color: var(--gris-texto);">Turnos en las próximas 2 semanas</p>
+              </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 800; color: var(--azul-agenda);">Agendar ➔</span>
+          </div>
+        </div>
+
+        <hr class="divisor-sutil">
+
+        <!-- Selector de Pestañas: Catálogo vs Muro y Foro -->
+        <div class="tabs-segmentadas" role="tablist">
+          <button type="button" class="tab-segmento activo" id="tab-modal-catalogo" role="tab" onclick="TramaWeb.cambiarTabModal(0)">
+            Catálogo (<span id="conteo-tab-catalogo">0</span>)
+          </button>
+          <button type="button" class="tab-segmento" id="tab-modal-foro" role="tab" onclick="TramaWeb.cambiarTabModal(1)">
+            Muro y Foro (<span id="conteo-tab-foro">0</span>)
+          </button>
+        </div>
+
+        <!-- CONTENIDO PESTAÑA 0: CATÁLOGO -->
+        <div id="contenido-tab-catalogo">
+          <div class="lista-productos-modal" id="lista-productos-tienda-modal">
+            <!-- Productos cargados con JS -->
+          </div>
+        </div>
+
+        <!-- CONTENIDO PESTAÑA 1: MURO Y FORO EN VIVO -->
+        <div id="contenido-tab-foro" style="display: none;">
+          <div class="cabecera-foro-vivo" style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: var(--rojo-alerce);">💬</span>
+              <strong style="font-size: 14px;">Muro Comunitario & Consultas</strong>
+            </div>
+            <span class="insignia-live" style="background: var(--rosado-contenedor); color: var(--rosado-foro);">EN VIVO</span>
+          </div>
+
+          <!-- Lista de mensajes del muro -->
+          <div class="lista-mensajes-foro" id="lista-mensajes-muro-tienda">
+            <!-- Mensajes y respuestas -->
+          </div>
+
+          <hr class="divisor-sutil" style="margin: 16px 0;">
+
+          <!-- Caja para publicar consulta en el muro -->
+          <div class="caja-publicar-muro">
+            <strong style="font-size: 12px; color: var(--negro-apple);" id="label-pregunta-muro">Pregúntale a la tienda en el Muro:</strong>
+            <textarea id="input-pregunta-muro" class="textarea-muro" placeholder="Ej: ¿Vecina, tiene stock disponible hoy o atiende por la tarde?"></textarea>
+            <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; align-self: flex-start; padding: 0 20px;" onclick="TramaWeb.publicarPreguntaEnMuro()">
+              Publicar Consulta como Paul
+            </button>
+          </div>
+        </div>
+
+        <!-- Acciones inferiores del modal -->
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <a id="btn-modal-tienda-whatsapp" href="#" target="_blank" rel="noopener" class="btn-accion-pill btn-negro" style="flex: 2; height: 44px;">
+            Contactar por WhatsApp
+          </a>
+          <button type="button" class="btn-accion-pill" id="btn-modal-tienda-qr" style="flex: 1; height: 44px;" onclick="TramaWeb.abrirQRTiendaActual()">
+            Compartir QR
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
 
-  <!-- Tienda de una emprendedora -->
-  <div class="modal" id="modal-tienda" hidden role="dialog" aria-modal="true" aria-labelledby="modal-tienda-titulo">
-    <div class="modal-panel">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <div id="modal-tienda-cuerpo"></div>
+  <!-- 2. MODAL CARRITO DE COMPRAS (COMPONENTE DEL COMPAÑERO ACTUALIZADO) -->
+  <div class="modal-overlay" id="modal-carrito" role="dialog" aria-modal="true" aria-labelledby="modal-carrito-titulo">
+    <div class="modal-panel-editorial" style="max-width: 540px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🛒</span>
+          <h2 id="modal-carrito-titulo" style="font-size: 18px; font-weight: 900;">Carrito de Compras</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-carrito')" aria-label="Cerrar carrito">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <div id="carrito-vacio-aviso" style="text-align: center; padding: 30px 10px; display: none;">
+          <span style="font-size: 40px;">🧺</span>
+          <p style="font-size: 14px; color: var(--gris-texto); margin-top: 10px;">Tu carrito está vacío.</p>
+          <p style="font-size: 12px; color: var(--gris-texto-claro);">Explora las vitrinas de Alerce y añade productos.</p>
+        </div>
+
+        <!-- Lista de items en el carrito -->
+        <div id="lista-items-carrito">
+          <!-- Items dinámicos -->
+        </div>
+
+        <div id="carrito-resumen-seccion">
+          <hr class="divisor-sutil">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 13px; color: var(--gris-texto);">Subtotal productos:</span>
+            <span id="carrito-subtotal-texto" style="font-size: 14px; font-weight: 700;">$ 0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 13px; color: var(--gris-texto);">Entrega:</span>
+            <span style="font-size: 12px; font-weight: 600; color: var(--verde-ok);">Coordinar con la tienda</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 10px 14px; background: var(--gris-chip); border-radius: 12px;">
+            <strong style="font-size: 15px;">Total a pagar:</strong>
+            <strong id="carrito-total-texto" style="font-size: 18px; color: var(--rojo-alerce);">$ 0</strong>
+          </div>
+
+          <!-- Selector de Medio de Pago -->
+          <div>
+            <strong style="font-size: 12.5px; color: var(--negro-apple);">Elige medio de pago:</strong>
+            <div class="selector-pago-pills" id="selector-medio-pago">
+              <button type="button" class="pill-pago activo" data-pago="Efectivo" onclick="TramaWeb.seleccionarMedioPago('Efectivo')">Efectivo</button>
+              <button type="button" class="pill-pago" data-pago="Debito" onclick="TramaWeb.seleccionarMedioPago('Debito')">Débito</button>
+              <button type="button" class="pill-pago" data-pago="Transferencia" onclick="TramaWeb.seleccionarMedioPago('Transferencia')">Transferencia</button>
+              <button type="button" class="pill-pago" data-pago="QR" onclick="TramaWeb.seleccionarMedioPago('QR')">📱 Pago QR</button>
+            </div>
+          </div>
+
+          <!-- Caja de Código QR si se selecciona Pago QR -->
+          <div id="caja-qr-pago" style="display: none; background: #fafafa; border: 1px solid var(--gris-borde); border-radius: 16px; padding: 14px; text-align: center; margin: 12px 0;">
+            <p style="font-size: 12px; font-weight: 700; color: var(--negro-apple); margin-bottom: 10px;">Escanea para pagar con tu aplicación de banco / billetera digital:</p>
+            <div id="qr-pago-container" style="display: flex; justify-content: center; margin-bottom: 8px;"></div>
+            <p style="font-size: 11px; color: var(--gris-texto);">Código generado para la orden de compra de Alerce Trama</p>
+          </div>
+
+          <!-- Botón de checkout por WhatsApp -->
+          <button type="button" class="btn-accion-pill btn-negro" style="width: 100%; height: 46px; font-size: 13.5px;" onclick="TramaWeb.finalizarPedidoWhatsApp()">
+            Confirmar Pedido por WhatsApp
+          </button>
+
+          <button type="button" style="display: block; width: 100%; text-align: center; font-size: 11.5px; color: var(--gris-texto); margin-top: 10px; cursor: pointer;" onclick="TramaWeb.vaciarCarrito()">
+            Vaciar Carrito
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Detalle de un producto -->
-  <div class="modal" id="modal-producto" hidden role="dialog" aria-modal="true" aria-labelledby="modal-producto-titulo">
-    <div class="modal-panel">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <div id="modal-producto-cuerpo"></div>
+  <!-- 3. MODAL CÓDIGO QR DE LA TIENDA (Matching TiendaQRScreen.kt) -->
+  <div class="modal-overlay" id="modal-qr-tienda" role="dialog" aria-modal="true" aria-labelledby="modal-qr-titulo">
+    <div class="modal-panel-editorial" style="max-width: 440px;">
+      <div class="modal-cabecera">
+        <h2 id="modal-qr-titulo" style="font-size: 16px; font-weight: 800;">Código QR de tu tienda</h2>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-qr-tienda')" aria-label="Cerrar QR">✕</button>
+      </div>
+
+      <div class="modal-cuerpo modal-qr-contenido">
+        <div id="canvas-qr-tienda" class="qr-contenedor"></div>
+        <h3 class="qr-titulo" id="qr-tienda-nombre">Tienda</h3>
+        <p class="qr-instruccion">Escanea este código QR para compartir tu tienda y visitarla directamente desde el celular.</p>
+        <span class="qr-url-pill" id="qr-tienda-url">https://trama.app/tienda/</span>
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 40px; padding: 0 24px;" onclick="TramaWeb.copiarEnlaceQR()">
+          Copiar enlace
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Ficha de una asociación -->
-  <div class="modal" id="modal-asociacion" hidden role="dialog" aria-modal="true" aria-labelledby="modal-asociacion-titulo">
-    <div class="modal-panel">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <div id="modal-asociacion-cuerpo"></div>
+  <!-- 4. MODAL AGENDAMIENTO DE CITAS (Próximas 2 Semanas) -->
+  <div class="modal-overlay" id="modal-agendamiento" role="dialog" aria-modal="true" aria-labelledby="modal-agenda-titulo">
+    <div class="modal-panel-editorial" style="max-width: 520px;">
+      <div class="modal-cabecera">
+        <div>
+          <h2 id="modal-agenda-titulo" style="font-size: 17px; font-weight: 800;">Agendar Cita de Atención</h2>
+          <p id="agenda-subtitulo" style="font-size: 12px; color: var(--gris-texto);">Turnos disponibles en las próximas 2 semanas</p>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-agendamiento')" aria-label="Cerrar agendamiento">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <!-- Selector de Días (Próximos 14 días) -->
+        <label style="font-size: 12px; font-weight: 700;">Selecciona una fecha:</label>
+        <div class="barra-categorias-pills" id="barra-fechas-agenda" style="padding: 4px 0 10px 0;">
+          <!-- 14 días inyectados con JS -->
+        </div>
+
+        <!-- Selector de Horarios -->
+        <label style="font-size: 12px; font-weight: 700;">Selecciona horario disponible:</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;" id="contenedor-horarios-agenda">
+          <button type="button" class="pill-pago activo" data-hora="10:00" onclick="TramaWeb.seleccionarHora('10:00')">10:00 hrs</button>
+          <button type="button" class="pill-pago" data-hora="11:30" onclick="TramaWeb.seleccionarHora('11:30')">11:30 hrs</button>
+          <button type="button" class="pill-pago" data-hora="15:00" onclick="TramaWeb.seleccionarHora('15:00')">15:00 hrs</button>
+          <button type="button" class="pill-pago" data-hora="16:30" onclick="TramaWeb.seleccionarHora('16:30')">16:30 hrs</button>
+          <button type="button" class="pill-pago" data-hora="18:00" onclick="TramaWeb.seleccionarHora('18:00')">18:00 hrs</button>
+        </div>
+
+        <!-- Datos del cliente -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="text" id="agenda-nombre-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Tu nombre completo (ej. Paul M.)" value="Paul Morales">
+          <input type="tel" id="agenda-telefono-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Teléfono de contacto (+56 9 ...)" value="+56 9 8765 4321">
+        </div>
+
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; margin-top: 10px;" onclick="TramaWeb.confirmarReservaCita()">
+          Confirmar Reserva de Hora
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Formulario de contacto (cuando la tienda lo tiene activado) -->
-  <div class="modal" id="modal-contacto" hidden role="dialog" aria-modal="true" aria-labelledby="modal-contacto-titulo">
-    <div class="modal-panel">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <div id="modal-contacto-cuerpo"></div>
+  <!-- 5. MODAL FICHA DE FERIA -->
+  <div class="modal-overlay" id="modal-feria" role="dialog" aria-modal="true" aria-labelledby="modal-feria-titulo">
+    <div class="modal-panel-editorial">
+      <div class="modal-cabecera">
+        <h2 id="modal-feria-titulo" style="font-size: 17px; font-weight: 800;">Ficha de la Feria</h2>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-feria')" aria-label="Cerrar ficha">✕</button>
+      </div>
+      <div class="modal-cuerpo" id="modal-feria-cuerpo">
+        <!-- Contenido dinámico de la feria -->
+      </div>
     </div>
   </div>
 
-  <!-- Iniciar sesión / crear cuenta del comprador (web) -->
-  <div class="modal" id="modal-login" hidden role="dialog" aria-modal="true" aria-labelledby="modal-login-titulo">
-    <div class="modal-panel modal-panel-angosto">
-      <button type="button" class="boton boton-cerrar-modal boton-cerrar" data-cerrar-modal>Cerrar esta ventana</button>
-      <h2 id="modal-login-titulo">Iniciar sesión</h2>
-      <p id="login-motivo" class="login-motivo" hidden></p>
-      <p>Para seguir una tienda o calificar necesitas una cuenta. Puedes entrar con Google o con tu correo.</p>
-      <button type="button" class="boton boton-google boton-ancho" id="boton-login-google">Entrar con Google</button>
-      <form id="formulario-login" class="formulario-login">
-        <label for="login-correo">Correo electrónico</label>
-        <input type="email" id="login-correo" placeholder="tucorreo@ejemplo.cl" required>
-        <label for="login-clave">Contraseña</label>
-        <input type="password" id="login-clave" placeholder="Tu contraseña" required>
-        <button type="submit" class="boton boton-principal boton-ancho">Entrar con correo y contraseña</button>
-      </form>
-      <p class="nota-login">Prototipo: cualquier correo sirve para simular el inicio de sesión.</p>
-    </div>
-  </div>
-
+  <!-- Scripts -->
+  <script src="js/qrcode.min.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
