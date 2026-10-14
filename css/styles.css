@@ -1,1247 +1,1250 @@
 /* ============================================================
-   TRAMA — Hoja de estilos (styles.css)
-   ============================================================
-   GUÍA RÁPIDA PARA CAMBIAR COLORES Y TAMAÑOS:
-
-   1) COLORES PRINCIPALES: están definidos en el bloque :root
-      (variables). Si cambias solo el valor de una variable,
-      la página completa usa el nuevo color.
-        - --color-texto      : color de los textos
-        - --color-fondo      : color de fondo de la página
-        - --color-principal  : berenjena de Trama (botones principales)
-        - --color-acento     : naranja de énfasis (botones de ayuda)
-        - --color-atencion   : rojo de alerta
-
-   2) TAMAÑO DE LETRA: se controla con "em".
-      - El tamaño NORMAL está en la etiqueta body (--tamano-normal).
-      - Los modos "Grande" y "Muy grande" los aplica js/main.js
-        agregando las clases .tamano-grande y .tamano-muy-grande.
-      Para agrandar TODO: sube solo el valor de --tamano-normal.
-
-   3) CONTRASTE: por defecto este diseño ya tiene alto contraste
-      (texto oscuro casi negro sobre fondo blanco y berenjena oscura.
-      La clase .alto-contraste (que activa el botón flotante)
-      hace el contraste aún más fuerte.
+   TRAMA ALERCE — Estética Editorial Minimalista (Farfetch & Apple)
+   Alineada 100% con la aplicación móvil Android
    ============================================================ */
 
-/* ---------- VARIABLES DE COLOR Y TAMAÑO ---------- */
 :root {
-  /* Colores principales (paleta "Berenjena" de la app Trama; contraste alto) */
-  --color-texto: #1a1a1a;              /* Texto casi negro: alto contraste */
-  --color-texto-claro: #ffffff;        /* Texto blanco sobre botones de color */
-  --color-fondo: #ffffff;              /* Fondo blanco de la página */
-  --color-fondo-suave: #f7f5f7;        /* Fondo neutro muy claro */
-  --color-principal: #5c315b;          /* Berenjena de Trama (botones) */
-  --color-principal-oscuro: #3e1f3e;   /* Berenjena oscura (encabezado, hover) */
-  --color-contenedor: #eadfea;         /* Berenjena muy claro (fondos suaves) */
-  --color-acento: #e07a2b;             /* Naranja de la app (botones de ayuda) */
-  --color-acento-oscuro: #c05219;      /* Naranja más oscuro (hover) */
-  --color-acento-suave: #ffe9cf;       /* Naranja muy claro (fondos de ayuda) */
-  --color-whatsapp: #2e7d5b;           /* Verde de la app (botón WhatsApp) */
-  --color-whatsapp-oscuro: #216043;    /* Verde de la app más oscuro */
-  --color-borde: #ddd5dc;              /* Línea suave para bordes */
-  --color-atencion: #c0392b;           /* Rojo de error para avisos */
-  --color-atencion-suave: #fbe0dc;     /* Rojo muy claro (fondos de aviso) */
+  /* Paleta Oficial Farfetch / Apple de la App */
+  --negro-apple: #111111;
+  --negro-suave: #1c1c1e;
+  --blanco-puro: #ffffff;
+  --fondo-limpio: #fafafa;
+  --gris-chip: #f4f4f5;
+  --gris-borde: #e4e4e7;
+  --gris-texto: #71717a;
+  --gris-texto-claro: #a1a1aa;
+  
+  --rojo-alerce: #dc2626;
+  --rojo-contenedor: #fee2e2;
+  --verde-ok: #059669;
+  --verde-contenedor: #d1fae5;
+  --azul-agenda: #0369a1;
+  --azul-contenedor: #e0f2fe;
+  --morado-pedido: #6d28d9;
+  --morado-contenedor: #f5f3ff;
+  --rosado-foro: #9d174d;
+  --rosado-contenedor: #fce7f3;
+  --dorado-oficial: #b45309;
+  --dorado-contenedor: #fef3c7;
 
-  /* Tamaños de letra (en em para crecer todo junto) */
-  --tamano-normal: 1.125rem;           /* Letra de base (18px): grande y clara */
-  --tamano-grande: 1.375rem;           /* Modo "Grande" (~22px) */
-  --tamano-muy-grande: 1.75rem;        /* Modo "Muy grande" (~28px) */
+  /* Tipografía y Escalas */
+  --tamano-base: 16px;
+  --radio-card: 20px;
+  --radio-pill: 50px;
+  --sombra-sutil: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --sombra-elevada: 0 12px 36px rgba(0, 0, 0, 0.09);
+  --fuente-sistema: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* ---------- RECONFIGURACIÓN BÁSICA ---------- */
+/* Modos de accesibilidad de texto */
+body.tamano-grande {
+  --tamano-base: 18px;
+}
+body.tamano-muy-grande {
+  --tamano-base: 21px;
+}
+
+/* Reset básico */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Regla de accesibilidad: los elementos con el atributo "hidden"
-   se ocultan siempre (aunque otra regla use display:flex). */
 [hidden] {
   display: none !important;
 }
 
-/* Márgenes y espacios básicos */
 body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--color-fondo);
-  color: var(--color-texto);
-  font-family: "Verdana", "Segoe UI", Arial, sans-serif; /* Letra fácil de leer */
-  font-size: var(--tamano-normal);
-  line-height: 1.6;
+  font-family: var(--fuente-sistema);
+  font-size: var(--tamano-base);
+  background-color: var(--fondo-limpio);
+  color: var(--negro-apple);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Títulos: todos grandes para leer sin esfuerzo */
-h1 {
-  font-size: 2.2rem;
-  line-height: 1.2;
-}
-
-h2 {
-  font-size: 1.8rem;
-  line-height: 1.2;
-}
-
-h3 {
-  font-size: 1.4rem;
-  line-height: 1.2;
-}
-
-/* Contenedor central: mantiene el contenido centrado y con ancho máximo */
+/* Contenedor centralizado */
 .contenedor {
-  max-width: 70rem;        /* Ancho máximo de la página */
-  margin: 0 auto;          /* Centra el bloque horizontalmente */
-  padding: 1rem 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-/* Enlaces: subrayados y de color visible (fáciles de distinguir) */
+/* Enlaces sin subrayado por defecto */
 a {
-  color: var(--color-principal-oscuro);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  color: inherit;
+  text-decoration: none;
 }
 
-/* ============================================================
-   ACCESIBILIDAD: ENFOQUE DE TECLADO (WCAG 2.4.7)
-   Cada botón o enlace muestra un anillo azul claro al enfocarse
-   con la pestaña (Tab) del teclado.
-   ============================================================ */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Accesibilidad de foco */
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
-  outline: 4px solid #1d5fd0;          /* Anillo azul bien visible */
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--negro-apple);
   outline-offset: 3px;
 }
 
-/* Enlace para saltar al contenido (visible solo al enfocarlo) */
 .skip-link {
   position: absolute;
-  left: -999px;                        /* Escondido para la vista normal */
-  top: 0;
-  background: var(--color-principal-oscuro);
-  color: #ffffff;
-  padding: 0.75rem 1.25rem;
-  z-index: 10;
+  top: -999px;
+  left: 20px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  z-index: 10000;
 }
-
 .skip-link:focus {
-  left: 0;                             /* Aparece al presionar Tab */
+  top: 15px;
 }
 
 /* ============================================================
-   ENCABEZADO (header)
+   CABECERA EDITORIAL MINIMALISTA (Apple / Farfetch Style)
    ============================================================ */
 .encabezado {
-  background-color: var(--color-principal-oscuro);
-  color: var(--color-texto-claro);
+  background: var(--blanco-puro);
+  border-bottom: 1px solid var(--gris-borde);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.encabezado .contenedor {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+.barra-superior-info {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 6px 0;
 }
 
-/* Fila superior: logo, buscador y selector, uno al lado del otro.
-   Si la pantalla es angosta, se apilan (ver media queries al final). */
+.barra-superior-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.punto-verde {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.controles-accesibilidad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-acc-mini {
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.btn-acc-mini:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.15);
+}
+
+/* Fila principal del Header */
 .encabezado-fila {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 20px;
 }
 
-/* Logo de Trama */
-.logo {
+.logo-marca {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-titulo-grupo {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.logo-alerce {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--negro-apple);
+  line-height: 1;
+}
+
+.punto-rojo {
+  width: 7px;
+  height: 7px;
+  background: var(--rojo-alerce);
+  border-radius: 50%;
   display: inline-block;
-  text-decoration: none;
-  color: #ffffff;
-}
-
-.logo-nombre {
-  font-size: 2rem;
-  font-weight: bold;
-  letter-spacing: 1px;
 }
 
 .logo-subtitulo {
-  display: block;
-  font-size: 1rem;
+  font-size: 12px;
+  color: var(--gris-texto);
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-/* Buscador: campo y botón grandes */
-.buscador {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 22rem;
-}
-
-.buscador input[type="search"] {
+/* Buscador Pill estilo Pinterest / Apple */
+.buscador-central {
   flex: 1;
-  font-size: 1.25rem;
-  padding: 0.75rem 1rem;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.5rem;
-  min-height: 3.25rem;               /* Caja alta, fácil de tocar */
-}
-
-/* Selector de tamaño de texto */
-.selector-tamano {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ============================================================
-   MENÚ DE TAMAÑO DE LETRA (DESPLEGABLE)
-   ============================================================ */
-.tamano-menu {
+  max-width: 480px;
   position: relative;
+}
+
+.input-buscador-pill {
+  width: 100%;
+  padding: 10px 18px 10px 42px;
+  background: var(--gris-chip);
+  border: 1px solid transparent;
+  border-radius: var(--radio-pill);
+  font-size: 13.5px;
+  color: var(--negro-apple);
+  transition: all 0.2s ease;
+}
+
+.input-buscador-pill:focus {
+  background: var(--blanco-puro);
+  border-color: var(--negro-apple);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.icono-lupa {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--gris-texto);
+  pointer-events: none;
+}
+
+/* Acciones a la derecha en el header */
+.header-acciones {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
-.boton-tamano-menu {
-  background-color: transparent;
-  color: #ffffff;
-  border: 3px solid #ffffff;
-  padding: 0.6rem 1.1rem;
-}
-
-.menu-tamano-opciones {
-  position: absolute;
-  top: 100%;
-  right: 0;
+/* Botón Carrito Farfetch */
+.btn-carrito-pill {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background-color: var(--color-principal-oscuro);
-  border: 3px solid #ffffff;
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  margin-top: 0.5rem;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
-  z-index: 25;
-  min-width: 12rem;
+  align-items: center;
+  gap: 8px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.btn-carrito-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
 }
 
-.opcion-tamano {
-  background-color: transparent;
-  color: #ffffff;
-  border: 2px solid transparent;
-  text-align: left;
-  width: 100%;
-  padding: 0.6rem 0.8rem;
-}
-
-.opcion-tamano:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-.opcion-tamano[aria-checked="true"] {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  font-weight: bold;
-}
-
-/* ============================================================
-   BOTONES (grandes, con texto claro)
-   ============================================================ */
-.boton {
-  display: inline-block;
-  font-size: 1.125rem;
-  font-weight: bold;
-  color: #ffffff;
-  background-color: var(--color-principal);
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  min-height: 3rem;                  /* Botón alto para tocar fácil */
-  text-decoration: none;
+.contador-carrito {
+  background: var(--rojo-alerce);
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 50px;
+  min-width: 18px;
   text-align: center;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
 }
 
-.boton:hover {
-  background-color: var(--color-principal-oscuro);
-}
-
-.boton-buscar {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid var(--color-principal-oscuro);
-}
-
-.boton-secundario {
-  background-color: var(--color-texto);
-  color: #ffffff;
-}
-
-.boton-secundario:hover {
-  background-color: #000000;
-}
-
-/* Botón principal (el más importante de cada tarjeta) */
-.boton-principal {
-  background-color: var(--color-principal);
-  color: #ffffff;
-  border: 3px solid transparent;
-}
-
-/* Botones del selector de tamaño */
-.boton-tamano {
-  background-color: transparent;
-  border: 3px solid #ffffff;
-  color: #ffffff;
-  font-size: 1.125rem;
-  padding: 0.5rem 1rem;
-  min-height: 2.75rem;
-}
-
-.boton-tamano:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-/* El tamaño activo se resalta con un fondo blanco */
-.boton-tamano-activo {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-}
-
-/* Botón WhatsApp (verde característico y texto claro) */
-.boton-whatsapp {
-  background-color: var(--color-whatsapp);
-  color: #ffffff;
-  display: block;
-  width: 100%;
-}
-
-.boton-whatsapp:hover {
-  background-color: var(--color-whatsapp-oscuro);
-}
-
-/* Botón de ayuda telefónica (resaltado, imposible de no ver) */
-.boton-ayuda-telefono {
-  background-color: var(--color-acento);
-  color: #ffffff;
-  font-size: 1.375rem;
-  padding: 1rem 2rem;
-  border: 3px solid var(--color-acento-oscuro);
-}
-
-.boton-ayuda-telefono:hover {
-  background-color: var(--color-acento-oscuro);
-}
-
-/* Botón para cerrar el mensaje de confirmación */
-.boton-cerrar {
-  background-color: var(--color-atencion);
-}
-
-.boton-cerrar:hover {
-  background-color: #96281d;
-}
-
-/* ============================================================
-   MENÚ DE NAVEGACIÓN
-   ============================================================ */
-.navegacion {
-  background-color: var(--color-principal);
-}
-
-.menu {
+/* Botón circular de usuario / logout */
+.btn-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--negro-apple);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+.btn-circular:hover {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+.tag-usuario {
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  padding: 6px 12px;
+  border-radius: var(--radio-pill);
+  color: var(--negro-apple);
+}
+
+/* Navegación por Pestañas Principales */
+.navegacion-principal {
+  background: var(--blanco-puro);
+  border-top: 1px solid #f0f0f2;
+}
+
+.menu-navegacion {
+  display: flex;
   list-style: none;
-  margin: 0;
-  padding: 0.5rem 1.25rem;
+  gap: 24px;
+  padding: 10px 20px;
+  overflow-x: auto;
 }
 
-.menu-enlace {
-  display: inline-block;
-  color: #ffffff;
-  font-size: 1.25rem;
-  font-weight: bold;
-  text-decoration: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.4rem;
+.enlace-seccion {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  padding-bottom: 4px;
+  position: relative;
+  transition: color 0.2s ease;
 }
 
-.menu-enlace:hover {
-  text-decoration: underline;
-  background-color: rgba(255, 255, 255, 0.15);
+.enlace-seccion:hover,
+.enlace-seccion.activo {
+  color: var(--negro-apple);
 }
 
-/* ============================================================
-   SECCIONES GENERALES
-   ============================================================ */
-.seccion {
-  padding: 2.5rem 0;
-}
-
-/* Sección con fondo suave para diferenciar bloques */
-.seccion-clara {
-  background-color: var(--color-fondo-suave);
-}
-
-/* Frase pequeña que explica cada sección (debajo de los títulos) */
-.ayuda-tarea {
-  font-size: 1.25rem;
-  color: var(--color-texto);
-}
-
-/* ============================================================
-   BIENVENIDA (inicio)
-   ============================================================ */
-.bienvenida {
-  background-color: var(--color-contenedor);
-  padding: 3rem 0;
-}
-
-/* Lista de pasos: recuadro tranquilo y con espacio */
-.pasos {
-  background-color: #ffffff;
-  border: 3px solid var(--color-principal);
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.75rem;
-  margin: 1.5rem 0;
-  max-width: 40rem;
-}
-
-.pasos li {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-/* ============================================================
-   CARTELERA DE FERIAS (tarjetas)
-   ============================================================ */
-.grilla-ferias,
-.grilla-emprendedoras {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 1.75rem;
-  margin-top: 1.5rem;
-}
-
-.tarjeta {
-  background-color: #ffffff;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.9rem;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Imágenes grandes y claras en cada tarjeta */
-.tarjeta img {
+.enlace-seccion.activo::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
   width: 100%;
-  height: 13rem;
-  object-fit: cover;
-  display: block;
-}
-
-.tarjeta-contenido {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-/* Fecha y lugar: texto grande y fácil de leer */
-.fecha {
-  font-size: 1.25rem;
-  color: var(--color-principal-oscuro);
-  margin: 0.25rem 0;
-}
-
-.lugar {
-  font-size: 1.125rem;
-  margin: 0.25rem 0;
-}
-
-/* Botones de la tarjeta (juntos, abajo) */
-.tarjeta-botones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: auto;                  /* Empuja los botones hacia abajo */
-  padding-top: 1rem;
+  height: 2px;
+  background: var(--negro-apple);
 }
 
 /* ============================================================
-   DIRECTORIO DE EMPRENDEDORAS
+   BANNER DE SINCRONIZACIÓN Y BIENVENIDA
    ============================================================ */
-.categoria {
-  font-size: 1.125rem;
-  font-weight: bold;
-  color: var(--color-principal-oscuro);
-  border: 2px solid var(--color-principal);
-  border-radius: 2rem;
-  display: inline-block;
-  padding: 0.35rem 1rem;
-  margin: 0.5rem 0;
+.seccion-hero {
+  padding: 24px 0 16px 0;
 }
 
-/* ============================================================
-   SECCIÓN DE AYUDA
-   ============================================================ */
-.ayuda {
-  background-color: var(--color-acento-suave);        /* Fondo anaranjado muy suave */
-  text-align: center;
-  border-top: 4px solid var(--color-acento);
-  border-bottom: 4px solid var(--color-acento);
-}
-
-.ayuda .ayuda-tarea {
-  max-width: 46rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.horario-ayuda {
-  font-size: 1.125rem;
-  margin-top: 1rem;
-}
-
-/* ============================================================
-   MENSAJE DE CONFIRMACIÓN (aparece al guardar o asistir)
-   ============================================================ */
-.confirmacion {
-  background-color: var(--color-atencion-suave);
-  border: 4px solid var(--color-atencion);        /* Borde rojo para llamar la atención */
-  border-radius: 0.9rem;
-  color: var(--color-texto);
-  font-size: 1.5rem;
+.banner-conexion-app {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: 14px;
+  padding: 12px 18px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 1rem auto;
-  max-width: 56rem;
-  padding: 1rem 1.5rem;
-  position: sticky;                 /* Se mantiene visible al bajar la página */
-  top: 0.75rem;
-  z-index: 20;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  gap: 12px;
+  box-shadow: var(--sombra-sutil);
 }
 
-.confirmacion p {
-  margin: 0;
+.conexion-texto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro-apple);
 }
 
-/* Aviso cuando el buscador no encuentra ferias */
-.aviso-sin-resultados {
-  background-color: var(--color-atencion-suave);
-  border: 4px solid var(--color-atencion);
-  border-radius: 0.75rem;
-  color: var(--color-texto);
-  font-size: 1.35rem;
-  padding: 1.25rem;
-  margin-top: 1.5rem;
+.insignia-live {
+  background: var(--verde-contenedor);
+  color: var(--verde-ok);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radio-pill);
 }
 
 /* ============================================================
-   BOTÓN FLOTANTE (Modo alto contraste)
-   Siempre visible en la esquina inferior derecha.
+   PILLS DE FILTRADO POR RUBRO (Farfetch Style)
    ============================================================ */
-.boton-flotante {
-  position: fixed;
-  bottom: 1.25rem;
-  right: 1.25rem;
-  z-index: 30;
-  background-color: var(--color-principal-oscuro);
-  color: #ffffff;
-  font-size: 1.25rem;
-  font-weight: bold;
-  border: 4px solid #ffffff;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+.barra-categorias-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 0 20px 0;
+  scrollbar-width: none;
+}
+.barra-categorias-pills::-webkit-scrollbar {
+  display: none;
 }
 
-.boton-flotante:hover {
-  background-color: var(--color-principal);
+.pill-categoria {
+  background: var(--gris-chip);
+  color: var(--negro-apple);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.pill-categoria:hover {
+  background: #e4e4e7;
+}
+
+.pill-categoria.activa {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+/* ============================================================
+   GRILLA DE TIENDAS Y TARJETAS EDITORIALES (Apple Style)
+   ============================================================ */
+.titulo-seccion-editorial {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--negro-apple);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subtitulo-seccion {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin-bottom: 20px;
+}
+
+.grilla-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 22px;
+  margin-bottom: 40px;
+}
+
+/* Tarjeta Tienda */
+.tarjeta-tienda {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  overflow: hidden;
+  box-shadow: var(--sombra-sutil);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.tarjeta-tienda:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-elevada);
+}
+
+/* Franja superior de color */
+.tarjeta-franja-color {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+}
+
+.franja-rubro {
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.franja-lado-derecho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.franja-sector-chip {
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.btn-favorito-corazon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+.btn-favorito-corazon:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+.btn-favorito-corazon.activo {
+  color: var(--rojo-alerce);
+  background: #ffffff;
+}
+
+/* Cuerpo de la tarjeta */
+.tarjeta-cuerpo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tarjeta-perfil-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.avatar-circulo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.tarjeta-titulos {
+  flex: 1;
+}
+
+.tarjeta-nombre {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--negro-apple);
+  line-height: 1.25;
+}
+
+.tarjeta-sub {
+  font-size: 12px;
+  color: var(--gris-texto);
+  margin-top: 2px;
+}
+
+.tarjeta-descripcion {
+  font-size: 12.5px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+  margin-bottom: 14px;
+  flex: 1;
+}
+
+/* Badges de capacidades / necesidades */
+.tarjeta-badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.badge-necesidad {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radio-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-stock { background: var(--verde-contenedor); color: var(--verde-ok); }
+.badge-pedido { background: var(--morado-contenedor); color: var(--morado-pedido); }
+.badge-ferias { background: var(--verde-contenedor); color: var(--verde-ok); }
+.badge-foro { background: var(--rosado-contenedor); color: var(--rosado-foro); }
+.badge-agenda { background: var(--azul-contenedor); color: var(--azul-agenda); }
+
+.divisor-sutil {
+  border: none;
+  height: 1px;
+  background: var(--gris-borde);
+  margin-bottom: 14px;
+}
+
+/* Botones de acción de la tarjeta */
+.tarjeta-acciones-fila {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accion-pill {
+  flex: 1;
+  height: 40px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--gris-borde);
+  color: var(--negro-apple);
+  background: var(--blanco-puro);
+}
+
+.btn-accion-pill:hover {
+  background: var(--gris-chip);
+}
+
+.btn-accion-pill.btn-negro {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border-color: var(--negro-apple);
+}
+.btn-accion-pill.btn-negro:hover {
+  background: var(--negro-suave);
+}
+
+.btn-accion-pill.btn-agenda {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: var(--azul-agenda);
+}
+
+.btn-qr-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--negro-apple);
+  background: var(--gris-chip);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.btn-qr-icon:hover {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+/* ============================================================
+   VENTANAS MODALES ESTILO APPLE SHEET (Backdrop Blur)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.abierto {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-panel-editorial {
+  background: var(--blanco-puro);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.25s ease;
+}
+
+.modal-overlay.abierto .modal-panel-editorial {
+  transform: translateY(0) scale(1);
+}
+
+/* Header del Modal */
+.modal-cabecera {
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gris-borde);
+  position: sticky;
+  top: 0;
+  background: var(--blanco-puro);
+  z-index: 10;
+}
+
+.modal-perfil-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-cerrar-x {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--negro-apple);
+  font-weight: 700;
+  transition: background 0.2s;
+}
+.btn-cerrar-x:hover {
+  background: #e4e4e7;
+}
+
+.modal-cuerpo {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Tabs del Modal: Catálogo vs Muro y Foro */
+.tabs-segmentadas {
+  display: flex;
+  background: var(--gris-chip);
+  border-radius: var(--radio-pill);
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab-segmento {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: var(--radio-pill);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--negro-apple);
+  transition: all 0.2s ease;
+}
+
+.tab-segmento.activo {
+  background: var(--blanco-puro);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.tab-segmento.activo-foro {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+/* Tarjetas de Producto en Modal */
+.lista-productos-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.producto-fila-card {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.producto-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.prod-nombre {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--negro-apple);
+}
+
+.prod-precio {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--rojo-alerce);
+}
+
+.prod-variantes-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-variante {
+  background: var(--gris-chip);
+  color: var(--gris-texto);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.producto-botones-fila {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-anadir-carrito {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radio-pill);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+.btn-anadir-carrito:hover {
+  opacity: 0.9;
+}
+
+.btn-whatsapp-prod {
+  border: 1px solid var(--negro-apple);
+  color: var(--negro-apple);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radio-pill);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.btn-whatsapp-prod:hover {
+  background: var(--gris-chip);
+}
+
+/* ============================================================
+   MURO Y FORO COMUNITARIO (EN VIVO - Live Forum)
+   ============================================================ */
+.cabecera-foro-vivo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lista-mensajes-foro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mensaje-muro-card {
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid var(--gris-borde);
+  background: var(--gris-chip);
+}
+
+.mensaje-muro-card.oficial {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.muro-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.autor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.autor-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-oficial-dorado {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 50px;
+}
+
+.muro-texto {
+  font-size: 13px;
+  color: var(--negro-apple);
+  line-height: 1.45;
+}
+
+.muro-fecha {
+  font-size: 10.5px;
+  color: var(--gris-texto);
+}
+
+/* Respuestas anidadas */
+.respuestas-anidadas {
+  margin-top: 8px;
+  padding-left: 14px;
+  border-left: 2px solid var(--rojo-alerce);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.respuesta-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.respuesta-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rojo-alerce);
+  margin-bottom: 2px;
+}
+
+/* Formulario para publicar en el muro */
+.caja-publicar-muro {
+  background: #f9fafb;
+  border: 1px solid var(--gris-borde);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.textarea-muro {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gris-borde);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 56px;
+}
+.textarea-muro:focus {
+  border-color: var(--negro-apple);
+  outline: none;
+}
+
+/* ============================================================
+   CARRITO DE COMPRAS FLOTANTE & MODAL
+   ============================================================ */
+.btn-carrito-flotante {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 12px 20px;
+  border-radius: var(--radio-pill);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 999;
+  transition: transform 0.2s ease;
+}
+.btn-carrito-flotante:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.item-carrito-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gris-borde);
+  gap: 12px;
+}
+
+.item-carrito-info {
+  flex: 1;
+}
+
+.item-carrito-titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--negro-apple);
+}
+
+.item-carrito-tienda {
+  font-size: 11.5px;
+  color: var(--gris-texto);
+}
+
+.item-carrito-precio {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--rojo-alerce);
+}
+
+.controles-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-qty {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+.btn-qty:hover {
+  background: var(--negro-apple);
+  color: #fff;
+}
+
+.qty-numero {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+.selector-pago-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.pill-pago {
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  padding: 7px 14px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--negro-apple);
+  transition: all 0.2s;
+}
+
+.pill-pago.activo {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border-color: var(--negro-apple);
+}
+
+/* ============================================================
+   MODAL QR CODE (Matching TiendaQRScreen.kt)
+   ============================================================ */
+.modal-qr-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.qr-contenedor {
+  padding: 16px;
+  background: var(--blanco-puro);
+  border-radius: 20px;
+  border: 1px solid var(--gris-borde);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  margin-bottom: 20px;
+}
+
+.qr-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--negro-apple);
+  margin-bottom: 6px;
+}
+
+.qr-instruccion {
+  font-size: 13px;
+  color: var(--gris-texto);
+  max-width: 320px;
+  margin-bottom: 14px;
+}
+
+.qr-url-pill {
+  background: var(--gris-chip);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--negro-apple);
+  margin-bottom: 18px;
+  word-break: break-all;
+}
+
+/* ============================================================
+   SECCIÓN PRÓXIMAS FERIAS
+   ============================================================ */
+.seccion-ferias {
+  padding: 30px 0;
+  border-top: 1px solid var(--gris-borde);
+}
+
+.tarjeta-feria-editorial {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  overflow: hidden;
+  box-shadow: var(--sombra-sutil);
+  display: flex;
+  flex-direction: column;
+}
+
+.tarjeta-feria-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.tarjeta-feria-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
 }
 
 /* ============================================================
    PIE DE PÁGINA
    ============================================================ */
-.pie {
-  background-color: var(--color-principal-oscuro);
-  color: #ffffff;
-  text-align: center;
-  padding: 1.5rem 0;
+.pie-pagina {
+  background: var(--blanco-puro);
+  border-top: 1px solid var(--gris-borde);
+  padding: 36px 0;
+  margin-top: 40px;
+  font-size: 12.5px;
+  color: var(--gris-texto);
 }
 
-.pie a {
-  color: #ffffff;
-}
-
-/* ============================================================
-   CLASE PARA TEXTO "MUY GRANDE" (acciones con js/main.js)
-   ============================================================ */
-/* Cuando el usuario elige "Normal": tamaño base del body (ya definido).
-   Cuando elige "Grande" o "Muy grande", se agregan estas clases: */
-body.tamano-grande {
-  font-size: var(--tamano-grande);
-}
-
-body.tamano-muy-grande {
-  font-size: var(--tamano-muy-grande);
-}
-
-/* ============================================================
-   MODO ALTO CONTRASTE (botón flotante rojo-blanco, WCAG AAA)
-   Texto 100% negro sobre fondo blanco. El botón flotante
-   también cambia a blanco con texto negro para destacar aún más.
-   ============================================================ */
-body.alto-contraste {
-  background-color: #000000;
-  color: #ffffff;
-  --color-fondo: #000000;             /* Fondo negro */
-  --color-texto: #ffffff;             /* Texto blanco */
-  --color-fondo-suave: #000000;       /* Fondos suaves ahora negros */
-  --color-principal: #ffd400;         /* Botones: amarillo brillante */
-  --color-principal-oscuro: #e6be00;
-  --color-acento: #ff8c1a;            /* Botones de ayuda naranja */
-  --color-acento-oscuro: #e07a0f;
-  --color-borde: #ffffff;             /* Bordes blancos bien visibles */
-}
-
-body.alto-contraste a {
-  color: #ffd400;
-}
-
-body.alto-contraste .tarjeta,
-body.alto-contraste .pasos {
-  background-color: #000000;
-  border-color: #ffffff;
-  box-shadow: none;
-}
-
-body.alto-contraste .logo-nombre,
-body.alto-contraste .menu-enlace {
-  color: #ffffff;
-}
-
-/* El botón flotante cambia a fondo blanco con letra negra en altocontraste */
-body.alto-contraste .boton-flotante {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #000000;
-}
-
-/* ============================================================
-   CLASES AUXILIARES
-   ============================================================ */
-/* .solo-lector: texto que leen los lectores de pantalla
-   pero que no se ve en la pantalla (como la etiqueta del buscador) */
-.solo-lector {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-/* ============================================================
-   PANTALLAS ANGOSTAS (celulares)
-   En pantallas pequeñas apilamos logo, buscador y menú.
-   ============================================================ */
-@media (max-width: 42rem) {
-  .encabezado-fila {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .buscador {
-    flex-direction: column;
-  }
-
-  .selector-tamano {
-    justify-content: center;
-  }
-
-  .menu {
-    flex-direction: column;
-  }
-
-  h1 {
-    font-size: 1.9rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-  }
-
-  .boton-flotante {
-    font-size: 1.1rem;
-    padding: 0.75rem 1rem;
-  }
-}
-
-/* ============================================================
-   COMPONENTES NUEVOS (vitrina pública según requisitos)
-   ============================================================ */
-
-/* Botones de bienvenida (dos accesos claros) */
-.bienvenida-botones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 1.25rem;
-}
-
-/* Etiquetas pequeñas pero legibles (tipo de feria o de producto) */
-.etiqueta {
-  display: inline-block;
-  font-size: 1.05rem;
-  font-weight: bold;
-  color: #ffffff;
-  border-radius: 2rem;
-  padding: 0.3rem 1rem;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.etiqueta-feria {
-  background-color: var(--color-principal);
-}
-
-.etiqueta-a-pedido {
-  background-color: var(--color-acento);
-}
-
-.etiqueta-agotado,
-.etiqueta-no-disponible {
-  background-color: var(--color-atencion);
-}
-
-.etiqueta-pieza-unica {
-  background-color: #2c3e8f;        /* Azul oscuro: pieza única */
-}
-
-.etiqueta-consultar-precio {
-  background-color: var(--color-texto);
-}
-
-.etiqueta-categoria {
-  background: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid var(--color-principal);
-}
-
-/* Línea "Participan" dentro de las tarjetas de ferias */
-.participantes-linea {
-  font-size: 1.1rem;
-  margin: 0.5rem 0;
-}
-
-/* ============================================================
-   DIRECTORIO: PESTAÑAS (Emprendedoras / Asociaciones)
-   ============================================================ */
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin: 1.25rem 0;
-}
-
-.tab {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid var(--color-principal);
-  padding: 0.7rem 1.5rem;
-}
-
-.tab-activo {
-  background-color: var(--color-principal);
-  color: #ffffff;
-}
-
-/* ============================================================
-   DIRECTORIO: FILTROS
-   ============================================================ */
-.filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-  background-color: #ffffff;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.75rem;
-  padding: 1.25rem;
-  margin: 1.25rem 0;
-}
-
-.campo-filtro {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 12rem;
-}
-
-.campo-filtro-ancho {
-  flex: 1 1 18rem;
-}
-
-.campo-filtro label {
-  font-weight: bold;
-  font-size: 1.05rem;
-}
-
-/* Entradas y listas desplegables grandes, fáciles de tocar */
-.campo-filtro input,
-.campo-filtro select,
-.formulario-login input {
-  font-size: 1.25rem;
-  padding: 0.6rem 0.8rem;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.5rem;
-  min-height: 3rem;
-  background-color: #ffffff;
-  color: var(--color-texto);
-}
-
-/* Rejilla del directorio */
-.grilla-directorio {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 1.75rem;
-}
-
-/* ============================================================
-   VENTANAS (MODALES)
-   Fondo oscuro que cubre la página y panel blanco centrado.
-   ============================================================ */
-.modal {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-  padding: 1rem;
-  overflow-y: auto;
-}
-
-.modal[hidden] {
-  display: none;
-}
-
-.modal-panel {
-  background-color: #ffffff;
-  color: var(--color-texto);
-  max-width: 52rem;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  border: 4px solid var(--color-principal);
-  border-radius: 0.9rem;
-  padding: 1rem 1.5rem 1.75rem;
-}
-
-.modal-panel-angosto {
-  max-width: 30rem;
-}
-
-/* Botón "Cerrar esta ventana": queda siempre visible mientras se baja */
-.boton-cerrar-modal {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: inline-block;
-  margin-bottom: 0.75rem;
-  background-color: var(--color-texto);
-}
-
-.boton-cerrar-modal:hover {
-  background-color: #000000;
-}
-
-/* ============================================================
-   DETALLE DE PRODUCTO (RF-CMP-02 y RF-CMP-03)
-   ============================================================ */
-.detalle-producto {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.detalle-producto img {
-  width: 100%;
-  border-radius: 0.75rem;
-  border: 3px solid var(--color-borde);
-}
-
-.detalle-precio {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: var(--color-principal-oscuro);
-  margin: 0.5rem 0;
-}
-
-.detalle-descripcion {
-  font-size: 1.2rem;
-}
-
-/* Variantes: cada botón de variante muestra foto y precio al tocarlo */
-.variantes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 1rem 0;
-}
-
-.boton-variante {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid var(--color-principal);
-  padding: 0.6rem 1.2rem;
-}
-
-.boton-variante-activo {
-  background-color: var(--color-principal);
-  color: #ffffff;
-}
-
-/* Calificaciones con estrellas grandes (RF-CMP-09) */
-.estrellas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1rem 0;
-}
-
-.boton-estrella {
-  font-size: 1.7rem;
-  min-height: 3.5rem;
-  min-width: 3.5rem;
-  background-color: #ffffff;
-  border: 3px solid var(--color-texto);
-  border-radius: 0.4rem;
-  color: var(--color-texto);
-  cursor: pointer;
-}
-
-.boton-estrella.activa {
-  background-color: var(--color-acento);
-  color: #ffffff;
-  border-color: var(--color-acento-oscuro);
-}
-
-/* Botón de seguimiento: cambia cuando ya se está siguiendo */
-.boton-siguiendo {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid var(--color-principal);
-}
-
-/* ============================================================
-   FICHA DE FERIA: MAPA (RF-MAP-02) Y ORGANIZACIÓN
-   ============================================================ */
-.mapa {
-  width: 100%;
-  height: 16rem;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.75rem;
-  margin: 1rem 0;
-  background-color: var(--color-fondo-suave);
-}
-
-.mapa iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0.6rem;
-}
-
-.campo-ficha {
-  margin: 0.75rem 0;
-  font-size: 1.2rem;
-}
-
-.campo-ficha strong {
-  display: block;
-  font-size: 1.05rem;
-  color: var(--color-principal-oscuro);
-}
-
-.lista-integrantes {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-/* Botón para entrar a la tienda de una participante desde la ficha */
-.boton-integrante {
-  width: 100%;
-  background-color: #ffffff;
-  border: 3px solid var(--color-principal);
-  color: var(--color-principal-oscuro);
-  text-align: left;
+.pie-fila {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-}
-
-.boton-integrante:hover {
-  background-color: var(--color-contenedor);
-}
-
-/* Muestra del catálogo de las participantes (RF-FER-10) */
-.muestra-catalogo {
-  display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.producto-mini {
-  flex: 1 1 11rem;
-  background-color: #ffffff;
-  border: 3px solid var(--color-borde);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-}
-
-.producto-mini img {
-  width: 100%;
-  height: 7rem;
-  object-fit: cover;
-  display: block;
-}
-
-.producto-mini strong {
-  display: block;
-  padding: 0.5rem 0.6rem 0.1rem;
-  font-size: 1.05rem;
-}
-
-.producto-mini span {
-  display: block;
-  padding: 0 0.6rem 0.75rem;
+  gap: 16px;
 }
 
 /* ============================================================
-   ACCESO DE CUENTA (RF-ACC-04 y RF-ACC-08)
+   MODO ALTO CONTRASTE (WCAG AAA)
    ============================================================ */
-.acceso-cuenta {
-  display: flex;
-  align-items: center;
-}
-
-.boton-entrar {
-  background-color: #ffffff;
-  color: var(--color-principal-oscuro);
-  border: 3px solid #ffffff;
-  padding: 0.6rem 1.1rem;
-}
-
-.usuario-logueado {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.usuario-saludo {
-  font-weight: bold;
-  font-size: 1.15rem;
-}
-
-.boton-salir {
-  background-color: transparent;
-  border: 3px solid #ffffff;
+body.alto-contraste {
+  background: #000000;
   color: #ffffff;
-  padding: 0.6rem 1.1rem;
 }
 
-.login-motivo {
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: var(--color-principal-oscuro);
-  background-color: var(--color-contenedor);
-  border: 3px solid var(--color-principal);
-  border-radius: 0.6rem;
-  padding: 0.75rem 1rem;
-}
-
-/* Simulación del botón de acceso con Google */
-.boton-google {
-  background-color: #ffffff;
-  color: #202124;
-  border: 3px solid #202124;
-}
-
-.boton-google:hover {
-  background-color: #f1f3f4;
-}
-
-.boton-ancho {
-  display: block;
-  width: 100%;
-  margin: 0.5rem 0;
-  text-align: center;
-}
-
-.formulario-login {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 1rem;
-}
-
-.formulario-login label {
-  font-weight: bold;
-  font-size: 1.05rem;
-}
-
-.formulario-login input {
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.nota-login {
-  font-size: 1.05rem;
-  border-top: 3px dashed var(--color-borde);
-  padding-top: 0.75rem;
-  margin-top: 1rem;
-}
-
-/* Aviso del pie de página (privacidad, RNF-PRI-01/02) */
-.pie-legal {
-  font-size: 1rem;
-  opacity: 0.95;
-}
-
-/* ============================================================
-   MODO ALTO CONTRASTE: componentes nuevos
-   ============================================================ */
-body.alto-contraste .modal-panel {
-  background-color: #000000;
+body.alto-contraste .encabezado,
+body.alto-contraste .tarjeta-tienda,
+body.alto-contraste .modal-panel-editorial,
+body.alto-contraste .banner-conexion-app,
+body.alto-contraste .tarjeta-feria-editorial,
+body.alto-contraste .pie-pagina {
+  background: #000000;
+  border-color: #ffffff;
   color: #ffffff;
-  border-color: #ffd400;
 }
 
-body.alto-contraste .filtros {
-  background-color: #000000;
-  border-color: #ffffff;
-}
-
-body.alto-contraste .campo-filtro input,
-body.alto-contraste .campo-filtro select,
-body.alto-contraste .formulario-login input {
-  background-color: #000000;
+body.alto-contraste .logo-alerce,
+body.alto-contraste .tarjeta-nombre,
+body.alto-contraste .prod-nombre {
   color: #ffffff;
-  border-color: #ffffff;
 }
 
-body.alto-contraste .tab,
-body.alto-contraste .boton-variante,
-body.alto-contraste .boton-integrante,
-body.alto-contraste .boton-estrella,
-body.alto-contraste .boton-siguiendo,
-body.alto-contraste .producto-mini,
-body.alto-contraste .boton-tamano {
-  background-color: #000000;
+body.alto-contraste .pill-categoria {
+  background: #000000;
+  border: 2px solid #ffffff;
   color: #ffffff;
-  border-color: #ffffff;
 }
 
-body.alto-contraste .tab-activo,
-body.alto-contraste .boton-variante-activo {
-  background-color: #ffd400;
-  color: #000000;
-  border-color: #ffd400;
-}
-
-body.alto-contraste .etiqueta-categoria {
-  background-color: #000000;
-  color: #ffd400;
-  border-color: #ffd400;
-}
-
-body.alto-contraste .mapa {
-  border-color: #ffffff;
-}
-
-body.alto-contraste .opcion-tamano[aria-checked="true"] {
-  background-color: #ffd400;
+body.alto-contraste .pill-categoria.activa {
+  background: #ffffff;
   color: #000000;
 }
 
-body.alto-contraste .login-motivo {
-  background-color: #000000;
-  color: #ffd400;
-  border-color: #ffd400;
-}
-
-/* ============================================================
-   PANTALLAS ANGOSTAS: ajustes de los componentes nuevos
-   ============================================================ */
-@media (max-width: 42rem) {
-  .detalle-producto {
-    grid-template-columns: 1fr;
-  }
-
-  .filtros {
-    align-items: stretch;
-  }
-
-  .campo-filtro {
-    min-width: 100%;
-  }
-
-  .modal {
-    padding: 0.5rem;
-  }
-
-  .modal-panel {
-    padding: 0.75rem;
-    border-width: 3px;
-  }
-
-  .tabs,
-  .bienvenida-botones {
-    flex-direction: column;
-  }
-
-  .tab {
-    width: 100%;
-  }
-
-  .mapa {
-    height: 13rem;
-  }
-
+/* Responsive */
+@media (max-width: 768px) {
   .encabezado-fila {
     flex-direction: column;
     align-items: stretch;
   }
-
-  .selector-tamano {
-    justify-content: center;
+  .buscador-central {
+    max-width: 100%;
   }
-
-  .menu {
-    flex-direction: column;
+  .header-acciones {
+    justify-content: space-between;
+  }
+  .grilla-tarjetas {
+    grid-template-columns: 1fr;
   }
 }
