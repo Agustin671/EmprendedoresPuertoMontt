@@ -76,7 +76,8 @@ fun PantallaVenta(
     avisar: (String) -> Unit
 ) {
     var feriaId by remember { mutableStateOf(TramaStore.feriasEnCurso().firstOrNull()?.id) }
-    var carrito by remember { mutableStateOf(listOf<ItemVenta>()) }
+    // Usa carrito persistente en store
+    val carrito = TramaStore.carritoVenta
     var medio by remember { mutableStateOf<MedioPago?>(null) }
     var busqueda by remember { mutableStateOf("") }
     var productoSel by remember { mutableStateOf<Producto?>(null) }
@@ -91,12 +92,11 @@ fun PantallaVenta(
         val existente = carrito.firstOrNull {
             it.productoId == item.productoId && it.varianteId == item.varianteId
         }
-        carrito = if (existente != null) {
-            carrito.map {
-                if (it === existente) it.copy(cantidad = it.cantidad + item.cantidad) else it
-            }
+        if (existente != null) {
+            val idx = carrito.indexOf(existente)
+            if (idx >= 0) carrito[idx] = existente.copy(cantidad = existente.cantidad + item.cantidad)
         } else {
-            carrito + item
+            carrito.add(item)
         }
     }
 
@@ -212,17 +212,16 @@ fun PantallaVenta(
                                     ContadorCantidad(
                                         cantidad = item.cantidad,
                                         onCambio = { nueva ->
-                                            carrito = if (nueva <= 0) {
-                                                carrito.filterNot { it === item }
+                                            if (nueva <= 0) {
+                                                carrito.remove(item)
                                             } else {
-                                                carrito.map {
-                                                    if (it === item) it.copy(cantidad = nueva) else it
-                                                }
+                                                val idx = carrito.indexOf(item)
+                                                if (idx >= 0) carrito[idx] = item.copy(cantidad = nueva)
                                             }
                                         }
                                     )
                                     IconButton(
-                                        onClick = { carrito = carrito.filterNot { it === item } },
+                                        onClick = { carrito.removeAll { it === item } },
                                         modifier = Modifier.size(36.dp)
                                     ) {
                                         Icon(
@@ -288,7 +287,7 @@ fun PantallaVenta(
                     onClick = {
                         val pago = medio ?: return@BotonPrimario
                         val venta = TramaStore.registrarVenta(carrito, pago, feriaId)
-                        carrito = emptyList()
+                        carrito.clear()
                         medio = null
                         busqueda = ""
                         ventaConfirmada = venta

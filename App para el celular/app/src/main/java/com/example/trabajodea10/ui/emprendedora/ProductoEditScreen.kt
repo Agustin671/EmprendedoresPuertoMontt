@@ -1,4 +1,4 @@
-package com.example.trabajodea10.ui.emprendedora
+﻿package com.example.trabajodea10.ui.emprendedora
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -116,7 +116,7 @@ fun PantallaProductoDetalle(
         ) {
             Tarjeta {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    TituloSeccion(texto = "Foto del producto")
+                    TituloSeccion(texto = "Paso 1: Foto del producto")
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
@@ -165,6 +165,7 @@ fun PantallaProductoDetalle(
                 }
             }
 
+            TituloSeccion(texto = "Paso 2: Datos del producto")
             CampoTexto(valor = nombre, onValorChange = { nombre = it }, etiqueta = "Nombre del producto")
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -213,7 +214,7 @@ fun PantallaProductoDetalle(
 
             Tarjeta {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    TituloSeccion(texto = "Variantes (color / talle)")
+                    TituloSeccion(texto = "Paso 3: Variantes (color / talle)")
                     Spacer(modifier = Modifier.height(8.dp))
                     if (variantes.isEmpty()) {
                         Text(

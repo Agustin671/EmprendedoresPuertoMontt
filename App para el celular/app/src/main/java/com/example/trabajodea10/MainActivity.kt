@@ -1,5 +1,8 @@
 package com.example.trabajodea10
 
+import com.example.trabajodea10.TramaApp
+
+
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -26,11 +29,9 @@ import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoAlerce
 import com.example.trabajodea10.ui.theme.TramaAppTheme
 import com.google.firebase.FirebaseApp
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val prefs = getSharedPreferences("app_diagnostico", Context.MODE_PRIVATE)
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
@@ -43,7 +44,6 @@ class MainActivity : ComponentActivity() {
             }
             defaultHandler?.uncaughtException(thread, throwable)
         }
-
         try {
             FirebaseApp.initializeApp(this)
         } catch (e: Throwable) {
@@ -51,12 +51,10 @@ class MainActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
         setContent {
-            TramaAppTheme {
+            com.example.trabajodea10.ui.theme.TramaAppTheme {
                 val errorPrevio = remember { prefs.getString("ultimo_error", null) }
                 var mostrarDialogoError by remember { mutableStateOf(errorPrevio != null) }
-
                 TramaApp()
-
                 if (mostrarDialogoError && errorPrevio != null) {
                     AlertDialog(
                         onDismissRequest = {

@@ -107,6 +107,9 @@ object TramaStore {
     val productos = mutableStateListOf<Producto>().apply { addAll(MockData.productos) }
     val ventas = mutableStateListOf<Venta>().apply { addAll(MockData.ventas) }
 
+    // Carrito de venta (persiste entre navegación)
+    val carritoVenta = mutableStateListOf<ItemVenta>()
+
     var tienda by mutableStateOf(MockData.tienda)
         private set
 

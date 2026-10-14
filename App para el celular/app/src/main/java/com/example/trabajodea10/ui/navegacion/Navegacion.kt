@@ -1,4 +1,4 @@
-package com.example.trabajodea10.ui.navegacion
+﻿package com.example.trabajodea10.ui.navegacion
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -41,6 +41,7 @@ sealed class Ruta(val grafica: String? = null) {
     data object EmpVenta : Ruta("emp_venta")
     data object EmpFerias : Ruta("emp_ferias")
     data object EmpTienda : Ruta("emp_tienda")
+    data class EmpTiendaQR(val tiendaId: String) : Ruta()
     data class ProductoDetalle(val productoId: String) : Ruta()
 
     data object VisInicio : Ruta("vis_inicio")
@@ -180,3 +181,4 @@ fun BarraInferior(
         }
     }
 }
+

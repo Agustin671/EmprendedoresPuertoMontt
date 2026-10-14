@@ -1,4 +1,4 @@
-package com.example.trabajodea10.ui.emprendedora
+﻿package com.example.trabajodea10.ui.emprendedora
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,13 +60,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.trabajodea10.data.BloqueHorario
-import com.example.trabajodea10.data.FirebaseManager
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
 import com.example.trabajodea10.data.NecesidadesTienda
 import com.example.trabajodea10.data.PublicacionForo
 import com.example.trabajodea10.data.RespuestaForo
 import androidx.compose.foundation.BorderStroke
 import com.example.trabajodea10.data.Tienda
+import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.BarraSuperior
@@ -108,6 +109,7 @@ fun PantallaTienda(
     avisar: (String) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
     // Buscar si ya existe tienda cargada o usar la de TramaStore
     val tiendaBase = FirebaseManager.tiendas.firstOrNull { it.id == TramaStore.tienda.id } ?: TramaStore.tienda
 
@@ -483,6 +485,34 @@ fun PantallaTienda(
                 Icon(Icons.Filled.Search, contentDescription = null, tint = NegroApple)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Ver en el Marketplace como Comprador", color = NegroApple, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            TituloSeccion(texto = "Compartir mi tienda")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = {
+                        val texto = "Mira mi tienda en Alerce Trama: https://trama.app/tienda/" + tiendaActualizada.id
+                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, texto)
+                        }
+                        context.startActivity(android.content.Intent.createChooser(intent, "Compartir"))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = VerdeOk),
+                    shape = RoundedCornerShape(50.dp),
+                    modifier = Modifier.weight(1f).height(46.dp)
+                ) {
+                    Text("Compartir por WhatsApp", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+                Button(
+                    onClick = { nav.irA(com.example.trabajodea10.ui.navegacion.Ruta.EmpTiendaQR(tiendaActualizada.id)) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Berenjena),
+                    shape = RoundedCornerShape(50.dp),
+                    modifier = Modifier.weight(1f).height(46.dp)
+                ) {
+                    Text("Generar QR", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -1216,6 +1246,9 @@ private fun SeccionGestionForo(
         }
     }
 }
+
+
+
 
 
 

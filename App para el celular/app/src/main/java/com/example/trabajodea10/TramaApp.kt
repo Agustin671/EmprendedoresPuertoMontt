@@ -29,6 +29,7 @@ import com.example.trabajodea10.ui.emprendedora.PantallaEmprendedoraInicio
 import com.example.trabajodea10.ui.emprendedora.PantallaMisFerias
 import com.example.trabajodea10.ui.emprendedora.PantallaProductoDetalle
 import com.example.trabajodea10.ui.emprendedora.PantallaTienda
+import com.example.trabajodea10.ui.emprendedora.PantallaTiendaQR
 import com.example.trabajodea10.ui.emprendedora.PantallaVenta
 import com.example.trabajodea10.ui.navegacion.BarraInferior
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
@@ -158,6 +159,7 @@ private fun ContenidoSegunRuta(
         Ruta.EmpVenta -> PantallaVenta(nav = nav, avisar = avisar)
         Ruta.EmpFerias -> PantallaMisFerias(nav = nav, avisar = avisar)
         Ruta.EmpTienda -> PantallaTienda(nav = nav, avisar = avisar)
+        is Ruta.EmpTiendaQR -> PantallaTiendaQR(tiendaId = ruta.tiendaId, nav = nav)
         is Ruta.ProductoDetalle -> PantallaProductoDetalle(
             productoId = ruta.productoId,
             nav = nav,

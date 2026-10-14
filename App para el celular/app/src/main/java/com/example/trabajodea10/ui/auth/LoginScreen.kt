@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,16 @@ import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.theme.BlancoPuro
+import android.widget.Toast
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.fragment.app.FragmentActivity
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+import java.util.concurrent.Executor
 import com.example.trabajodea10.ui.theme.FondoLimpio
 import com.example.trabajodea10.ui.theme.GrisBorde
 import com.example.trabajodea10.ui.theme.GrisChip
@@ -76,7 +87,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun PantallaLogin(nav: ControladorNavegacion) {
     val coroutineScope = rememberCoroutineScope()
-    var pestañaModo by remember { mutableIntStateOf(0) } // 0: Emprendedora, 1: Comprador
+    val activity = LocalContext.current as? FragmentActivity
+    val contexto = LocalContext.current
+    var pestanaModo by remember { mutableIntStateOf(0) } // 0: Emprendedora, 1: Comprador
     var correo by remember { mutableStateOf("") }
     var clave by remember { mutableStateOf("") }
     var nombreRegistro by remember { mutableStateOf("") }
@@ -84,6 +97,14 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     var cargando by remember { mutableStateOf(false) }
     var mensajeError by remember { mutableStateOf<String?>(null) }
     var mensajeExito by remember { mutableStateOf<String?>(null) }
+    var puedeUsarBiometria by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val biometricManager = BiometricManager.from(contexto)
+        puedeUsarBiometria = biometricManager.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        ) == BiometricManager.BIOMETRIC_SUCCESS
+    }
 
     Column(
         modifier = Modifier
@@ -148,8 +169,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(50.dp))
-                        .background(if (pestañaModo == 0) NegroApple else Color.Transparent)
-                        .clickable { pestañaModo = 0 }
+                        .background(if (pestanaModo == 0) NegroApple else Color.Transparent)
+                        .clickable { pestanaModo = 0 }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -158,14 +179,14 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             Icons.Filled.Store,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (pestañaModo == 0) BlancoPuro else GrisTexto
+                            tint = if (pestanaModo == 0) BlancoPuro else GrisTexto
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             "Soy Emprendedora",
-                            fontWeight = if (pestañaModo == 0) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (pestanaModo == 0) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 13.sp,
-                            color = if (pestañaModo == 0) BlancoPuro else GrisTexto
+                            color = if (pestanaModo == 0) BlancoPuro else GrisTexto
                         )
                     }
                 }
@@ -174,8 +195,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(50.dp))
-                        .background(if (pestañaModo == 1) NegroApple else Color.Transparent)
-                        .clickable { pestañaModo = 1 }
+                        .background(if (pestanaModo == 1) NegroApple else Color.Transparent)
+                        .clickable { pestanaModo = 1 }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -184,14 +205,14 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             Icons.Filled.ShoppingBag,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
-                            tint = if (pestañaModo == 1) BlancoPuro else GrisTexto
+                            tint = if (pestanaModo == 1) BlancoPuro else GrisTexto
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             "Soy Comprador",
-                            fontWeight = if (pestañaModo == 1) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (pestanaModo == 1) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 13.sp,
-                            color = if (pestañaModo == 1) BlancoPuro else GrisTexto
+                            color = if (pestanaModo == 1) BlancoPuro else GrisTexto
                         )
                     }
                 }
@@ -223,7 +244,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     )
 
                     Text(
-                        text = if (pestañaModo == 0)
+                        text = if (pestanaModo == 0)
                             "Ingresa con tus credenciales de la asociación para administrar tu tienda."
                         else
                             "Ingresa para seguir tus tiendas favoritas y recibir avisos de ferias.",
@@ -279,7 +300,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             OutlinedButton(
                                 onClick = {
                                     val nombre = nombreRegistro.ifBlank { correo.substringBefore("@").ifBlank { "Paul Ferrada" } }
-                                    val rol = if (pestañaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
+                                    val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
                                     FirebaseManager.entrarModoDemo(nombre, rol)
                                     nav.iniciarSesion(rol)
                                 },
@@ -319,7 +340,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                     cargando = false
                                     if (res.isSuccess) {
                                         mensajeExito = "¡Cuenta creada en Firebase! Bienvenido."
-                                        val rol = if (pestañaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
+                                        val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
                                         nav.iniciarSesion(rol)
                                     } else {
                                         mensajeError = res.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
@@ -328,7 +349,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                     val res = FirebaseManager.iniciarSesion(correo, clave)
                                     cargando = false
                                     if (res.isSuccess) {
-                                        val rol = if (pestañaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
+                                        val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
                                         nav.iniciarSesion(rol)
                                     } else {
                                         mensajeError = res.exceptionOrNull()?.localizedMessage ?: "Credenciales incorrectas"
@@ -355,6 +376,26 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         }
                     }
 
+
+                    if (pestanaModo == 0 && puedeUsarBiometria) {
+                        OutlinedButton(
+                            onClick = {
+                                activity?.let {
+                                    autenticarConHuella(
+                                        activity = it,
+                                        onExito = { nav.iniciarSesion(Rol.EMPRENDEDORA) },
+                                        onError = { err -> mensajeError = "Error de biometría: " + err },
+                                        onCancelar = {}
+                                    )
+                                }
+                            },
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(1.dp, NegroApple),
+                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                        ) {
+                            Text("Ingresar con huella digital", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = NegroApple)
+                        }
+                    }
                     TextButton(
                         onClick = {
                             esModoRegistro = !esModoRegistro
@@ -488,4 +529,47 @@ private fun FilaAccesoRapidoEditorial(
         Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = NegroApple.copy(alpha = 0.5f))
     }
 }
+
+
+
+
+
+fun autenticarConHuella(
+    activity: FragmentActivity,
+    onExito: () -> Unit,
+    onError: (String) -> Unit,
+    onCancelar: () -> Unit
+) {
+    val executor: Executor = ContextCompat.getMainExecutor(activity)
+    val biometricPrompt = BiometricPrompt(activity, executor,
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                onError(errString.toString())
+                onCancelar()
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onExito()
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                onError("Huella no reconocida. Intenta nuevamente.")
+            }
+        })
+
+    val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("Verificación biométrica")
+        .setSubtitle("Ingresa al modo emprendedora")
+        .setDescription("Usa tu huella o credencial del dispositivo para continuar")
+        .setAllowedAuthenticators(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        )
+        .build()
+
+    biometricPrompt.authenticate(promptInfo)
+}
+
 
