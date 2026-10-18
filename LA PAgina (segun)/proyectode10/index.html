@@ -542,69 +542,62 @@
     </div>
   </div>
 
-  <!-- 6. MODAL PUBLICAR PRODUCTO (ESTILO FACEBOOK MARKETPLACE) -->
+  <!-- 6. MODAL PUBLICAR PRODUCTO -->
   <div class="modal-overlay" id="modal-publicar-producto" role="dialog" aria-modal="true" aria-labelledby="modal-publicar-titulo">
-    <div class="modal-panel-editorial" style="max-width: 640px;">
+    <div class="modal-panel-editorial" style="max-width: 620px;">
       <div class="modal-cabecera">
         <div>
-          <span class="badge-necesidad badge-pedido" style="margin-bottom: 4px;">Modo Emprendedora</span>
-          <h2 id="modal-publicar-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple);">➕ Añadir Producto en Venta</h2>
-          <p style="font-size: 12px; color: var(--gris-texto);">Publica en 1 minuto con una interfaz fácil estilo Facebook Marketplace</p>
+          <h2 id="modal-publicar-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Añadir Producto</h2>
         </div>
         <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-publicar-producto')" aria-label="Cerrar">✕</button>
       </div>
 
-      <div class="modal-cuerpo" style="gap: 16px;">
+      <div class="modal-cuerpo" style="gap: 14px;">
 
-        <!-- 1. ZONA DE FOTO -->
+        <!-- FOTO -->
         <div>
-          <label class="label-fb-market">1. Foto del Producto:</label>
+          <label class="label-fb-market">Foto</label>
           <div class="fb-caja-foto-preview" id="fb-caja-foto-preview">
             <div id="fb-placeholder-foto" class="fb-placeholder-foto">
-              <span style="font-size: 38px;">📷</span>
-              <p style="font-size: 13.5px; font-weight: 700; color: var(--negro-apple);">Sube una foto clara de tu producto</p>
-              <p style="font-size: 12px; color: var(--gris-texto);">O diseña un afiche llamativo con plantillas de cadenas grandes</p>
-              <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center;">
+              <span style="font-size: 32px;">📷</span>
+              <p style="font-size: 13px; font-weight: 700; color: var(--negro-apple); margin: 4px 0;">Foto del producto o afiche</p>
+              <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;">
                 <label for="inp-subir-foto-producto" class="btn-accion-pill" style="cursor: pointer; background: #ffffff;">
-                  📁 Subir Foto de mi Celular
+                  📁 Subir Foto
                 </label>
                 <input type="file" id="inp-subir-foto-producto" accept="image/*" style="display: none;" onchange="TramaWeb.onFotoProductoSubida(event)">
                 <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">
-                  🎨 Diseñar Flyer con Plantilla
+                  🎨 Crear Afiche
                 </button>
               </div>
             </div>
-            <img id="fb-img-preview" src="" alt="Vista previa del producto" style="display: none; width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px;">
+            <img id="fb-img-preview" src="" alt="Vista previa" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 8px;">
           </div>
           <div id="fb-opciones-foto-activa" style="display: none; margin-top: 8px; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: var(--verde-ok); font-weight: 700;">✓ Foto lista para publicar</span>
+            <span style="font-size: 12px; color: var(--verde-ok); font-weight: 700;">✓ Foto lista</span>
             <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">Editar en Estudio ➔</button>
+              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">Editar en Diseñador ➔</button>
               <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px; color: var(--rojo-alerce);" onclick="TramaWeb.quitarFotoProducto()">Cambiar Foto</button>
             </div>
           </div>
 
-          <!-- Galería de fotos rápidas sugeridas -->
-          <p style="font-size: 11.5px; color: var(--gris-texto); margin-top: 10px;">O elige una foto sugerida si no tienes una a mano:</p>
-          <div class="fb-galeria-rapida" id="fb-galeria-rapida">
-            <!-- Chips de fotos precargadas inyectados por JS -->
-          </div>
+          <div class="fb-galeria-rapida" id="fb-galeria-rapida" style="margin-top: 8px;"></div>
         </div>
 
-        <!-- 2. ¿QUÉ VENDES? -->
+        <!-- NOMBRE -->
         <div>
-          <label for="fb-inp-titulo" class="label-fb-market">2. ¿Qué estás vendiendo? (Título):</label>
-          <input type="text" id="fb-inp-titulo" class="input-fb-market" placeholder="Ej: Pan amasado caliente recién salido del horno" maxlength="90">
+          <label for="fb-inp-titulo" class="label-fb-market">Nombre del producto</label>
+          <input type="text" id="fb-inp-titulo" class="input-fb-market" placeholder="Ej: Pan amasado artesanal" maxlength="90">
         </div>
 
-        <!-- 3. PRECIO Y TIENDA -->
+        <!-- PRECIO Y NEGOCIO -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label for="fb-inp-precio" class="label-fb-market">3. Precio ($ CLP):</label>
-            <input type="number" id="fb-inp-precio" class="input-fb-market" placeholder="Ej: 2500" min="0" step="100">
+            <label for="fb-inp-precio" class="label-fb-market">Precio ($ CLP)</label>
+            <input type="number" id="fb-inp-precio" class="input-fb-market" placeholder="2500" min="0" step="100">
           </div>
           <div>
-            <label for="fb-select-tienda" class="label-fb-market">4. Tu Negocio / Emprendimiento:</label>
+            <label for="fb-select-tienda" class="label-fb-market">Negocio</label>
             <select id="fb-select-tienda" class="input-fb-market" style="height: 44px; background: #ffffff;">
               <option value="t_minimarket_rosa">Minimarket Doña Rosa</option>
               <option value="t_tejidos_austral">Tejidos & Lanares Austral</option>
@@ -614,49 +607,47 @@
           </div>
         </div>
 
-        <!-- 5. CATEGORÍA (CHIPS GRANDES TÁCTILES) -->
+        <!-- CATEGORÍA -->
         <div>
-          <label class="label-fb-market">5. Categoría del producto:</label>
+          <label class="label-fb-market">Categoría</label>
           <div class="fb-selector-chips" id="fb-selector-categoria">
-            <button type="button" class="fb-chip-cat activo" data-cat="Abarrotes y Alimentos" onclick="TramaWeb.seleccionarCategoriaFB('Abarrotes y Alimentos')">🍞 Alimentos & Panadería</button>
-            <button type="button" class="fb-chip-cat" data-cat="Artesanía y Textil" onclick="TramaWeb.seleccionarCategoriaFB('Artesanía y Textil')">🧶 Artesanía & Lana</button>
-            <button type="button" class="fb-chip-cat" data-cat="Pastelería y Gastronomía" onclick="TramaWeb.seleccionarCategoriaFB('Pastelería y Gastronomía')">🍰 Pastelería & Kuchen</button>
-            <button type="button" class="fb-chip-cat" data-cat="Servicios y Peluquería" onclick="TramaWeb.seleccionarCategoriaFB('Servicios y Peluquería')">💈 Peluquería & Servicios</button>
+            <button type="button" class="fb-chip-cat activo" data-cat="Abarrotes y Alimentos" onclick="TramaWeb.seleccionarCategoriaFB('Abarrotes y Alimentos')">🍞 Alimentos</button>
+            <button type="button" class="fb-chip-cat" data-cat="Artesanía y Textil" onclick="TramaWeb.seleccionarCategoriaFB('Artesanía y Textil')">🧶 Artesanía</button>
+            <button type="button" class="fb-chip-cat" data-cat="Pastelería y Gastronomía" onclick="TramaWeb.seleccionarCategoriaFB('Pastelería y Gastronomía')">🍰 Pastelería</button>
+            <button type="button" class="fb-chip-cat" data-cat="Servicios y Peluquería" onclick="TramaWeb.seleccionarCategoriaFB('Servicios y Peluquería')">💈 Servicios</button>
           </div>
         </div>
 
-        <!-- 6. DISPONIBILIDAD -->
+        <!-- DISPONIBILIDAD -->
         <div>
-          <label class="label-fb-market">6. Disponibilidad / Stock:</label>
+          <label class="label-fb-market">Disponibilidad</label>
           <div class="fb-selector-chips" id="fb-selector-stock">
-            <button type="button" class="fb-chip-cat activo" data-stock="inmediato" onclick="TramaWeb.seleccionarStockFB('inmediato')">📦 Con Stock (Para entrega hoy mismo)</button>
-            <button type="button" class="fb-chip-cat" data-stock="pedido" onclick="TramaWeb.seleccionarStockFB('pedido')">✂️ A Pedido (Se elabora por encargo)</button>
+            <button type="button" class="fb-chip-cat activo" data-stock="inmediato" onclick="TramaWeb.seleccionarStockFB('inmediato')">📦 Con Stock (Entrega hoy)</button>
+            <button type="button" class="fb-chip-cat" data-stock="pedido" onclick="TramaWeb.seleccionarStockFB('pedido')">✂️ A Pedido (Por encargo)</button>
           </div>
         </div>
 
-        <!-- 7. DETALLES ADICIONALES -->
+        <!-- DETALLES -->
         <div>
-          <label for="fb-inp-desc" class="label-fb-market">7. Detalles adicionales (opcional):</label>
-          <textarea id="fb-inp-desc" class="input-fb-market" style="min-height: 56px; font-family: inherit; font-size: 13px;" placeholder="Ej: Bolsa de 5 unidades calientitas. Entregas en Alerce Histórico."></textarea>
+          <label for="fb-inp-desc" class="label-fb-market">Descripción (opcional)</label>
+          <textarea id="fb-inp-desc" class="input-fb-market" style="min-height: 52px; font-family: inherit; font-size: 13px;" placeholder="Detalles de entrega o elaboración"></textarea>
         </div>
 
-        <!-- BOTÓN GIGANTE PUBLICAR -->
+        <!-- BOTÓN PUBLICAR -->
         <button type="button" class="btn-publicar-gigante" onclick="TramaWeb.confirmarPublicacionFB()">
-          <span>🚀 Publicar Artículo en la Vitrina</span>
+          <span>Publicar Producto</span>
         </button>
 
       </div>
     </div>
   </div>
 
-  <!-- 7. MODAL ESTUDIO DE FLYERS Y EDICIÓN COMERCIAL (Burger King, McDonald's, Editorial, Sureño, WhatsApp) -->
+  <!-- 7. MODAL DISEÑADOR DE AFICHES (ESTILOS 1 A 5 - LETRAS DETRÁS, PRODUCTO AL FRENTE) -->
   <div class="modal-overlay" id="modal-estudio-flyer" role="dialog" aria-modal="true" aria-labelledby="modal-flyer-titulo">
     <div class="modal-panel-editorial" style="max-width: 900px;">
       <div class="modal-cabecera">
         <div>
-          <span class="badge-necesidad badge-stock" style="margin-bottom: 4px;">Generador de Afiches Comerciales</span>
-          <h2 id="modal-flyer-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple);">🎨 Estudio de Flyers para Redes y WhatsApp</h2>
-          <p style="font-size: 12px; color: var(--gris-texto);">Crea imágenes de impacto estilo Burger King y McDonald's para promocionar tus productos</p>
+          <h2 id="modal-flyer-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Diseñador de Afiches</h2>
         </div>
         <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-estudio-flyer')" aria-label="Cerrar">✕</button>
       </div>
@@ -672,117 +663,109 @@
             
             <div class="estudio-acciones-descarga">
               <button type="button" class="btn-accion-pill btn-negro" style="height: 42px; font-size: 13px;" onclick="TramaWeb.descargarFlyerImagen('jpg')">
-                <span>📥</span>
-                <span>Descargar Imagen (WhatsApp / Facebook)</span>
+                <span>📥 Descargar Imagen</span>
               </button>
               <button type="button" class="btn-accion-pill" style="height: 42px; font-size: 13px; border-color: var(--negro-apple);" onclick="TramaWeb.aplicarFlyerComoFotoProducto()">
-                <span>✅</span>
-                <span>Usar como Foto de mi Producto</span>
+                <span>✅ Usar en Producto</span>
               </button>
             </div>
           </div>
 
-          <!-- Columna Derecha: Controles de Plantillas y Textos -->
+          <!-- Columna Derecha: Controles -->
           <div class="estudio-controles-col">
             
-            <!-- 1. Selector de Plantillas -->
+            <!-- 1. Selector de Estilos -->
             <div>
-              <label class="label-fb-market">1. Elige una Plantilla de Cadena Grande:</label>
+              <label class="label-fb-market">Estilo del afiche</label>
               <div class="grid-plantillas-botones">
-                <button type="button" class="btn-plantilla-selector activa" data-plantilla="burgerking" onclick="TramaWeb.cambiarPlantillaFlyer('burgerking')">
-                  <span class="plantilla-emoji">🍔</span>
+                <button type="button" class="btn-plantilla-selector activa" data-plantilla="estilo1" onclick="TramaWeb.cambiarPlantillaFlyer('estilo1')">
+                  <span class="plantilla-emoji">⚡</span>
                   <div>
-                    <strong>Burger King Promo</strong>
-                    <small>Fondo enérgico, precio gigante en círculo amarillo</small>
+                    <strong>Estilo 1</strong>
+                    <small>Split Urbano · Letras verticales detrás</small>
                   </div>
                 </button>
 
-                <button type="button" class="btn-plantilla-selector" data-plantilla="mcdonalds" onclick="TramaWeb.cambiarPlantillaFlyer('mcdonalds')">
-                  <span class="plantilla-emoji">🍟</span>
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo2" onclick="TramaWeb.cambiarPlantillaFlyer('estilo2')">
+                  <span class="plantilla-emoji">🔥</span>
                   <div>
-                    <strong>McDonald's Golden Value</strong>
-                    <small>Cabecera roja brillante, acento dorado y sello oferta</small>
+                    <strong>Estilo 2</strong>
+                    <small>Tipografía Outline · Letras gigantes detrás</small>
                   </div>
                 </button>
 
-                <button type="button" class="btn-plantilla-selector" data-plantilla="editorial" onclick="TramaWeb.cambiarPlantillaFlyer('editorial')">
-                  <span class="plantilla-emoji">☕</span>
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo3" onclick="TramaWeb.cambiarPlantillaFlyer('estilo3')">
+                  <span class="plantilla-emoji">✨</span>
                   <div>
-                    <strong>Minimalista Editorial</strong>
-                    <small>Estilo Farfetch / Apple, sobrio, limpio y elegante</small>
+                    <strong>Estilo 3</strong>
+                    <small>Splash Pop · Explosión y sol detrás</small>
                   </div>
                 </button>
 
-                <button type="button" class="btn-plantilla-selector" data-plantilla="sureno" onclick="TramaWeb.cambiarPlantillaFlyer('sureno')">
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo4" onclick="TramaWeb.cambiarPlantillaFlyer('estilo4')">
+                  <span class="plantilla-emoji">🏷️</span>
+                  <div>
+                    <strong>Estilo 4</strong>
+                    <small>Minimal Editorial · Marco fino y sobrio</small>
+                  </div>
+                </button>
+
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo5" onclick="TramaWeb.cambiarPlantillaFlyer('estilo5')">
                   <span class="plantilla-emoji">🌲</span>
                   <div>
-                    <strong>Tradición Sureña Alerce</strong>
-                    <small>Madera, bosque nativo y sello 100% Hecho a Mano</small>
-                  </div>
-                </button>
-
-                <button type="button" class="btn-plantilla-selector" data-plantilla="whatsapp" onclick="TramaWeb.cambiarPlantillaFlyer('whatsapp')">
-                  <span class="plantilla-emoji">💬</span>
-                  <div>
-                    <strong>WhatsApp Grupos & Estados</strong>
-                    <small>Directo para grupos de compra/venta con botón WhatsApp</small>
+                    <strong>Estilo 5</strong>
+                    <small>Tradición · Bosque nativo y sello artesanal</small>
                   </div>
                 </button>
               </div>
             </div>
 
-            <!-- 2. Cambiar Foto -->
+            <!-- 2. Subir Foto -->
             <div style="margin-top: 14px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <label class="label-fb-market" style="margin-bottom: 0;">2. Foto de Fondo del Producto:</label>
-                <label for="inp-foto-flyer" class="btn-acc-mini" style="cursor: pointer; background: var(--negro-apple); color: #fff; padding: 4px 10px; border-radius: 4px;">
-                  📁 Subir Foto Propia
+                <label class="label-fb-market" style="margin-bottom: 0;">Foto del producto</label>
+                <label for="inp-foto-flyer" class="btn-accion-pill" style="cursor: pointer; background: var(--negro-apple); color: #fff; padding: 4px 12px; font-size: 11.5px; height: 30px;">
+                  📁 Subir Foto
                 </label>
                 <input type="file" id="inp-foto-flyer" accept="image/*" style="display: none;" onchange="TramaWeb.onFotoFlyerSubida(event)">
               </div>
-              <!-- Fotos rápidas para probar -->
               <div class="fb-galeria-rapida" id="flyer-galeria-fotos"></div>
             </div>
 
-            <!-- 3. Textos Personalizables -->
+            <!-- 3. Textos -->
             <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
-              <label class="label-fb-market">3. Modificar Textos del Flyer:</label>
+              <label class="label-fb-market">Texto</label>
               
               <div>
-                <span class="label-sub-input">Título del Producto:</span>
-                <input type="text" id="flyer-inp-titulo" class="input-fb-market" value="Pan Amasado Caliente" oninput="TramaWeb.actualizarLienzoFlyer()">
+                <span class="label-sub-input">Nombre</span>
+                <input type="text" id="flyer-inp-titulo" class="input-fb-market" value="Producto Artesanal" oninput="TramaWeb.actualizarLienzoFlyer()">
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div>
-                  <span class="label-sub-input">Precio ($):</span>
+                  <span class="label-sub-input">Precio ($)</span>
                   <input type="text" id="flyer-inp-precio" class="input-fb-market" value="2500" oninput="TramaWeb.actualizarLienzoFlyer()">
                 </div>
                 <div>
-                  <span class="label-sub-input">Sello / Oferta:</span>
-                  <input type="text" id="flyer-inp-sello" class="input-fb-market" value="¡OFERTA DEL DÍA!" oninput="TramaWeb.actualizarLienzoFlyer()">
+                  <span class="label-sub-input">Texto distintivo</span>
+                  <input type="text" id="flyer-inp-sello" class="input-fb-market" value="EDICIÓN LIMITADA" oninput="TramaWeb.actualizarLienzoFlyer()">
                 </div>
               </div>
 
               <div>
-                <span class="label-sub-input">Mensaje Promocional / WhatsApp:</span>
-                <input type="text" id="flyer-inp-mensaje" class="input-fb-market" value="Pide directo al WhatsApp: +56 9 9123 4567" oninput="TramaWeb.actualizarLienzoFlyer()">
-              </div>
-
-              <div>
-                <span class="label-sub-input">Lugar / Sector:</span>
-                <input type="text" id="flyer-inp-sector" class="input-fb-market" value="Alerce Histórico · Puerto Montt" oninput="TramaWeb.actualizarLienzoFlyer()">
+                <span class="label-sub-input">WhatsApp / Contacto</span>
+                <input type="text" id="flyer-inp-mensaje" class="input-fb-market" value="+56 9 9123 4567" oninput="TramaWeb.actualizarLienzoFlyer()">
               </div>
             </div>
 
             <!-- 4. Tipografía -->
             <div style="margin-top: 14px;">
-              <label class="label-fb-market">4. Tipografía:</label>
+              <label class="label-fb-market">Tipografía</label>
               <div class="fb-selector-chips" id="flyer-selector-fuente">
-                <button type="button" class="fb-chip-cat activo" data-fuente="Impact" onclick="TramaWeb.cambiarFuenteFlyer('Impact')">Bold Impact (Cadenas)</button>
+                <button type="button" class="fb-chip-cat activo" data-fuente="Impact" onclick="TramaWeb.cambiarFuenteFlyer('Impact')">Impact</button>
                 <button type="button" class="fb-chip-cat" data-fuente="Bebas Neue" onclick="TramaWeb.cambiarFuenteFlyer('Bebas Neue')">Bebas Neue</button>
                 <button type="button" class="fb-chip-cat" data-fuente="Montserrat" onclick="TramaWeb.cambiarFuenteFlyer('Montserrat')">Montserrat</button>
-                <button type="button" class="fb-chip-cat" data-fuente="Playfair Display" onclick="TramaWeb.cambiarFuenteFlyer('Playfair Display')">Playfair (Artesanal)</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Playfair Display" onclick="TramaWeb.cambiarFuenteFlyer('Playfair Display')">Playfair</button>
               </div>
             </div>
 

@@ -56,6 +56,7 @@ import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.NaranjaAlerta
+import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
@@ -99,7 +100,7 @@ fun PantallaCatalogo(
             }
         )
 
-        // Banner botón grande tipo Facebook Marketplace para emprendedoras
+        // Botón sobrio para añadir producto
         androidx.compose.material3.Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,39 +110,33 @@ fun PantallaCatalogo(
                     nav.irA(Ruta.ProductoDetalle(id))
                 },
             colors = androidx.compose.material3.CardDefaults.cardColors(
-                containerColor = Color(0xFF1A1A1A)
+                containerColor = NegroApple
             ),
             shape = RoundedCornerShape(14.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 13.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .background(Color(0xFF2E7D5B), RoundedCornerShape(12.dp)),
+                        .size(36.dp)
+                        .background(Color(0xFF2E7D5B), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("➕", fontSize = 20.sp)
+                    Text("➕", fontSize = 16.sp)
                 }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Añadir Producto en Venta",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.5.sp,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Fácil estilo Facebook Marketplace · Crea afiches comerciales",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFFCCCCCC)
-                    )
-                }
-                Text("➔", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Añadir producto",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("➔", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
 

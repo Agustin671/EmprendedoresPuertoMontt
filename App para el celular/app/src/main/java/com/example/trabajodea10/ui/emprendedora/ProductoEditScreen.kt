@@ -1,6 +1,9 @@
 package com.example.trabajodea10.ui.emprendedora
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,15 +43,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.trabajodea10.data.Categoria
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.Variante
@@ -69,22 +79,17 @@ import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
 
-enum class PlantillaFlyer(
+enum class EstiloFlyer(
     val id: String,
     val nombre: String,
-    val emoji: String,
-    val descripcion: String
+    val emoji: String
 ) {
-    BURGER_KING("burgerking", "Burger King", "🍔", "Fondo fuego, precio gigante amarillo"),
-    MCDONALDS("mcdonalds", "McDonald's", "🍟", "Rojo vibrante y sellos dorados"),
-    EDITORIAL("editorial", "Minimalista", "☕", "Estilo Apple / Farfetch, sobrio"),
-    SURENO("sureno", "Tradición Sureña", "🌲", "Bosque nativo y 100% hecho a mano"),
-    WHATSAPP("whatsapp", "WhatsApp Viral", "💬", "Para estados y grupos de venta")
+    ESTILO_1("estilo1", "Estilo 1", "⚡"),
+    ESTILO_2("estilo2", "Estilo 2", "🔥"),
+    ESTILO_3("estilo3", "Estilo 3", "✨"),
+    ESTILO_4("estilo4", "Estilo 4", "🏷️"),
+    ESTILO_5("estilo5", "Estilo 5", "🌲")
 }
-
-private val COLORES_FOTO = listOf(
-    0xFF8E6B94, 0xFF3E7D6E, 0xFFC07A3E, 0xFF6B7FB3, 0xFFB36B7F, 0xFF7FA66B, 0xFF7B3E7A
-)
 
 private fun formatearPrecio(precio: String): String {
     val valor = precio.filter { it.isDigit() }.toLongOrNull() ?: 0L
@@ -121,25 +126,25 @@ fun PantallaProductoDetalle(
     var categoria by remember(original.id) { mutableStateOf(original.categoria) }
     var publicado by remember(original.id) { mutableStateOf(original.publicado) }
     var destacado by remember(original.id) { mutableStateOf(original.destacado) }
-    var colorFoto by remember(original.id) { mutableStateOf(original.colorFoto) }
-    var variantes by remember(original.id) { mutableStateOf(original.variantes) }
-
-    // Modos inspirados en Facebook Marketplace & Estudio de Flyers
-    var plantillaSeleccionada by remember { mutableStateOf(PlantillaFlyer.BURGER_KING) }
-    var selloFlyer by remember { mutableStateOf("¡OFERTA DEL DÍA!") }
+    var estiloSeleccionado by remember { mutableStateOf(EstiloFlyer.ESTILO_1) }
+    var selloFlyer by remember { mutableStateOf("EDICIÓN LIMITADA") }
     var tipoDisponibilidad by remember {
         mutableStateOf(if (original.variantes.any { it.stock > 0 }) "inmediato" else "pedido")
     }
-    var detallesMarketplace by remember { mutableStateOf("") }
+    var detalles by remember { mutableStateOf("") }
+    var fotoUri by remember { mutableStateOf<String?>(null) }
 
-    val stockTotal = if (tipoDisponibilidad == "inmediato") {
-        if (variantes.sumOf { it.stock } > 0) variantes.sumOf { it.stock } else 10
-    } else 0
+    val launcherGaleria = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            fotoUri = uri.toString()
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = if (esNuevo) "Añadir Producto" else "Editar Producto",
-            subtitulo = if (esNuevo) "Estilo Facebook Marketplace · Generador de Afiches" else "Stock actual: $stockTotal",
+            titulo = if (esNuevo) "Nuevo producto" else "Editar producto",
             onVolver = { nav.volver() }
         )
 
@@ -151,63 +156,44 @@ fun PantallaProductoDetalle(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // ==========================================
-            // 1. ESTUDIO DE AFICHES COMERCIALES (FLYERS)
+            // SECCIÓN AFICHE
             // ==========================================
             Tarjeta {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "🎨 Estudio de Afiches Comerciales",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = NegroApple,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = Color(0xFFFFC72C)
-                        ) {
-                            Text(
-                                text = "NUEVO",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 10.sp,
-                                color = Color(0xFF801200),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
                     Text(
-                        text = "Elige una plantilla inspirada en cadenas comerciales para promocionar en Facebook o WhatsApp:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GrisTexto,
-                        modifier = Modifier.padding(top = 4.dp, bottom = 10.dp)
+                        text = "Afiche",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = NegroApple
                     )
 
-                    // Selector de Plantillas (Chips con emoji)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Selector de Estilos
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        PlantillaFlyer.entries.forEach { p ->
-                            val activa = p == plantillaSeleccionada
+                        EstiloFlyer.entries.forEach { estilo ->
+                            val activa = estilo == estiloSeleccionado
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 color = if (activa) NegroApple else SuperficieVariante,
                                 border = BorderStroke(1.dp, if (activa) NegroApple else GrisBorde),
-                                modifier = Modifier.clickable { plantillaSeleccionada = p }
+                                modifier = Modifier.clickable { estiloSeleccionado = estilo }
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
-                                    Text(p.emoji, fontSize = 16.sp)
+                                    Text(estilo.emoji, fontSize = 14.sp)
                                     Text(
-                                        text = p.nombre,
+                                        text = estilo.nombre,
                                         fontWeight = if (activa) FontWeight.Bold else FontWeight.Medium,
-                                        fontSize = 12.5.sp,
+                                        fontSize = 12.sp,
                                         color = if (activa) Color.White else NegroApple
                                     )
                                 }
@@ -217,110 +203,91 @@ fun PantallaProductoDetalle(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // LIENZO VIVO DEL FLYER
+                    // LIENZO VIVO DEL FLYER (Letras detrás, producto al frente)
                     FlyerPreviewCard(
-                        plantilla = plantillaSeleccionada,
+                        estilo = estiloSeleccionado,
                         titulo = nombre,
                         precio = precio,
                         sello = selloFlyer,
-                        colorFoto = colorFoto
+                        fotoUri = fotoUri
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Controles rápidos del flyer
-                    CampoTexto(
-                        valor = selloFlyer,
-                        onValorChange = { selloFlyer = it },
-                        etiqueta = "Sello o Frase Promocional del Afiche",
-                        placeholder = "Ej: ¡OFERTA DEL DÍA! o 100% ARTESANAL"
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Color base para el producto:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextoSecundario
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    // Botón para subir / cambiar foto
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        COLORES_FOTO.forEach { color ->
-                            val seleccionado = color == colorFoto
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .background(
-                                        if (seleccionado) MaterialTheme.colorScheme.primaryContainer
-                                        else SuperficieVariante,
-                                        CircleShape
-                                    )
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .background(Color(color), CircleShape)
-                                        .clickable { colorFoto = color }
-                                )
-                            }
+                        BotonSecundario(
+                            texto = if (fotoUri != null) "Cambiar foto" else "Subir foto del producto",
+                            onClick = { launcherGaleria.launch("image/*") },
+                            modifier = Modifier.weight(1f),
+                            icono = { Icon(Icons.Filled.PhotoCamera, contentDescription = null, tint = NegroApple) }
+                        )
+                        if (fotoUri != null) {
+                            BotonTexto(
+                                texto = "Quitar foto",
+                                color = RojoError,
+                                onClick = { fotoUri = null }
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // Botón para compartir afiche por WhatsApp / Grupos
+                    CampoTexto(
+                        valor = selloFlyer,
+                        onValorChange = { selloFlyer = it },
+                        etiqueta = "Texto del afiche",
+                        placeholder = "Ej: EDICIÓN LIMITADA o ¡HOY EN ALERCE!"
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     BotonSecundario(
-                        texto = "📲 Compartir Afiche en WhatsApp / Redes",
+                        texto = "Compartir afiche en WhatsApp",
                         onClick = {
                             val valorCLP = formatearPrecio(precio)
                             val textoCompartir = buildString {
-                                append("🔥 *${selloFlyer.ifBlank { "¡OFERTA ESPECIAL EN ALERCE!" }}* 🔥\n\n")
-                                append("🛍️ *${nombre.ifBlank { "Producto Artesanal" }}*\n")
+                                append("🔥 *${selloFlyer.ifBlank { "¡OFERTA EN ALERCE!" }}* 🔥\n\n")
+                                append("🛍️ *${nombre.ifBlank { "Producto" }}*\n")
                                 append("💰 *Precio:* \$$valorCLP CLP\n")
-                                append("📦 *Disponibilidad:* ${if (tipoDisponibilidad == "inmediato") "Stock inmediato (Hoy)" else "Elaboración por encargo"}\n")
-                                if (detallesMarketplace.isNotBlank()) {
-                                    append("📝 *Detalle:* ${detallesMarketplace.trim()}\n")
+                                if (detalles.isNotBlank()) {
+                                    append("📝 ${detalles.trim()}\n")
                                 }
-                                append("📍 *Ubicación:* Alerce · Red Trama Puerto Montt\n\n")
-                                append("📲 *¡Escríbeme por WhatsApp para reservar o pedir el tuyo!*")
+                                append("📍 Alerce · Red Trama\n\n")
+                                append("📲 *Consulta o pide directo por WhatsApp*")
                             }
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, textoCompartir)
                             }
-                            context.startActivity(Intent.createChooser(intent, "Compartir Afiche Comercial"))
+                            context.startActivity(Intent.createChooser(intent, "Compartir afiche"))
                         },
                         icono = {
-                            Icon(Icons.Filled.Share, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Share, contentDescription = null, tint = NegroApple)
                         }
                     )
                 }
             }
 
             // ==========================================
-            // 2. DATOS ESTILO FACEBOOK MARKETPLACE
+            // SECCIÓN DATOS DEL PRODUCTO
             // ==========================================
-            TituloSeccion(texto = "2. Datos del Producto (Estilo Marketplace)")
-
             CampoTexto(
                 valor = nombre,
                 onValorChange = { nombre = it },
-                etiqueta = "¿Qué estás vendiendo? (Título)",
-                placeholder = "Ej: Pan amasado caliente recién horneado"
+                etiqueta = "Nombre del producto",
+                placeholder = "Ej: Pan amasado artesanal"
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 CampoTexto(
                     valor = precio,
                     onValorChange = { precio = it.filter { c -> c.isDigit() } },
-                    etiqueta = "Precio ($ CLP)",
+                    etiqueta = "Precio ($)",
                     tipoTeclado = KeyboardType.Number,
                     modifier = Modifier.weight(1f),
                     placeholder = "2500"
@@ -340,7 +307,7 @@ fun PantallaProductoDetalle(
                             color = Berenjena
                         )
                         Text(
-                            text = "pesos chilenos",
+                            text = "CLP",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextoSecundario
                         )
@@ -348,55 +315,51 @@ fun PantallaProductoDetalle(
                 }
             }
 
-            // ==========================================
-            // 3. DISPONIBILIDAD / ENTREGA
-            // ==========================================
+            // Disponibilidad
             Text(
-                text = "3. Disponibilidad / Entrega:",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                text = "Disponibilidad",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.5.sp,
                 color = NegroApple
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 val inmediato = tipoDisponibilidad == "inmediato"
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = if (inmediato) NegroApple else SuperficieVariante,
                     border = BorderStroke(1.dp, if (inmediato) NegroApple else GrisBorde),
                     modifier = Modifier
                         .weight(1f)
                         .clickable { tipoDisponibilidad = "inmediato" }
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("📦 Con Stock", fontWeight = FontWeight.Bold, color = if (inmediato) Color.White else NegroApple)
-                        Text("Para entrega hoy", fontSize = 11.sp, color = if (inmediato) Color(0xFFDDDDDD) else GrisTexto)
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text("Con stock", fontWeight = FontWeight.Bold, color = if (inmediato) Color.White else NegroApple, fontSize = 13.sp)
+                        Text("Entrega hoy", fontSize = 11.sp, color = if (inmediato) Color(0xFFCCCCCC) else GrisTexto)
                     }
                 }
 
                 val pedido = tipoDisponibilidad == "pedido"
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     color = if (pedido) NegroApple else SuperficieVariante,
                     border = BorderStroke(1.dp, if (pedido) NegroApple else GrisBorde),
                     modifier = Modifier
                         .weight(1f)
                         .clickable { tipoDisponibilidad = "pedido" }
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text("✂️ A Pedido", fontWeight = FontWeight.Bold, color = if (pedido) Color.White else NegroApple)
-                        Text("Se elabora por encargo", fontSize = 11.sp, color = if (pedido) Color(0xFFDDDDDD) else GrisTexto)
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text("A pedido", fontWeight = FontWeight.Bold, color = if (pedido) Color.White else NegroApple, fontSize = 13.sp)
+                        Text("Por encargo", fontSize = 11.sp, color = if (pedido) Color(0xFFCCCCCC) else GrisTexto)
                     }
                 }
             }
 
-            // ==========================================
-            // 4. CATEGORÍA
-            // ==========================================
+            // Categoría
             Text(
-                text = "4. Categoría del producto:",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                text = "Categoría",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.5.sp,
                 color = NegroApple
             )
 
@@ -415,56 +378,40 @@ fun PantallaProductoDetalle(
                 }
             }
 
-            // ==========================================
-            // 5. DETALLES ADICIONALES (OPCIONAL)
-            // ==========================================
             CampoTexto(
-                valor = detallesMarketplace,
-                onValorChange = { detallesMarketplace = it },
-                etiqueta = "5. Detalles para tus clientes (Opcional)",
-                placeholder = "Ej: Bolsa de 5 unidades. Entregas en Alerce Histórico."
+                valor = detalles,
+                onValorChange = { detalles = it },
+                etiqueta = "Descripción (opcional)",
+                placeholder = "Detalles para tus clientes o entrega"
             )
 
-            // ==========================================
-            // 6. VISIBILIDAD EN TIENDA
-            // ==========================================
             Tarjeta {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                     FilaSwitch(
-                        titulo = "Publicar en mi vitrina y catálogo",
-                        descripcion = "Visible para los vecinos de Alerce",
+                        titulo = "Publicado en tienda",
+                        descripcion = "Visible para clientes",
                         checked = publicado,
                         onCheckedChange = { publicado = it }
                     )
                     FilaSwitch(
-                        titulo = "Producto destacado en portada",
-                        descripcion = "Aparece con una estrella en primer lugar",
+                        titulo = "Destacado en portada",
+                        descripcion = "Aparece primero",
                         checked = destacado,
                         onCheckedChange = { destacado = it }
                     )
                 }
             }
 
-            // ==========================================
-            // BOTÓN GIGANTE PUBLICAR
-            // ==========================================
             BotonPrimario(
-                texto = if (esNuevo) "🚀 Publicar Producto en Mi Tienda" else "💾 Guardar Cambios",
+                texto = if (esNuevo) "Publicar producto" else "Guardar cambios",
                 onClick = {
                     if (nombre.isBlank()) {
-                        avisar("⚠️ Escribe el nombre de tu producto")
+                        avisar("Escribe el nombre del producto")
                     } else if (precio.isBlank() || precio.toLongOrNull() == null || precio.toLong() <= 0) {
-                        avisar("⚠️ Ingresa un precio válido en pesos ($)")
+                        avisar("Ingresa un precio válido")
                     } else {
-                        val stockFinal = if (tipoDisponibilidad == "inmediato") {
-                            if (variantes.sumOf { it.stock } > 0) variantes.sumOf { it.stock } else 15
-                        } else 0
-
-                        val variantesFinales = if (variantes.isEmpty()) {
-                            listOf(Variante("${original.id}v1", "Unidad", stockFinal))
-                        } else {
-                            listOf(Variante("${original.id}v1", "Unidad", stockFinal))
-                        }
+                        val stockFinal = if (tipoDisponibilidad == "inmediato") 15 else 0
+                        val variantesFinales = listOf(Variante("${original.id}v1", "Unidad", stockFinal))
 
                         TramaStore.guardarProducto(
                             original.copy(
@@ -473,11 +420,10 @@ fun PantallaProductoDetalle(
                                 categoria = categoria,
                                 publicado = publicado,
                                 destacado = destacado,
-                                colorFoto = colorFoto,
                                 variantes = variantesFinales
                             )
                         )
-                        avisar("🎉 ¡Producto publicado con éxito en tu tienda!")
+                        avisar("Producto guardado")
                         nav.volver()
                     }
                 }
@@ -485,7 +431,7 @@ fun PantallaProductoDetalle(
 
             if (!esNuevo) {
                 BotonTexto(
-                    texto = "Eliminar este producto",
+                    texto = "Eliminar producto",
                     color = RojoError,
                     onClick = {
                         TramaStore.eliminarProducto(original.id)
@@ -495,264 +441,396 @@ fun PantallaProductoDetalle(
                 )
             }
 
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(56.dp))
         }
     }
 }
 
 // ============================================================
-// COMPONENTE PREVIEW DE AFICHE EN VIVO (BURGER KING, MCDONALDS, ETC)
+// COMPONENTE PREVIEW DE AFICHE EN VIVO (LETRAS DETRÁS, PRODUCTO AL FRENTE)
 // ============================================================
 
 @Composable
 fun FlyerPreviewCard(
-    plantilla: PlantillaFlyer,
+    estilo: EstiloFlyer,
     titulo: String,
     precio: String,
     sello: String,
-    colorFoto: Long
+    fotoUri: String?
 ) {
-    val tituloFinal = titulo.ifBlank { "Pan Amasado Caliente" }
+    val tituloFinal = titulo.ifBlank { "Producto" }
     val precioFinal = formatearPrecio(precio)
-    val selloFinal = sello.ifBlank { "¡OFERTA DEL DÍA!" }
+    val selloFinal = sello.ifBlank { "OFERTA" }
 
-    when (plantilla) {
-        // PLANTILLA 1: BURGER KING PROMO (Cálido, precio amarillo gigante)
-        PlantillaFlyer.BURGER_KING -> {
+    when (estilo) {
+        // ------------------------------------------------------------
+        // ESTILO 1: SPLIT URBANO (Fondo dividido, letras verticales detrás, producto al frente)
+        // ------------------------------------------------------------
+        EstiloFlyer.ESTILO_1 -> {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFD62300))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0D0E10))
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Fondo dividido en 2 columnas
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier
+                                .weight(0.48f)
+                                .fillMaxHeight()
+                                .background(Color(0xFF33353A))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(0.52f)
+                                .fillMaxHeight()
+                                .background(Color(0xFF0D0E10))
+                        )
+                    }
+
+                    // CAPA DETRÁS: Letras gigantes verticales en el lado derecho
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 12.dp)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceAround,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        listOf("E", "D", "I", "T", "I", "O", "N").forEach { letra ->
+                            Text(
+                                text = letra,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF6E7178),
+                                lineHeight = 28.sp
+                            )
+                        }
+                    }
+
+                    // CAPA AL FRENTE: Producto centrado flotando sobre la división y letras
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(start = 28.dp)
+                            .size(170.dp)
+                            .rotate(-14f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (fotoUri != null) {
+                            AsyncImage(
+                                model = fotoUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .shadow(16.dp, RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // Elemento demostrativo con profundidad
+                            Box(
+                                modifier = Modifier
+                                    .size(140.dp)
+                                    .shadow(18.dp, RoundedCornerShape(20.dp))
+                                    .background(Color.White, RoundedCornerShape(20.dp))
+                                    .border(3.dp, Color(0xFFEEEEEE), RoundedCornerShape(20.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "👟",
+                                    fontSize = 64.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // CAPA SUPERIOR: Textos y Precios en el lado izquierdo
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(18.dp)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = tituloFinal.uppercase(),
+                                fontWeight = FontWeight.Black,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 22.sp,
+                                color = Color.White
+                            )
+                            Text(
+                                text = selloFinal,
+                                fontSize = 12.sp,
+                                color = Color(0xFFC0C0C0),
+                                fontStyle = FontStyle.Italic
+                            )
+                        }
+
+                        // Caja de precio estilo poster urbano
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0xFFE5E5E5), RoundedCornerShape(4.dp))
+                                    .border(1.5.dp, Color.White, RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "$$precioFinal",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 17.sp,
+                                    color = Color.Black
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("🔥", fontSize = 16.sp)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ------------------------------------------------------------
+        // ESTILO 2: IMPACTO TIPOGRÁFICO (Fondo ámbar, letras huecas gigantes detrás, producto al frente)
+        // ------------------------------------------------------------
+        EstiloFlyer.ESTILO_2 -> {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(310.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE59807))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                listOf(Color(0xFF801200), Color(0xFFD62300), Color(0xFF360600))
+                                listOf(Color(0xFFF3A410), Color(0xFFD68700))
                             )
                         )
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        // Cintillo Sello Flame Grill
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFFFFC72C))
-                                .padding(vertical = 5.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "🔥 ${selloFinal.uppercase()} · ALERCE 🔥",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = Color(0xFF801200)
-                            )
-                        }
+                    // CAPA DETRÁS: Enormes letras en outline blanco detrás del producto
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 14.dp, vertical = 20.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "BUR",
+                            fontSize = 76.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0x35FFFFFF),
+                            letterSpacing = 6.sp,
+                            lineHeight = 76.sp
+                        )
+                        Text(
+                            text = "GER",
+                            fontSize = 76.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0x35FFFFFF),
+                            letterSpacing = 6.sp,
+                            lineHeight = 76.sp
+                        )
+                    }
 
-                        // Contenido Central
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            // Círculo de producto
+                    // CAPA AL FRENTE: Producto en el centro sobre las letras gigantes
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(190.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (fotoUri != null) {
+                            AsyncImage(
+                                model = fotoUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .shadow(20.dp, RoundedCornerShape(18.dp))
+                                    .clip(RoundedCornerShape(18.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
                             Box(
                                 modifier = Modifier
-                                    .size(92.dp)
-                                    .background(Color(colorFoto), CircleShape)
-                                    .border(3.dp, Color.White, CircleShape),
+                                    .size(150.dp)
+                                    .shadow(22.dp, CircleShape)
+                                    .background(Color(0xFFFFF7E6), CircleShape)
+                                    .border(4.dp, Color.White, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = tituloFinal.firstOrNull()?.uppercase() ?: "🍞",
-                                    fontSize = 36.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Text(
-                                text = tituloFinal.uppercase(),
-                                fontWeight = FontWeight.Black,
-                                fontSize = 19.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                maxLines = 2
-                            )
-                        }
-
-                        // Pie con WhatsApp y Círculo Precio
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFF1B0401))
-                                .padding(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(Color(0xFF25D366), RoundedCornerShape(50))
-                                        .padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "💬 PEDIR POR WHATSAPP",
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 12.sp,
-                                        color = Color.White
-                                    )
-                                }
+                                Text("🍔", fontSize = 72.sp)
                             }
                         }
                     }
 
-                    // Sello Gigante de Precio Flotante
+                    // CAPA SUPERIOR: Badge de antojo en esquina superior derecha
                     Box(
                         modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(end = 16.dp)
-                            .rotate(-8f)
-                            .size(76.dp)
-                            .background(Color(0xFFFFC72C), CircleShape)
-                            .border(3.dp, Color(0xFF801200), CircleShape),
-                        contentAlignment = Alignment.Center
+                            .align(Alignment.TopEnd)
+                            .padding(14.dp)
+                            .background(Color(0xFF421C05), RoundedCornerShape(50))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("SOLO", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF801200))
+                        Text(
+                            text = selloFinal.uppercase(),
+                            color = Color(0xFFFFB703),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 9.sp
+                        )
+                    }
+
+                    // Badge de precio inferior izquierdo estilo banner chocolate
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(14.dp)
+                            .background(Color(0xFF381D0F), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = tituloFinal.uppercase(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                color = Color(0xFFFFC555)
+                            )
                             Text(
                                 text = "$$precioFinal",
-                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Black,
-                                color = Color(0xFF801200)
+                                fontSize = 20.sp,
+                                color = Color.White
                             )
-                            Text("CLP", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF801200))
                         }
                     }
                 }
             }
         }
 
-        // PLANTILLA 2: MCDONALDS (Rojo vibrante, arcos y sellos dorados)
-        PlantillaFlyer.MCDONALDS -> {
+        // ------------------------------------------------------------
+        // ESTILO 3: SPLASH POP (Azul eléctrico, explosión amarilla detrás, producto al frente)
+        // ------------------------------------------------------------
+        EstiloFlyer.ESTILO_3 -> {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFDA291C))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0055D4))
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Cabecera McDonald's
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF0055D4))
+                ) {
+                    // CAPA DETRÁS: Explosión / Sol orgánico amarillo
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFFFFC72C))
-                            .padding(vertical = 6.dp),
+                            .align(Alignment.Center)
+                            .size(230.dp)
+                            .rotate(18f)
+                            .background(Color(0xFFFFB800), RoundedCornerShape(55.dp))
+                    )
+
+                    // CAPA AL FRENTE: Producto en el centro
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(170.dp),
                         contentAlignment = Alignment.Center
                     ) {
+                        if (fotoUri != null) {
+                            AsyncImage(
+                                model = fotoUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .shadow(16.dp, RoundedCornerShape(16.dp))
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(136.dp)
+                                    .shadow(18.dp, CircleShape)
+                                    .background(Color.White, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🥐", fontSize = 64.sp)
+                            }
+                        }
+                    }
+
+                    // Título superior estilo retro
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(
-                            text = "★ ${selloFinal.uppercase()} ★",
+                            text = "SUPER PROMO",
                             fontWeight = FontWeight.Black,
-                            fontSize = 13.sp,
-                            color = Color(0xFFDA291C)
+                            fontSize = 11.sp,
+                            color = Color.White,
+                            letterSpacing = 2.sp
+                        )
+                        Text(
+                            text = tituloFinal.uppercase(),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 20.sp,
+                            color = Color(0xFFFFB800)
                         )
                     }
 
-                    // Card blanco central del producto
+                    // Badge de descuento lateral dentado
                     Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(14.dp)
-                            .background(Color.White, RoundedCornerShape(14.dp))
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 12.dp)
+                            .rotate(12f)
+                            .background(Color.White, RoundedCornerShape(10.dp))
+                            .border(2.dp, Color(0xFF0055D4), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .background(Color(colorFoto), RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = tituloFinal.firstOrNull()?.uppercase() ?: "🍟",
-                                    fontSize = 32.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = tituloFinal.uppercase(),
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 17.sp,
-                                    color = Color(0xFFDA291C),
-                                    maxLines = 2
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = Color(0xFFFFC72C)
-                                ) {
-                                    Text(
-                                        text = "$$precioFinal CLP",
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 15.sp,
-                                        color = Color(0xFFDA291C),
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(selloFinal, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0055D4))
+                            Text("$$precioFinal", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color(0xFF0055D4))
                         }
                     }
 
-                    // Botón dorado McDonald's inferior
+                    // Botón inferior
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF1E0402))
-                            .padding(12.dp)
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 12.dp)
+                            .background(Color(0xFFFFB800), RoundedCornerShape(50))
+                            .padding(horizontal = 24.dp, vertical = 7.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFFFFC72C), RoundedCornerShape(50))
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "📲 ¡LLEVA EL TUYO EN ALERCE!",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = Color(0xFFDA291C)
-                            )
-                        }
+                        Text(
+                            text = "➔ PEDIR AHORA",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 12.sp,
+                            color = Color(0xFF00388C)
+                        )
                     }
                 }
             }
         }
 
-        // PLANTILLA 3: MINIMALISTA EDITORIAL (Farfetch & Apple Style)
-        PlantillaFlyer.EDITORIAL -> {
+        // ------------------------------------------------------------
+        // ESTILO 4: EDITORIAL MINIMAL (Apple / Farfetch)
+        // ------------------------------------------------------------
+        EstiloFlyer.ESTILO_4 -> {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -767,7 +845,7 @@ fun FlyerPreviewCard(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "TRAMA · EDICIÓN ARTESANAL LOCAL",
+                        text = "EDICIÓN ARTESANAL",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF666666),
@@ -781,16 +859,21 @@ fun FlyerPreviewCard(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(90.dp)
-                                .background(Color(colorFoto), RoundedCornerShape(6.dp)),
+                                .size(96.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFEBE8E1)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = tituloFinal.firstOrNull()?.uppercase() ?: "☕",
-                                fontSize = 34.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                            if (fotoUri != null) {
+                                AsyncImage(
+                                    model = fotoUri,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text("☕", fontSize = 36.sp)
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(14.dp))
@@ -833,7 +916,7 @@ fun FlyerPreviewCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "COMPRA DIRECTA · HECHO A MANO EN ALERCE",
+                        text = "COMPRA DIRECTA · ALERCE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF222222)
@@ -842,8 +925,10 @@ fun FlyerPreviewCard(
             }
         }
 
-        // PLANTILLA 4: TRADICIÓN SUREÑA (Bosque nativo y madera)
-        PlantillaFlyer.SURENO -> {
+        // ------------------------------------------------------------
+        // ESTILO 5: TRADICIÓN (Bosque nativo y dorado)
+        // ------------------------------------------------------------
+        EstiloFlyer.ESTILO_5 -> {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -859,27 +944,33 @@ fun FlyerPreviewCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "🌲 TRADICIÓN Y SABOR DE ALERCE 🌲",
+                        text = "TRADICIÓN Y SABOR",
                         fontWeight = FontWeight.Black,
-                        fontSize = 11.5.sp,
-                        color = Color(0xFFD4AF37)
+                        fontSize = 11.sp,
+                        color = Color(0xFFD4AF37),
+                        letterSpacing = 1.5.sp
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
-                            .background(Color(colorFoto), RoundedCornerShape(10.dp))
-                            .border(2.dp, Color(0xFFD4AF37), RoundedCornerShape(10.dp)),
+                            .size(90.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(2.dp, Color(0xFFD4AF37), RoundedCornerShape(10.dp))
+                            .background(Color(0xFF224433)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = tituloFinal.firstOrNull()?.uppercase() ?: "🌲",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        if (fotoUri != null) {
+                            AsyncImage(
+                                model = fotoUri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text("🌲", fontSize = 36.sp)
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -899,7 +990,7 @@ fun FlyerPreviewCard(
                         color = Color(0xFFD4AF37)
                     ) {
                         Text(
-                            text = "$$precioFinal · 100% ARTESANAL",
+                            text = "$$precioFinal · ARTESANAL",
                             fontWeight = FontWeight.Black,
                             fontSize = 13.sp,
                             color = Color(0xFF163024),
@@ -908,106 +999,10 @@ fun FlyerPreviewCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Hecho a mano con amor sureño · Puerto Montt",
+                        text = "Alerce · Puerto Montt",
                         fontSize = 10.5.sp,
                         color = Color(0xFFA7D3BA)
                     )
-                }
-            }
-        }
-
-        // PLANTILLA 5: WHATSAPP DIRECTO
-        PlantillaFlyer.WHATSAPP -> {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(310.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE5DDD5))
-            ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFF075E54))
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "🟢 COMPRA DIRECTA · ALERCE",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = Color.White
-                        )
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(76.dp)
-                                    .background(Color(colorFoto), RoundedCornerShape(8.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = tituloFinal.firstOrNull()?.uppercase() ?: "🛍️",
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = tituloFinal,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = Color(0xFF128C7E)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = Color(0xFF25D366)
-                                ) {
-                                    Text(
-                                        text = "$$precioFinal",
-                                        fontWeight = FontWeight.Black,
-                                        fontSize = 14.sp,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .background(Color(0xFF25D366), RoundedCornerShape(50))
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "💬 PEDIR DIRECTO AL WHATSAPP",
-                            fontWeight = FontWeight.Black,
-                            fontSize = 12.5.sp,
-                            color = Color.White
-                        )
-                    }
                 }
             }
         }

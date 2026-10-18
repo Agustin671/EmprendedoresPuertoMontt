@@ -1254,7 +1254,7 @@
   };
 
   var estadoFlyer = {
-    plantilla: "burgerking", // 'burgerking' | 'mcdonalds' | 'editorial' | 'sureno' | 'whatsapp'
+    plantilla: "estilo1", // 'estilo1' | 'estilo2' | 'estilo3' | 'estilo4' | 'estilo5'
     fuente: "Impact",
     fotoImg: null,
     fotoUrlActual: ""
@@ -1516,15 +1516,12 @@
       }
     });
 
-    // Ajustar fuentes recomendadas por plantilla
-    if (plantillaId === "burgerking" || plantillaId === "mcdonalds") {
+    if (plantillaId === "estilo1" || plantillaId === "estilo2" || plantillaId === "estilo3" || plantillaId === "burgerking" || plantillaId === "mcdonalds") {
       cambiarFuenteFlyer("Impact");
-    } else if (plantillaId === "editorial") {
+    } else if (plantillaId === "estilo4" || plantillaId === "editorial") {
       cambiarFuenteFlyer("Playfair Display");
-    } else if (plantillaId === "sureno") {
+    } else if (plantillaId === "estilo5" || plantillaId === "sureno") {
       cambiarFuenteFlyer("Montserrat");
-    } else if (plantillaId === "whatsapp") {
-      cambiarFuenteFlyer("Bebas Neue");
     }
 
     actualizarLienzoFlyer();
@@ -1544,7 +1541,7 @@
   }
 
   // ============================================================
-  // MOTOR DE DIBUJO CANVAS 700x700 (PLANTILLAS BURGER KING, MCDONALDS, ETC)
+  // MOTOR DE DIBUJO CANVAS 700x700 (ESTILOS 1 A 5 - LETRAS DETRÁS, PRODUCTO AL FRENTE)
   // ============================================================
 
   function actualizarLienzoFlyer() {
@@ -1565,11 +1562,11 @@
     var inpSector = document.getElementById("flyer-inp-sector");
 
     var datos = {
-      titulo: (inpTitulo ? inpTitulo.value.trim() : "") || "Pan Amasado Caliente",
+      titulo: (inpTitulo ? inpTitulo.value.trim() : "") || "Producto",
       precio: (inpPrecio ? inpPrecio.value.trim() : "") || "2500",
-      sello: (inpSello ? inpSello.value.trim() : "") || "¡OFERTA DEL DÍA!",
-      mensaje: (inpMensaje ? inpMensaje.value.trim() : "") || "Pide directo al WhatsApp: +56 9 9123 4567",
-      sector: (inpSector ? inpSector.value.trim() : "") || "Alerce Histórico · Puerto Montt",
+      sello: (inpSello ? inpSello.value.trim() : "") || "EDICIÓN LIMITADA",
+      mensaje: (inpMensaje ? inpMensaje.value.trim() : "") || "+56 9 9123 4567",
+      sector: (inpSector ? inpSector.value.trim() : "") || "Alerce · Puerto Montt",
       fuente: estadoFlyer.fuente || "Impact",
       img: estadoFlyer.fotoImg
     };
@@ -1577,298 +1574,297 @@
     ctx.save();
 
     switch (estadoFlyer.plantilla) {
+      case "estilo1":
       case "burgerking":
-        dibujarPlantillaBurgerKing(ctx, datos, w, h);
+        dibujarPlantillaEstilo1(ctx, datos, w, h);
         break;
+      case "estilo2":
       case "mcdonalds":
-        dibujarPlantillaMcDonalds(ctx, datos, w, h);
+        dibujarPlantillaEstilo2(ctx, datos, w, h);
         break;
-      case "editorial":
-        dibujarPlantillaEditorial(ctx, datos, w, h);
-        break;
-      case "sureno":
-        dibujarPlantillaSureno(ctx, datos, w, h);
-        break;
+      case "estilo3":
       case "whatsapp":
-        dibujarPlantillaWhatsApp(ctx, datos, w, h);
+        dibujarPlantillaEstilo3(ctx, datos, w, h);
+        break;
+      case "estilo4":
+      case "editorial":
+        dibujarPlantillaEstilo4(ctx, datos, w, h);
+        break;
+      case "estilo5":
+      case "sureno":
+        dibujarPlantillaEstilo5(ctx, datos, w, h);
         break;
       default:
-        dibujarPlantillaBurgerKing(ctx, datos, w, h);
+        dibujarPlantillaEstilo1(ctx, datos, w, h);
     }
 
     ctx.restore();
   }
 
-  // PLANTILLA 1: BURGER KING (Fondo cálido, tipografía imponente y círculo amarillo de precio)
-  function dibujarPlantillaBurgerKing(ctx, d, w, h) {
-    // Fondo degradado carbón / fuego
-    var grad = ctx.createRadialGradient(w / 2, h / 2, 80, w / 2, h / 2, 420);
-    grad.addColorStop(0, "#D62300");
-    grad.addColorStop(0.55, "#801200");
-    grad.addColorStop(1, "#360600");
+  // ESTILO 1: SPLIT URBANO (Fondo dividido, letras verticales detrás, producto al frente)
+  function dibujarPlantillaEstilo1(ctx, d, w, h) {
+    // Fondo dividido
+    ctx.fillStyle = "#2F3136";
+    ctx.fillRect(0, 0, w * 0.44, h);
+    ctx.fillStyle = "#0C0D0E";
+    ctx.fillRect(w * 0.44, 0, w * 0.56, h);
+
+    // CAPA DETRÁS: Letras gigantes verticales en lado derecho
+    ctx.save();
+    ctx.font = "900 64px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+    ctx.textAlign = "center";
+    var letras = ["E", "D", "I", "T", "I", "O", "N"];
+    for (var i = 0; i < letras.length; i++) {
+      ctx.fillText(letras[i], w * 0.86, 120 + i * 78);
+    }
+    ctx.restore();
+
+    // CAPA AL FRENTE: Producto en centro inclinado sobre la división
+    var px = 390;
+    var py = 350;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(-0.24);
+
+    // Sombra del producto
+    ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+    ctx.shadowBlur = 35;
+    ctx.shadowOffsetX = -12;
+    ctx.shadowOffsetY = 18;
+
+    var pw = 300;
+    var ph = 300;
+
+    if (d.img) {
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-pw / 2, -ph / 2, pw, ph, 24);
+      else ctx.rect(-pw / 2, -ph / 2, pw, ph);
+      ctx.clip();
+      ctx.drawImage(d.img, -pw / 2, -ph / 2, pw, ph);
+    } else {
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(-pw / 2, -ph / 2, pw, ph, 28);
+      else ctx.rect(-pw / 2, -ph / 2, pw, ph);
+      ctx.fill();
+      ctx.font = "130px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("👟", 0, 45);
+    }
+    ctx.restore();
+
+    // CAPA SUPERIOR: Textos frontales
+    ctx.save();
+    // Título Marca / Producto en itálica impact
+    ctx.font = "italic 900 46px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(d.titulo.toUpperCase(), 36, 110, w * 0.42);
+
+    // Subtítulo distintivo
+    ctx.font = "italic 600 19px sans-serif";
+    ctx.fillStyle = "#B0B3B8";
+    ctx.fillText(d.sello, 36, 150, w * 0.42);
+
+    // Caja de precio estilo poster urbano
+    ctx.fillStyle = "#EAEAEA";
+    if (ctx.roundRect) ctx.roundRect(36, h - 140, 190, 68, 6);
+    else ctx.fillRect(36, h - 140, 190, 68);
+    ctx.fill();
+
+    ctx.fillStyle = "#000000";
+    ctx.font = "900 38px " + d.fuente + ", sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 36 + 95, h - 92);
+
+    ctx.font = "24px sans-serif";
+    ctx.fillText("🔥", 255, h - 94);
+
+    ctx.restore();
+  }
+
+  // ESTILO 2: IMPACTO TIPOGRÁFICO (Fondo ámbar, letras huecas gigantes detrás, producto al frente)
+  function dibujarPlantillaEstilo2(ctx, d, w, h) {
+    // Fondo degradado ámbar cálido
+    var grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, 450);
+    grad.addColorStop(0, "#F5A623");
+    grad.addColorStop(1, "#CE7900");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Rayos sutiles de fondo
+    // CAPA DETRÁS: Enormes letras outline blancas detrás
     ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-    for (var i = 0; i < 16; i++) {
-      ctx.beginPath();
-      ctx.moveTo(w / 2, h / 2);
-      var ang1 = (i * 22.5 * Math.PI) / 180;
-      var ang2 = ((i * 22.5 + 11.25) * Math.PI) / 180;
-      ctx.lineTo(w / 2 + Math.cos(ang1) * 600, h / 2 + Math.sin(ang1) * 600);
-      ctx.lineTo(w / 2 + Math.cos(ang2) * 600, h / 2 + Math.sin(ang2) * 600);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-
-    // Sello superior (Cintillo Flame Grill)
-    ctx.fillStyle = "#FFC72C";
-    ctx.fillRect(0, 0, w, 54);
-    ctx.font = "900 20px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#801200";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.lineWidth = 6;
+    ctx.font = "900 170px " + d.fuente + ", sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("🔥 " + d.sello.toUpperCase() + " · ALERCE SABOR LOCAL 🔥", w / 2, 35);
-
-    // Recuadro / Círculo de Foto del Producto
-    var cx = w / 2;
-    var cy = 250;
-    var radio = 160;
-
-    // Resplandor dorado detrás de la foto
-    ctx.save();
-    var glow = ctx.createRadialGradient(cx, cy, 60, cx, cy, 200);
-    glow.addColorStop(0, "rgba(255, 199, 44, 0.45)");
-    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 200, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.letterSpacing = "6px";
+    ctx.strokeText("BUR", w / 2, 230);
+    ctx.strokeText("GER", w / 2, 570);
     ctx.restore();
 
+    // CAPA AL FRENTE: Producto en el centro sobre las letras gigantes
+    var cx = w / 2;
+    var cy = h / 2;
+    var rad = 185;
+
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, radio, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.stroke();
-    ctx.clip();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 38;
+    ctx.shadowOffsetY = 16;
 
     if (d.img) {
-      ctx.drawImage(d.img, cx - radio, cy - radio, radio * 2, radio * 2);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(d.img, cx - rad, cy - rad, rad * 2, rad * 2);
     } else {
-      // Ilustración de reemplazo si no hay foto
-      ctx.fillStyle = "#FAF5E9";
-      ctx.fillRect(cx - radio, cy - radio, radio * 2, radio * 2);
-      ctx.font = "80px sans-serif";
+      ctx.fillStyle = "#FFF7E6";
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad - 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = "140px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("🥖", cx, cy + 28);
+      ctx.fillText("🍔", cx, cy + 50);
     }
     ctx.restore();
 
-    // Título Principal del Producto (Estilo Burger King Heavy)
+    // CAPA SUPERIOR: Badge superior derecho
     ctx.save();
-    ctx.font = "900 42px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.strokeStyle = "#1A0300";
-    ctx.lineWidth = 7;
-    ctx.textAlign = "center";
-    ctx.strokeText(d.titulo.toUpperCase(), w / 2, 470);
-    ctx.fillText(d.titulo.toUpperCase(), w / 2, 470);
-    ctx.restore();
-
-    // Círculo Gigante de Precio Amarillo (Bottom Right / Angled)
-    var px = 550;
-    var py = 390;
-    ctx.save();
-    ctx.translate(px, py);
-    ctx.rotate(-0.1);
-
-    ctx.fillStyle = "#FFC72C";
-    ctx.beginPath();
-    ctx.arc(0, 0, 84, 0, Math.PI * 2);
+    ctx.fillStyle = "#3D1C06";
+    if (ctx.roundRect) ctx.roundRect(w - 250, 36, 214, 46, 23);
+    else ctx.fillRect(w - 250, 36, 214, 46);
     ctx.fill();
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = "#D62300";
-    ctx.stroke();
 
-    ctx.fillStyle = "#801200";
-    ctx.font = "800 15px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFAE00";
+    ctx.font = "900 14px " + d.fuente + ", sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("SOLO AHORA", 0, -38);
+    ctx.fillText(d.sello.toUpperCase(), w - 143, 65);
 
-    ctx.font = "900 44px " + d.fuente + ", sans-serif";
-    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 8);
+    // Badge de precio inferior izquierdo estilo banner chocolate
+    ctx.fillStyle = "#381D0F";
+    if (ctx.roundRect) ctx.roundRect(36, h - 165, 250, 105, 20);
+    else ctx.fillRect(36, h - 165, 250, 105);
+    ctx.fill();
 
+    ctx.fillStyle = "#FFC555";
     ctx.font = "800 14px " + d.fuente + ", sans-serif";
-    ctx.fillText("PESOS CLP", 0, 36);
+    ctx.textAlign = "left";
+    ctx.fillText(d.titulo.toUpperCase(), 56, h - 130, 210);
 
-    ctx.restore();
-
-    // Pie de página con WhatsApp y Sector
-    ctx.fillStyle = "#1B0401";
-    ctx.fillRect(0, h - 140, w, 140);
-
-    // Botón verde simulado WhatsApp
-    ctx.fillStyle = "#25D366";
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(50, h - 118, w - 100, 48, 24);
-    } else {
-      ctx.rect(50, h - 118, w - 100, 48);
-    }
-    ctx.fill();
-
-    ctx.font = "900 19px " + d.fuente + ", sans-serif";
     ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("💬 " + d.mensaje.toUpperCase(), w / 2, h - 87);
-
-    ctx.font = "600 13px sans-serif";
-    ctx.fillStyle = "#FFC72C";
-    ctx.fillText("📍 " + d.sector + " · Emprendimiento Local de Alerce", w / 2, h - 35);
+    ctx.font = "900 48px " + d.fuente + ", sans-serif";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 56, h - 82);
+    ctx.restore();
   }
 
-  // PLANTILLA 2: MCDONALD'S (Rojo vibrante, arcos dorados y sello de gran valor)
-  function dibujarPlantillaMcDonalds(ctx, d, w, h) {
-    // Fondo Rojo McDonald's
-    ctx.fillStyle = "#DA291C";
+  // ESTILO 3: SPLASH POP (Azul eléctrico, explosión amarilla detrás, producto al frente)
+  function dibujarPlantillaEstilo3(ctx, d, w, h) {
+    // Fondo azul eléctrico
+    ctx.fillStyle = "#0055D4";
     ctx.fillRect(0, 0, w, h);
 
-    // Decoración Arcos Dorados sutiles en esquinas
+    // CAPA DETRÁS: Explosión / Sol amarillo
     ctx.save();
-    ctx.strokeStyle = "rgba(255, 199, 44, 0.35)";
-    ctx.lineWidth = 26;
+    ctx.fillStyle = "#FFB800";
     ctx.beginPath();
-    ctx.arc(680, 20, 220, Math.PI * 0.5, Math.PI);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(20, 20, 220, 0, Math.PI * 0.5);
-    ctx.stroke();
-    ctx.restore();
-
-    // Cabecera Amarilla Golden
-    ctx.fillStyle = "#FFC72C";
-    ctx.fillRect(0, 0, w, 68);
-    ctx.fillStyle = "#DA291C";
-    ctx.font = "900 24px " + d.fuente + ", sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("★ " + d.sello.toUpperCase() + " ★", w / 2, 44);
-
-    // Foto del producto enmarcada en blanco con sombra
-    var fx = 75;
-    var fy = 95;
-    var fw = 550;
-    var fh = 330;
-
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.4)";
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 8;
-    ctx.fillStyle = "#FFFFFF";
-    if (ctx.roundRect) {
-      ctx.roundRect(fx, fy, fw, fh, 16);
-    } else {
-      ctx.rect(fx, fy, fw, fh);
+    var cx = w / 2;
+    var cy = h / 2 + 15;
+    for (var i = 0; i < 16; i++) {
+      var r = (i % 2 === 0) ? 230 : 180;
+      var ang = (i * Math.PI) / 8;
+      var sx = cx + Math.cos(ang) * r;
+      var sy = cy + Math.sin(ang) * r;
+      if (i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
     }
+    ctx.closePath();
     ctx.fill();
     ctx.restore();
 
-    // Dibujar imagen adentro
+    // CAPA AL FRENTE: Producto en el centro
     ctx.save();
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(fx + 6, fy + 6, fw - 12, fh - 12, 12);
-      ctx.clip();
-    }
+    ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetY = 12;
+
+    var rad = 165;
     if (d.img) {
-      ctx.drawImage(d.img, fx + 6, fy + 6, fw - 12, fh - 12);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(d.img, cx - rad, cy - rad, rad * 2, rad * 2);
     } else {
-      ctx.fillStyle = "#FFF9E6";
-      ctx.fillRect(fx + 6, fy + 6, fw - 12, fh - 12);
-      ctx.font = "80px sans-serif";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad - 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = "130px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("🍰", fx + fw / 2, fy + fh / 2 + 25);
+      ctx.fillText("🥐", cx, cy + 45);
     }
     ctx.restore();
 
-    // Sello Ovalado de Precio (Estilo McDonald's Extra Value)
-    var ox = 520;
-    var oy = 390;
+    // Título superior estilo retro
     ctx.save();
-    ctx.translate(ox, oy);
-    ctx.rotate(0.08);
-    ctx.fillStyle = "#FFC72C";
+    ctx.font = "900 22px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("SUPER PROMO", w / 2, 55);
+
+    ctx.font = "900 48px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFB800";
+    ctx.fillText(d.titulo.toUpperCase(), w / 2, 110, w - 80);
+
+    // Badge lateral dentado
+    ctx.save();
+    ctx.translate(w - 95, cy - 20);
+    ctx.rotate(0.18);
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.arc(0, 0, 78, 0, Math.PI * 2);
+    ctx.arc(0, 0, 68, 0, Math.PI * 2);
     ctx.fill();
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#0055D4";
     ctx.stroke();
 
-    ctx.fillStyle = "#DA291C";
+    ctx.fillStyle = "#0055D4";
     ctx.font = "900 13px " + d.fuente + ", sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("PRECIO ALERCE", 0, -32);
-    ctx.font = "900 42px " + d.fuente + ", sans-serif";
-    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 8);
-    ctx.font = "700 12px sans-serif";
-    ctx.fillText("¡LLEVA EL TUYO!", 0, 32);
+    ctx.fillText(d.sello.toUpperCase(), 0, -8);
+    ctx.font = "900 32px " + d.fuente + ", sans-serif";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 28);
     ctx.restore();
 
-    // Título del Producto
-    ctx.save();
-    ctx.font = "900 38px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText(d.titulo.toUpperCase(), w / 2, 485);
-    ctx.restore();
-
-    // Barra de llamado a la acción inferior
-    ctx.fillStyle = "#1E0402";
-    ctx.fillRect(0, h - 145, w, 145);
-
-    ctx.fillStyle = "#FFC72C";
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(40, h - 125, w - 80, 52, 26);
-    } else {
-      ctx.rect(40, h - 125, w - 80, 52);
-    }
+    // Botón inferior
+    ctx.fillStyle = "#FFB800";
+    if (ctx.roundRect) ctx.roundRect(w / 2 - 170, h - 85, 340, 56, 28);
+    else ctx.fillRect(w / 2 - 170, h - 85, 340, 56);
     ctx.fill();
 
-    ctx.font = "900 20px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#DA291C";
+    ctx.font = "900 21px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#00388C";
     ctx.textAlign = "center";
-    ctx.fillText("📲 " + d.mensaje.toUpperCase(), w / 2, h - 92);
-
-    ctx.font = "600 13px sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("📍 " + d.sector + " · Red de Emprendedoras de Puerto Montt", w / 2, h - 35);
+    ctx.fillText("➔ PEDIR AHORA: " + d.mensaje, w / 2, h - 50, 310);
+    ctx.restore();
   }
 
-  // PLANTILLA 3: MINIMALISTA EDITORIAL (Farfetch & Apple Style)
-  function dibujarPlantillaEditorial(ctx, d, w, h) {
-    // Fondo marfil / piedra limpia
+  // ESTILO 4: MINIMALISTA EDITORIAL (Apple / Farfetch)
+  function dibujarPlantillaEstilo4(ctx, d, w, h) {
     ctx.fillStyle = "#F8F7F4";
     ctx.fillRect(0, 0, w, h);
 
-    // Marco exterior fino sobrio
     ctx.strokeStyle = "#1A1A1A";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(28, 28, w - 56, h - 56);
 
-    // Encabezado editorial fino
     ctx.font = "600 13px Montserrat, sans-serif";
     ctx.fillStyle = "#666666";
     ctx.textAlign = "center";
     ctx.letterSpacing = "3px";
-    ctx.fillText("TRAMA · EDICIÓN ARTESANAL LOCAL", w / 2, 60);
+    ctx.fillText("EDICIÓN ARTESANAL LOCAL", w / 2, 60);
 
-    // Foto editorial grande con proporciones de galería de moda/diseño
     var ex = 56;
     var ey = 82;
     var ew = w - 112;
@@ -1881,10 +1877,9 @@
       ctx.fillRect(ex, ey, ew, eh);
       ctx.font = "70px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("🧶", ex + ew / 2, ey + eh / 2 + 20);
+      ctx.fillText("☕", ex + ew / 2, ey + eh / 2 + 20);
     }
 
-    // Badge sutil sobre la foto
     ctx.fillStyle = "rgba(26, 26, 26, 0.9)";
     ctx.fillRect(ex + 18, ey + 18, 140, 30);
     ctx.font = "700 11px Montserrat, sans-serif";
@@ -1892,22 +1887,19 @@
     ctx.textAlign = "center";
     ctx.fillText(d.sello.toUpperCase(), ex + 88, ey + 37);
 
-    // Título en tipografía serifa elegante
     ctx.font = "700 32px 'Playfair Display', serif";
     ctx.fillStyle = "#111111";
     ctx.textAlign = "left";
     ctx.fillText(d.titulo, ex, 525);
 
-    // Precio sobrio y distinguido
     ctx.font = "700 34px Montserrat, sans-serif";
     ctx.fillStyle = "#111111";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), ex, 575);
 
     ctx.font = "400 14px Montserrat, sans-serif";
     ctx.fillStyle = "#777777";
-    ctx.fillText("CLP · IVA Incluido", ex + 180, 575);
+    ctx.fillText("CLP", ex + 180, 575);
 
-    // Línea divisoria
     ctx.strokeStyle = "#E0DED9";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -1915,39 +1907,26 @@
     ctx.lineTo(ex + ew, 605);
     ctx.stroke();
 
-    // Pie con detalles de contacto
     ctx.font = "600 13px Montserrat, sans-serif";
     ctx.fillStyle = "#222222";
     ctx.textAlign = "left";
     ctx.fillText("COMPRA DIRECTA: " + d.mensaje, ex, 638);
-
-    ctx.font = "400 12px Montserrat, sans-serif";
-    ctx.fillStyle = "#666666";
-    ctx.fillText("📍 " + d.sector, ex, 658);
   }
 
-  // PLANTILLA 4: TRADICIÓN SUREÑA ALERCE (Madera, bosque nativo y sello artesanal)
-  function dibujarPlantillaSureno(ctx, d, w, h) {
-    // Fondo Verde Bosque Sureño
+  // ESTILO 5: TRADICIÓN (Bosque nativo y dorado)
+  function dibujarPlantillaEstilo5(ctx, d, w, h) {
     ctx.fillStyle = "#163024";
     ctx.fillRect(0, 0, w, h);
 
-    // Borde madera / dorado cálido
     ctx.strokeStyle = "#D4AF37";
     ctx.lineWidth = 4;
     ctx.strokeRect(20, 20, w - 40, h - 40);
 
-    ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(28, 28, w - 56, h - 56);
-
-    // Cabecera Tradición
     ctx.fillStyle = "#D4AF37";
     ctx.font = "800 18px " + d.fuente + ", sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("🌲 TRADICIÓN Y SABOR DE ALERCE · 100% ARTESANAL 🌲", w / 2, 62);
+    ctx.fillText("TRADICIÓN Y SABOR DE ALERCE", w / 2, 62);
 
-    // Foto con marco dorado
     var sx = 65;
     var sy = 90;
     var sw = w - 130;
@@ -1964,25 +1943,20 @@
       ctx.fillRect(sx, sy, sw, sh);
       ctx.font = "75px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("🥖", sx + sw / 2, sy + sh / 2 + 25);
+      ctx.fillText("🌲", sx + sw / 2, sy + sh / 2 + 25);
     }
 
-    // Título
     ctx.font = "800 36px 'Playfair Display', " + d.fuente + ", serif";
     ctx.fillStyle = "#FFF9E6";
     ctx.textAlign = "center";
     ctx.fillText(d.titulo, w / 2, 490);
 
-    // Sello Artesanal de Precio
     var rx = w / 2;
     var ry = 555;
     ctx.fillStyle = "#D4AF37";
     ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(rx - 150, ry - 32, 300, 56, 28);
-    } else {
-      ctx.rect(rx - 150, ry - 32, 300, 56);
-    }
+    if (ctx.roundRect) ctx.roundRect(rx - 150, ry - 32, 300, 56, 28);
+    else ctx.fillRect(rx - 150, ry - 32, 300, 56);
     ctx.fill();
 
     ctx.font = "900 32px " + d.fuente + ", sans-serif";
@@ -1990,113 +1964,9 @@
     ctx.textAlign = "center";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), rx, ry + 9);
 
-    // Mensaje WhatsApp
     ctx.font = "700 16px sans-serif";
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText("📲 " + d.mensaje, w / 2, 628);
-
-    ctx.font = "500 13px sans-serif";
-    ctx.fillStyle = "#A7D3BA";
-    ctx.fillText("📍 " + d.sector + " · Hecho a Mano con Amor Sureño", w / 2, 654);
-  }
-
-  // PLANTILLA 5: WHATSAPP DIRECTO (Optimizada para estados y grupos de compra/venta)
-  function dibujarPlantillaWhatsApp(ctx, d, w, h) {
-    // Fondo Estilo Chat WhatsApp
-    ctx.fillStyle = "#E5DDD5";
-    ctx.fillRect(0, 0, w, h);
-
-    // Cabecera Verde Oscuro WhatsApp
-    ctx.fillStyle = "#075E54";
-    ctx.fillRect(0, 0, w, 75);
-
-    ctx.font = "900 22px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("🟢 COMPRA Y VENTA DIRECTA · ALERCE", w / 2, 46);
-
-    // Card de Producto
-    var wx = 40;
-    var wy = 95;
-    var ww = w - 80;
-    var wh = 420;
-
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.18)";
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 6;
-    ctx.fillStyle = "#FFFFFF";
-    if (ctx.roundRect) {
-      ctx.roundRect(wx, wy, ww, wh, 16);
-    } else {
-      ctx.rect(wx, wy, ww, wh);
-    }
-    ctx.fill();
-    ctx.restore();
-
-    // Foto dentro del card
-    var px = wx + 12;
-    var py = wy + 12;
-    var pw = ww - 24;
-    var ph = 270;
-
-    if (d.img) {
-      ctx.drawImage(d.img, px, py, pw, ph);
-    } else {
-      ctx.fillStyle = "#F0F2F5";
-      ctx.fillRect(px, py, pw, ph);
-      ctx.font = "70px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("🛍️", px + pw / 2, py + ph / 2 + 25);
-    }
-
-    // Título y Precio dentro del card
-    ctx.font = "900 28px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#128C7E";
-    ctx.textAlign = "left";
-    ctx.fillText(d.titulo, wx + 20, wy + 325);
-
-    // Badge Precio Gigante
-    ctx.fillStyle = "#25D366";
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(wx + 20, wy + 348, 180, 46, 23);
-    } else {
-      ctx.rect(wx + 20, wy + 348, 180, 46);
-    }
-    ctx.fill();
-
-    ctx.font = "900 28px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), wx + 110, wy + 382);
-
-    ctx.font = "700 13px sans-serif";
-    ctx.fillStyle = "#E02424";
-    ctx.textAlign = "left";
-    ctx.fillText("🔥 " + d.sello, wx + 220, wy + 378);
-
-    // Botón Gigante WhatsApp Inferior
-    ctx.fillStyle = "#25D366";
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(40, h - 145, w - 80, 68, 34);
-    } else {
-      ctx.rect(40, h - 145, w - 80, 68);
-    }
-    ctx.fill();
-
-    ctx.font = "900 22px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textAlign = "center";
-    ctx.fillText("💬 PEDIR DIRECTO AL WHATSAPP", w / 2, h - 105);
-
-    ctx.font = "600 14px sans-serif";
-    ctx.fillText(d.mensaje, w / 2, h - 85);
-
-    ctx.font = "600 12.5px sans-serif";
-    ctx.fillStyle = "#4A5568";
-    ctx.fillText("📍 " + d.sector + " · Trama Alerce", w / 2, h - 35);
   }
 
   // DESCARGAR IMAGEN DEL CANVAS
