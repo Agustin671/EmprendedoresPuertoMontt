@@ -1,6 +1,7 @@
 package com.example.trabajodea10.ui.emprendedora
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -97,6 +98,52 @@ fun PantallaCatalogo(
                 }
             }
         )
+
+        // Banner botón grande tipo Facebook Marketplace para emprendedoras
+        androidx.compose.material3.Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .clickable {
+                    val id = TramaStore.crearProductoBorrador()
+                    nav.irA(Ruta.ProductoDetalle(id))
+                },
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A)
+            ),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(Color(0xFF2E7D5B), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("➕", fontSize = 20.sp)
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Añadir Producto en Venta",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.5.sp,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Fácil estilo Facebook Marketplace · Crea afiches comerciales",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+                Text("➔", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
 
         CampoBusqueda(
             valor = busqueda,

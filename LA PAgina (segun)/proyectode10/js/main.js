@@ -86,7 +86,7 @@
     }
   ];
 
-  var PRODUCTOS = [
+  var PRODUCTOS_BASE = [
     // Doña Rosa
     {
       id: "p_mini_1",
@@ -215,6 +215,18 @@
       variantes: [{ nombre: "Caja 6 un.", precio: 5500 }]
     }
   ];
+
+  function cargarProductosDeStorage() {
+    try {
+      var guardados = localStorage.getItem("trama_productos_custom");
+      var custom = guardados ? JSON.parse(guardados) : [];
+      return PRODUCTOS_BASE.concat(custom);
+    } catch (e) {
+      return PRODUCTOS_BASE.slice();
+    }
+  }
+
+  var PRODUCTOS = cargarProductosDeStorage();
 
   var PUBLICACIONES_FORO = [
     {
@@ -754,9 +766,14 @@
 
       html += '<div class="producto-fila-card">';
       html += '  <div class="producto-card-top">';
-      html += '    <div>';
-      html += '      <h4 class="prod-nombre">' + escaparHtml(p.nombre) + '</h4>';
-      html += '      <p style="font-size: 12px; color: var(--gris-texto); margin-top: 2px;">' + escaparHtml(p.descripcion) + '</p>';
+      html += '    <div style="display: flex; gap: 12px; align-items: center;">';
+      if (p.fotoUrl) {
+        html += '      <img src="' + p.fotoUrl + '" alt="' + escaparHtml(p.nombre) + '" style="width: 52px; height: 52px; object-fit: cover; border-radius: 6px; border: 1px solid var(--gris-borde); flex-shrink: 0;">';
+      }
+      html += '      <div>';
+      html += '        <h4 class="prod-nombre">' + escaparHtml(p.nombre) + '</h4>';
+      html += '        <p style="font-size: 12px; color: var(--gris-texto); margin-top: 2px;">' + escaparHtml(p.descripcion) + '</p>';
+      html += '      </div>';
       html += '    </div>';
       html += '    <div style="text-align: right;">';
       html += '      <span class="prod-precio">' + formatearMoneda(p.precio) + '</span>';
@@ -1219,6 +1236,935 @@
   }
 
   // ============================================================
+  // MÓDULO 8: ESTUDIO DE FLYERS (BURGER KING / MCDONALDS) Y PUBLICADOR FACEBOOK MARKETPLACE
+  // ============================================================
+
+  var FOTOS_SUGERIDAS = [
+    { nombre: "Pan Amasado", url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80", emoji: "🍞" },
+    { nombre: "Kuchen Sureño", url: "https://images.unsplash.com/photo-1519869325930-281384150729?w=600&q=80", emoji: "🍰" },
+    { nombre: "Tejidos Lana", url: "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600&q=80", emoji: "🧶" },
+    { nombre: "Barbería", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=80", emoji: "💈" },
+    { nombre: "Empanadas", url: "https://images.unsplash.com/photo-1628191010210-a59de33e5941?w=600&q=80", emoji: "🥟" }
+  ];
+
+  var estadoPublicar = {
+    fotoDataUrl: "",
+    categoriaSeleccionada: "Abarrotes y Alimentos",
+    stockSeleccionado: "inmediato"
+  };
+
+  var estadoFlyer = {
+    plantilla: "burgerking", // 'burgerking' | 'mcdonalds' | 'editorial' | 'sureno' | 'whatsapp'
+    fuente: "Impact",
+    fotoImg: null,
+    fotoUrlActual: ""
+  };
+
+  // Abrir Modal Publicar estilo FB Marketplace
+  function abrirModalPublicarProducto() {
+    renderizarGaleriaSugeridaFB();
+    abrirModal("modal-publicar-producto");
+  }
+
+  // Renderizar galería de fotos sugeridas en modal FB
+  function renderizarGaleriaSugeridaFB() {
+    var cont = document.getElementById("fb-galeria-rapida");
+    if (!cont) return;
+    cont.innerHTML = FOTOS_SUGERIDAS.map(function (f) {
+      return '<button type="button" class="fb-chip-cat" style="font-size: 11px; padding: 4px 8px;" onclick="TramaWeb.seleccionarFotoSugeridaFB(\'' + f.url + '\')">' +
+        f.emoji + ' ' + f.nombre +
+      '</button>';
+    }).join("");
+  }
+
+  // Seleccionar foto sugerida en FB
+  function seleccionarFotoSugeridaFB(url) {
+    estadoPublicar.fotoDataUrl = url;
+    var preview = document.getElementById("fb-img-preview");
+    var placeholder = document.getElementById("fb-placeholder-foto");
+    var opciones = document.getElementById("fb-opciones-foto-activa");
+    if (preview) {
+      preview.src = url;
+      preview.style.display = "block";
+    }
+    if (placeholder) placeholder.style.display = "none";
+    if (opciones) opciones.style.display = "flex";
+    cargarFotoEnFlyer(url);
+    mostrarToast("Foto sugerida seleccionada");
+  }
+
+  // Al subir foto local (teléfono / PC)
+  function onFotoProductoSubida(event) {
+    var file = event.target.files && event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var dataUrl = e.target.result;
+      estadoPublicar.fotoDataUrl = dataUrl;
+      var preview = document.getElementById("fb-img-preview");
+      var placeholder = document.getElementById("fb-placeholder-foto");
+      var opciones = document.getElementById("fb-opciones-foto-activa");
+      if (preview) {
+        preview.src = dataUrl;
+        preview.style.display = "block";
+      }
+      if (placeholder) placeholder.style.display = "none";
+      if (opciones) opciones.style.display = "flex";
+
+      cargarFotoEnFlyer(dataUrl);
+      mostrarToast("Foto cargada con éxito");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function quitarFotoProducto() {
+    estadoPublicar.fotoDataUrl = "";
+    var preview = document.getElementById("fb-img-preview");
+    var placeholder = document.getElementById("fb-placeholder-foto");
+    var opciones = document.getElementById("fb-opciones-foto-activa");
+    var inp = document.getElementById("inp-subir-foto-producto");
+    if (preview) preview.style.display = "none";
+    if (placeholder) placeholder.style.display = "flex";
+    if (opciones) opciones.style.display = "none";
+    if (inp) inp.value = "";
+  }
+
+  function seleccionarCategoriaFB(cat) {
+    estadoPublicar.categoriaSeleccionada = cat;
+    var contenedor = document.getElementById("fb-selector-categoria");
+    if (!contenedor) return;
+    var btns = contenedor.querySelectorAll(".fb-chip-cat");
+    btns.forEach(function (b) {
+      if (b.getAttribute("data-cat") === cat) {
+        b.classList.add("activo");
+      } else {
+        b.classList.remove("activo");
+      }
+    });
+  }
+
+  function seleccionarStockFB(stock) {
+    estadoPublicar.stockSeleccionado = stock;
+    var contenedor = document.getElementById("fb-selector-stock");
+    if (!contenedor) return;
+    var btns = contenedor.querySelectorAll(".fb-chip-cat");
+    btns.forEach(function (b) {
+      if (b.getAttribute("data-stock") === stock) {
+        b.classList.add("activo");
+      } else {
+        b.classList.remove("activo");
+      }
+    });
+  }
+
+  // Confirmar publicación estilo Facebook Marketplace
+  function confirmarPublicacionFB() {
+    var inpTitulo = document.getElementById("fb-inp-titulo");
+    var inpPrecio = document.getElementById("fb-inp-precio");
+    var selectTienda = document.getElementById("fb-select-tienda");
+    var inpDesc = document.getElementById("fb-inp-desc");
+
+    var titulo = inpTitulo ? inpTitulo.value.trim() : "";
+    var precio = inpPrecio ? parseInt(inpPrecio.value, 10) : 0;
+    var tiendaId = selectTienda ? selectTienda.value : "t_minimarket_rosa";
+    var desc = inpDesc ? inpDesc.value.trim() : "";
+
+    if (!titulo) {
+      mostrarToast("⚠️ Por favor escribe el nombre de tu producto");
+      if (inpTitulo) inpTitulo.focus();
+      return;
+    }
+
+    if (!precio || isNaN(precio) || precio <= 0) {
+      mostrarToast("⚠️ Ingresa un precio válido en pesos chilenos ($)");
+      if (inpPrecio) inpPrecio.focus();
+      return;
+    }
+
+    var tiendaEncontrada = null;
+    for (var i = 0; i < TIENDAS.length; i++) {
+      if (TIENDAS[i].id === tiendaId) {
+        tiendaEncontrada = TIENDAS[i];
+        break;
+      }
+    }
+    var nombreTienda = tiendaEncontrada ? tiendaEncontrada.nombre : "Emprendedora de Alerce";
+
+    var nuevoProducto = {
+      id: "p_custom_" + Date.now(),
+      tiendaId: tiendaId,
+      nombre: titulo,
+      precio: precio,
+      stockTotal: estadoPublicar.stockSeleccionado === "inmediato" ? 15 : 0,
+      descripcion: desc || (titulo + " elaborado con amor por " + nombreTienda + "."),
+      fotoUrl: estadoPublicar.fotoDataUrl || "",
+      variantes: [{ nombre: "Unidad", precio: precio }]
+    };
+
+    // Guardar en almacenamiento local
+    try {
+      var guardados = localStorage.getItem("trama_productos_custom");
+      var lista = guardados ? JSON.parse(guardados) : [];
+      lista.unshift(nuevoProducto);
+      localStorage.setItem("trama_productos_custom", JSON.stringify(lista));
+    } catch (e) {
+      console.warn("No se pudo guardar en localStorage", e);
+    }
+
+    // Agregar al listado en memoria
+    PRODUCTOS.unshift(nuevoProducto);
+
+    // Limpiar formulario
+    if (inpTitulo) inpTitulo.value = "";
+    if (inpPrecio) inpPrecio.value = "";
+    if (inpDesc) inpDesc.value = "";
+    quitarFotoProducto();
+
+    cerrarModal("modal-publicar-producto");
+    mostrarToast("🎉 ¡Producto publicado con éxito en la vitrina!");
+    renderizarTiendasMarketplace();
+
+    // Si la vitrina de la tienda está abierta, refrescarla
+    if (estado.tiendaSeleccionada && estado.tiendaSeleccionada.id === tiendaId) {
+      renderizarProductosTienda(tiendaId);
+    }
+  }
+
+  // Pasar del modal de publicar al estudio de flyers
+  function abrirEstudioFlyerDesdePublicar() {
+    var inpTitulo = document.getElementById("fb-inp-titulo");
+    var inpPrecio = document.getElementById("fb-inp-precio");
+
+    if (inpTitulo && inpTitulo.value.trim()) {
+      var flyerTit = document.getElementById("flyer-inp-titulo");
+      if (flyerTit) flyerTit.value = inpTitulo.value.trim();
+    }
+    if (inpPrecio && inpPrecio.value.trim()) {
+      var flyerPre = document.getElementById("flyer-inp-precio");
+      if (flyerPre) flyerPre.value = inpPrecio.value.trim();
+    }
+
+    cerrarModal("modal-publicar-producto");
+    abrirModalEstudioFlyer();
+  }
+
+  // Abrir Modal Estudio de Flyers
+  function abrirModalEstudioFlyer() {
+    renderizarGaleriaFotosFlyer();
+    abrirModal("modal-estudio-flyer");
+    setTimeout(function () {
+      actualizarLienzoFlyer();
+    }, 100);
+  }
+
+  function renderizarGaleriaFotosFlyer() {
+    var cont = document.getElementById("flyer-galeria-fotos");
+    if (!cont) return;
+    cont.innerHTML = FOTOS_SUGERIDAS.map(function (f) {
+      return '<button type="button" class="fb-chip-cat" style="font-size: 11px; padding: 4px 8px;" onclick="TramaWeb.seleccionarFotoSugeridaFlyer(\'' + f.url + '\')">' +
+        f.emoji + ' ' + f.nombre +
+      '</button>';
+    }).join("");
+  }
+
+  function seleccionarFotoSugeridaFlyer(url) {
+    cargarFotoEnFlyer(url, function () {
+      actualizarLienzoFlyer();
+    });
+    mostrarToast("Foto de muestra cargada en el flyer");
+  }
+
+  function onFotoFlyerSubida(event) {
+    var file = event.target.files && event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var dataUrl = e.target.result;
+      cargarFotoEnFlyer(dataUrl, function () {
+        actualizarLienzoFlyer();
+      });
+      mostrarToast("Foto personalizada cargada");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function cargarFotoEnFlyer(src, callback) {
+    estadoFlyer.fotoUrlActual = src;
+    var img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function () {
+      estadoFlyer.fotoImg = img;
+      if (callback) callback();
+      actualizarLienzoFlyer();
+    };
+    img.onerror = function () {
+      estadoFlyer.fotoImg = null;
+      if (callback) callback();
+      actualizarLienzoFlyer();
+    };
+    img.src = src;
+  }
+
+  function cambiarPlantillaFlyer(plantillaId) {
+    estadoFlyer.plantilla = plantillaId;
+    var btns = document.querySelectorAll(".btn-plantilla-selector");
+    btns.forEach(function (b) {
+      if (b.getAttribute("data-plantilla") === plantillaId) {
+        b.classList.add("activa");
+      } else {
+        b.classList.remove("activa");
+      }
+    });
+
+    // Ajustar fuentes recomendadas por plantilla
+    if (plantillaId === "burgerking" || plantillaId === "mcdonalds") {
+      cambiarFuenteFlyer("Impact");
+    } else if (plantillaId === "editorial") {
+      cambiarFuenteFlyer("Playfair Display");
+    } else if (plantillaId === "sureno") {
+      cambiarFuenteFlyer("Montserrat");
+    } else if (plantillaId === "whatsapp") {
+      cambiarFuenteFlyer("Bebas Neue");
+    }
+
+    actualizarLienzoFlyer();
+  }
+
+  function cambiarFuenteFlyer(fuenteNombre) {
+    estadoFlyer.fuente = fuenteNombre;
+    var btns = document.querySelectorAll("#flyer-selector-fuente .fb-chip-cat");
+    btns.forEach(function (b) {
+      if (b.getAttribute("data-fuente") === fuenteNombre) {
+        b.classList.add("activo");
+      } else {
+        b.classList.remove("activo");
+      }
+    });
+    actualizarLienzoFlyer();
+  }
+
+  // ============================================================
+  // MOTOR DE DIBUJO CANVAS 700x700 (PLANTILLAS BURGER KING, MCDONALDS, ETC)
+  // ============================================================
+
+  function actualizarLienzoFlyer() {
+    var canvas = document.getElementById("canvas-flyer");
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    var w = 700;
+    var h = 700;
+    canvas.width = w;
+    canvas.height = h;
+
+    var inpTitulo = document.getElementById("flyer-inp-titulo");
+    var inpPrecio = document.getElementById("flyer-inp-precio");
+    var inpSello = document.getElementById("flyer-inp-sello");
+    var inpMensaje = document.getElementById("flyer-inp-mensaje");
+    var inpSector = document.getElementById("flyer-inp-sector");
+
+    var datos = {
+      titulo: (inpTitulo ? inpTitulo.value.trim() : "") || "Pan Amasado Caliente",
+      precio: (inpPrecio ? inpPrecio.value.trim() : "") || "2500",
+      sello: (inpSello ? inpSello.value.trim() : "") || "¡OFERTA DEL DÍA!",
+      mensaje: (inpMensaje ? inpMensaje.value.trim() : "") || "Pide directo al WhatsApp: +56 9 9123 4567",
+      sector: (inpSector ? inpSector.value.trim() : "") || "Alerce Histórico · Puerto Montt",
+      fuente: estadoFlyer.fuente || "Impact",
+      img: estadoFlyer.fotoImg
+    };
+
+    ctx.save();
+
+    switch (estadoFlyer.plantilla) {
+      case "burgerking":
+        dibujarPlantillaBurgerKing(ctx, datos, w, h);
+        break;
+      case "mcdonalds":
+        dibujarPlantillaMcDonalds(ctx, datos, w, h);
+        break;
+      case "editorial":
+        dibujarPlantillaEditorial(ctx, datos, w, h);
+        break;
+      case "sureno":
+        dibujarPlantillaSureno(ctx, datos, w, h);
+        break;
+      case "whatsapp":
+        dibujarPlantillaWhatsApp(ctx, datos, w, h);
+        break;
+      default:
+        dibujarPlantillaBurgerKing(ctx, datos, w, h);
+    }
+
+    ctx.restore();
+  }
+
+  // PLANTILLA 1: BURGER KING (Fondo cálido, tipografía imponente y círculo amarillo de precio)
+  function dibujarPlantillaBurgerKing(ctx, d, w, h) {
+    // Fondo degradado carbón / fuego
+    var grad = ctx.createRadialGradient(w / 2, h / 2, 80, w / 2, h / 2, 420);
+    grad.addColorStop(0, "#D62300");
+    grad.addColorStop(0.55, "#801200");
+    grad.addColorStop(1, "#360600");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Rayos sutiles de fondo
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    for (var i = 0; i < 16; i++) {
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h / 2);
+      var ang1 = (i * 22.5 * Math.PI) / 180;
+      var ang2 = ((i * 22.5 + 11.25) * Math.PI) / 180;
+      ctx.lineTo(w / 2 + Math.cos(ang1) * 600, h / 2 + Math.sin(ang1) * 600);
+      ctx.lineTo(w / 2 + Math.cos(ang2) * 600, h / 2 + Math.sin(ang2) * 600);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Sello superior (Cintillo Flame Grill)
+    ctx.fillStyle = "#FFC72C";
+    ctx.fillRect(0, 0, w, 54);
+    ctx.font = "900 20px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#801200";
+    ctx.textAlign = "center";
+    ctx.fillText("🔥 " + d.sello.toUpperCase() + " · ALERCE SABOR LOCAL 🔥", w / 2, 35);
+
+    // Recuadro / Círculo de Foto del Producto
+    var cx = w / 2;
+    var cy = 250;
+    var radio = 160;
+
+    // Resplandor dorado detrás de la foto
+    ctx.save();
+    var glow = ctx.createRadialGradient(cx, cy, 60, cx, cy, 200);
+    glow.addColorStop(0, "rgba(255, 199, 44, 0.45)");
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 200, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radio, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.stroke();
+    ctx.clip();
+
+    if (d.img) {
+      ctx.drawImage(d.img, cx - radio, cy - radio, radio * 2, radio * 2);
+    } else {
+      // Ilustración de reemplazo si no hay foto
+      ctx.fillStyle = "#FAF5E9";
+      ctx.fillRect(cx - radio, cy - radio, radio * 2, radio * 2);
+      ctx.font = "80px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🥖", cx, cy + 28);
+    }
+    ctx.restore();
+
+    // Título Principal del Producto (Estilo Burger King Heavy)
+    ctx.save();
+    ctx.font = "900 42px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.strokeStyle = "#1A0300";
+    ctx.lineWidth = 7;
+    ctx.textAlign = "center";
+    ctx.strokeText(d.titulo.toUpperCase(), w / 2, 470);
+    ctx.fillText(d.titulo.toUpperCase(), w / 2, 470);
+    ctx.restore();
+
+    // Círculo Gigante de Precio Amarillo (Bottom Right / Angled)
+    var px = 550;
+    var py = 390;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(-0.1);
+
+    ctx.fillStyle = "#FFC72C";
+    ctx.beginPath();
+    ctx.arc(0, 0, 84, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#D62300";
+    ctx.stroke();
+
+    ctx.fillStyle = "#801200";
+    ctx.font = "800 15px " + d.fuente + ", sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("SOLO AHORA", 0, -38);
+
+    ctx.font = "900 44px " + d.fuente + ", sans-serif";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 8);
+
+    ctx.font = "800 14px " + d.fuente + ", sans-serif";
+    ctx.fillText("PESOS CLP", 0, 36);
+
+    ctx.restore();
+
+    // Pie de página con WhatsApp y Sector
+    ctx.fillStyle = "#1B0401";
+    ctx.fillRect(0, h - 140, w, 140);
+
+    // Botón verde simulado WhatsApp
+    ctx.fillStyle = "#25D366";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(50, h - 118, w - 100, 48, 24);
+    } else {
+      ctx.rect(50, h - 118, w - 100, 48);
+    }
+    ctx.fill();
+
+    ctx.font = "900 19px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("💬 " + d.mensaje.toUpperCase(), w / 2, h - 87);
+
+    ctx.font = "600 13px sans-serif";
+    ctx.fillStyle = "#FFC72C";
+    ctx.fillText("📍 " + d.sector + " · Emprendimiento Local de Alerce", w / 2, h - 35);
+  }
+
+  // PLANTILLA 2: MCDONALD'S (Rojo vibrante, arcos dorados y sello de gran valor)
+  function dibujarPlantillaMcDonalds(ctx, d, w, h) {
+    // Fondo Rojo McDonald's
+    ctx.fillStyle = "#DA291C";
+    ctx.fillRect(0, 0, w, h);
+
+    // Decoración Arcos Dorados sutiles en esquinas
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 199, 44, 0.35)";
+    ctx.lineWidth = 26;
+    ctx.beginPath();
+    ctx.arc(680, 20, 220, Math.PI * 0.5, Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(20, 20, 220, 0, Math.PI * 0.5);
+    ctx.stroke();
+    ctx.restore();
+
+    // Cabecera Amarilla Golden
+    ctx.fillStyle = "#FFC72C";
+    ctx.fillRect(0, 0, w, 68);
+    ctx.fillStyle = "#DA291C";
+    ctx.font = "900 24px " + d.fuente + ", sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("★ " + d.sello.toUpperCase() + " ★", w / 2, 44);
+
+    // Foto del producto enmarcada en blanco con sombra
+    var fx = 75;
+    var fy = 95;
+    var fw = 550;
+    var fh = 330;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 8;
+    ctx.fillStyle = "#FFFFFF";
+    if (ctx.roundRect) {
+      ctx.roundRect(fx, fy, fw, fh, 16);
+    } else {
+      ctx.rect(fx, fy, fw, fh);
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // Dibujar imagen adentro
+    ctx.save();
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(fx + 6, fy + 6, fw - 12, fh - 12, 12);
+      ctx.clip();
+    }
+    if (d.img) {
+      ctx.drawImage(d.img, fx + 6, fy + 6, fw - 12, fh - 12);
+    } else {
+      ctx.fillStyle = "#FFF9E6";
+      ctx.fillRect(fx + 6, fy + 6, fw - 12, fh - 12);
+      ctx.font = "80px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🍰", fx + fw / 2, fy + fh / 2 + 25);
+    }
+    ctx.restore();
+
+    // Sello Ovalado de Precio (Estilo McDonald's Extra Value)
+    var ox = 520;
+    var oy = 390;
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.rotate(0.08);
+    ctx.fillStyle = "#FFC72C";
+    ctx.beginPath();
+    ctx.arc(0, 0, 78, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.stroke();
+
+    ctx.fillStyle = "#DA291C";
+    ctx.font = "900 13px " + d.fuente + ", sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("PRECIO ALERCE", 0, -32);
+    ctx.font = "900 42px " + d.fuente + ", sans-serif";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 8);
+    ctx.font = "700 12px sans-serif";
+    ctx.fillText("¡LLEVA EL TUYO!", 0, 32);
+    ctx.restore();
+
+    // Título del Producto
+    ctx.save();
+    ctx.font = "900 38px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText(d.titulo.toUpperCase(), w / 2, 485);
+    ctx.restore();
+
+    // Barra de llamado a la acción inferior
+    ctx.fillStyle = "#1E0402";
+    ctx.fillRect(0, h - 145, w, 145);
+
+    ctx.fillStyle = "#FFC72C";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(40, h - 125, w - 80, 52, 26);
+    } else {
+      ctx.rect(40, h - 125, w - 80, 52);
+    }
+    ctx.fill();
+
+    ctx.font = "900 20px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#DA291C";
+    ctx.textAlign = "center";
+    ctx.fillText("📲 " + d.mensaje.toUpperCase(), w / 2, h - 92);
+
+    ctx.font = "600 13px sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("📍 " + d.sector + " · Red de Emprendedoras de Puerto Montt", w / 2, h - 35);
+  }
+
+  // PLANTILLA 3: MINIMALISTA EDITORIAL (Farfetch & Apple Style)
+  function dibujarPlantillaEditorial(ctx, d, w, h) {
+    // Fondo marfil / piedra limpia
+    ctx.fillStyle = "#F8F7F4";
+    ctx.fillRect(0, 0, w, h);
+
+    // Marco exterior fino sobrio
+    ctx.strokeStyle = "#1A1A1A";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(28, 28, w - 56, h - 56);
+
+    // Encabezado editorial fino
+    ctx.font = "600 13px Montserrat, sans-serif";
+    ctx.fillStyle = "#666666";
+    ctx.textAlign = "center";
+    ctx.letterSpacing = "3px";
+    ctx.fillText("TRAMA · EDICIÓN ARTESANAL LOCAL", w / 2, 60);
+
+    // Foto editorial grande con proporciones de galería de moda/diseño
+    var ex = 56;
+    var ey = 82;
+    var ew = w - 112;
+    var eh = 390;
+
+    if (d.img) {
+      ctx.drawImage(d.img, ex, ey, ew, eh);
+    } else {
+      ctx.fillStyle = "#ECE9E2";
+      ctx.fillRect(ex, ey, ew, eh);
+      ctx.font = "70px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🧶", ex + ew / 2, ey + eh / 2 + 20);
+    }
+
+    // Badge sutil sobre la foto
+    ctx.fillStyle = "rgba(26, 26, 26, 0.9)";
+    ctx.fillRect(ex + 18, ey + 18, 140, 30);
+    ctx.font = "700 11px Montserrat, sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText(d.sello.toUpperCase(), ex + 88, ey + 37);
+
+    // Título en tipografía serifa elegante
+    ctx.font = "700 32px 'Playfair Display', serif";
+    ctx.fillStyle = "#111111";
+    ctx.textAlign = "left";
+    ctx.fillText(d.titulo, ex, 525);
+
+    // Precio sobrio y distinguido
+    ctx.font = "700 34px Montserrat, sans-serif";
+    ctx.fillStyle = "#111111";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), ex, 575);
+
+    ctx.font = "400 14px Montserrat, sans-serif";
+    ctx.fillStyle = "#777777";
+    ctx.fillText("CLP · IVA Incluido", ex + 180, 575);
+
+    // Línea divisoria
+    ctx.strokeStyle = "#E0DED9";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ex, 605);
+    ctx.lineTo(ex + ew, 605);
+    ctx.stroke();
+
+    // Pie con detalles de contacto
+    ctx.font = "600 13px Montserrat, sans-serif";
+    ctx.fillStyle = "#222222";
+    ctx.textAlign = "left";
+    ctx.fillText("COMPRA DIRECTA: " + d.mensaje, ex, 638);
+
+    ctx.font = "400 12px Montserrat, sans-serif";
+    ctx.fillStyle = "#666666";
+    ctx.fillText("📍 " + d.sector, ex, 658);
+  }
+
+  // PLANTILLA 4: TRADICIÓN SUREÑA ALERCE (Madera, bosque nativo y sello artesanal)
+  function dibujarPlantillaSureno(ctx, d, w, h) {
+    // Fondo Verde Bosque Sureño
+    ctx.fillStyle = "#163024";
+    ctx.fillRect(0, 0, w, h);
+
+    // Borde madera / dorado cálido
+    ctx.strokeStyle = "#D4AF37";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(20, 20, w - 40, h - 40);
+
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(28, 28, w - 56, h - 56);
+
+    // Cabecera Tradición
+    ctx.fillStyle = "#D4AF37";
+    ctx.font = "800 18px " + d.fuente + ", sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("🌲 TRADICIÓN Y SABOR DE ALERCE · 100% ARTESANAL 🌲", w / 2, 62);
+
+    // Foto con marco dorado
+    var sx = 65;
+    var sy = 90;
+    var sw = w - 130;
+    var sh = 350;
+
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(sx, sy, sw, sh);
+
+    if (d.img) {
+      ctx.drawImage(d.img, sx, sy, sw, sh);
+    } else {
+      ctx.fillStyle = "#264837";
+      ctx.fillRect(sx, sy, sw, sh);
+      ctx.font = "75px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🥖", sx + sw / 2, sy + sh / 2 + 25);
+    }
+
+    // Título
+    ctx.font = "800 36px 'Playfair Display', " + d.fuente + ", serif";
+    ctx.fillStyle = "#FFF9E6";
+    ctx.textAlign = "center";
+    ctx.fillText(d.titulo, w / 2, 490);
+
+    // Sello Artesanal de Precio
+    var rx = w / 2;
+    var ry = 555;
+    ctx.fillStyle = "#D4AF37";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(rx - 150, ry - 32, 300, 56, 28);
+    } else {
+      ctx.rect(rx - 150, ry - 32, 300, 56);
+    }
+    ctx.fill();
+
+    ctx.font = "900 32px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#163024";
+    ctx.textAlign = "center";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), rx, ry + 9);
+
+    // Mensaje WhatsApp
+    ctx.font = "700 16px sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("📲 " + d.mensaje, w / 2, 628);
+
+    ctx.font = "500 13px sans-serif";
+    ctx.fillStyle = "#A7D3BA";
+    ctx.fillText("📍 " + d.sector + " · Hecho a Mano con Amor Sureño", w / 2, 654);
+  }
+
+  // PLANTILLA 5: WHATSAPP DIRECTO (Optimizada para estados y grupos de compra/venta)
+  function dibujarPlantillaWhatsApp(ctx, d, w, h) {
+    // Fondo Estilo Chat WhatsApp
+    ctx.fillStyle = "#E5DDD5";
+    ctx.fillRect(0, 0, w, h);
+
+    // Cabecera Verde Oscuro WhatsApp
+    ctx.fillStyle = "#075E54";
+    ctx.fillRect(0, 0, w, 75);
+
+    ctx.font = "900 22px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("🟢 COMPRA Y VENTA DIRECTA · ALERCE", w / 2, 46);
+
+    // Card de Producto
+    var wx = 40;
+    var wy = 95;
+    var ww = w - 80;
+    var wh = 420;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.18)";
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 6;
+    ctx.fillStyle = "#FFFFFF";
+    if (ctx.roundRect) {
+      ctx.roundRect(wx, wy, ww, wh, 16);
+    } else {
+      ctx.rect(wx, wy, ww, wh);
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // Foto dentro del card
+    var px = wx + 12;
+    var py = wy + 12;
+    var pw = ww - 24;
+    var ph = 270;
+
+    if (d.img) {
+      ctx.drawImage(d.img, px, py, pw, ph);
+    } else {
+      ctx.fillStyle = "#F0F2F5";
+      ctx.fillRect(px, py, pw, ph);
+      ctx.font = "70px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🛍️", px + pw / 2, py + ph / 2 + 25);
+    }
+
+    // Título y Precio dentro del card
+    ctx.font = "900 28px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#128C7E";
+    ctx.textAlign = "left";
+    ctx.fillText(d.titulo, wx + 20, wy + 325);
+
+    // Badge Precio Gigante
+    ctx.fillStyle = "#25D366";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(wx + 20, wy + 348, 180, 46, 23);
+    } else {
+      ctx.rect(wx + 20, wy + 348, 180, 46);
+    }
+    ctx.fill();
+
+    ctx.font = "900 28px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), wx + 110, wy + 382);
+
+    ctx.font = "700 13px sans-serif";
+    ctx.fillStyle = "#E02424";
+    ctx.textAlign = "left";
+    ctx.fillText("🔥 " + d.sello, wx + 220, wy + 378);
+
+    // Botón Gigante WhatsApp Inferior
+    ctx.fillStyle = "#25D366";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(40, h - 145, w - 80, 68, 34);
+    } else {
+      ctx.rect(40, h - 145, w - 80, 68);
+    }
+    ctx.fill();
+
+    ctx.font = "900 22px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "center";
+    ctx.fillText("💬 PEDIR DIRECTO AL WHATSAPP", w / 2, h - 105);
+
+    ctx.font = "600 14px sans-serif";
+    ctx.fillText(d.mensaje, w / 2, h - 85);
+
+    ctx.font = "600 12.5px sans-serif";
+    ctx.fillStyle = "#4A5568";
+    ctx.fillText("📍 " + d.sector + " · Trama Alerce", w / 2, h - 35);
+  }
+
+  // DESCARGAR IMAGEN DEL CANVAS
+  function descargarFlyerImagen(formato) {
+    var canvas = document.getElementById("canvas-flyer");
+    if (!canvas) return;
+
+    var inpTitulo = document.getElementById("flyer-inp-titulo");
+    var nombreBase = inpTitulo && inpTitulo.value.trim() ? inpTitulo.value.trim().toLowerCase().replace(/[^a-z0-9]/g, "-") : "flyer-comercial";
+
+    try {
+      var mime = formato === "png" ? "image/png" : "image/jpeg";
+      var dataUrl = canvas.toDataURL(mime, 0.92);
+      var link = document.createElement("a");
+      link.download = nombreBase + "-alerce." + (formato === "png" ? "png" : "jpg");
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      mostrarToast("📥 Afiche descargado con éxito");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("⚠️ No se pudo descargar directamente debido a políticas de seguridad de la imagen.");
+    }
+  }
+
+  // APLICAR FLYER COMO FOTO DEL PRODUCTO
+  function aplicarFlyerComoFotoProducto() {
+    var canvas = document.getElementById("canvas-flyer");
+    if (!canvas) return;
+
+    try {
+      var dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      estadoPublicar.fotoDataUrl = dataUrl;
+
+      var preview = document.getElementById("fb-img-preview");
+      var placeholder = document.getElementById("fb-placeholder-foto");
+      var opciones = document.getElementById("fb-opciones-foto-activa");
+      if (preview) {
+        preview.src = dataUrl;
+        preview.style.display = "block";
+      }
+      if (placeholder) placeholder.style.display = "none";
+      if (opciones) opciones.style.display = "flex";
+
+      // Sincronizar título y precio si están vacíos
+      var flyerTit = document.getElementById("flyer-inp-titulo");
+      var flyerPre = document.getElementById("flyer-inp-precio");
+      var fbTit = document.getElementById("fb-inp-titulo");
+      var fbPre = document.getElementById("fb-inp-precio");
+
+      if (flyerTit && fbTit && !fbTit.value.trim()) {
+        fbTit.value = flyerTit.value.trim();
+      }
+      if (flyerPre && fbPre && !fbPre.value.trim()) {
+        fbPre.value = flyerPre.value.trim().replace(/\D/g, "");
+      }
+
+      cerrarModal("modal-estudio-flyer");
+      abrirModal("modal-publicar-producto");
+      mostrarToast("✅ Afiche aplicado como foto de tu producto");
+    } catch (err) {
+      console.error(err);
+      mostrarToast("⚠️ Error al capturar afiche");
+    }
+  }
+
+  // ============================================================
   // INICIALIZACIÓN DE EVENTOS Y ARRANQUE
   // ============================================================
 
@@ -1314,7 +2260,24 @@
     responderPublicacionMuro: responderPublicacionMuro,
     toggleFavorito: toggleFavorito,
     cerrarModal: cerrarModal,
-    abrirModal: abrirModal
+    abrirModal: abrirModal,
+    // Módulo 8: Publicador Facebook Marketplace y Estudio de Flyers
+    abrirModalPublicarProducto: abrirModalPublicarProducto,
+    abrirModalEstudioFlyer: abrirModalEstudioFlyer,
+    abrirEstudioFlyerDesdePublicar: abrirEstudioFlyerDesdePublicar,
+    seleccionarFotoSugeridaFB: seleccionarFotoSugeridaFB,
+    seleccionarFotoSugeridaFlyer: seleccionarFotoSugeridaFlyer,
+    onFotoProductoSubida: onFotoProductoSubida,
+    quitarFotoProducto: quitarFotoProducto,
+    seleccionarCategoriaFB: seleccionarCategoriaFB,
+    seleccionarStockFB: seleccionarStockFB,
+    confirmarPublicacionFB: confirmarPublicacionFB,
+    cambiarPlantillaFlyer: cambiarPlantillaFlyer,
+    cambiarFuenteFlyer: cambiarFuenteFlyer,
+    onFotoFlyerSubida: onFotoFlyerSubida,
+    actualizarLienzoFlyer: actualizarLienzoFlyer,
+    descargarFlyerImagen: descargarFlyerImagen,
+    aplicarFlyerComoFotoProducto: aplicarFlyerComoFotoProducto
   };
 
   // Ejecutar al cargar el DOM
