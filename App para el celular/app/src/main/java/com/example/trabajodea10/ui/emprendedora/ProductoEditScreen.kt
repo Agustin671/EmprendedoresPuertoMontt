@@ -56,6 +56,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.example.trabajodea10.R
 import coil.compose.AsyncImage
 import com.example.trabajodea10.data.Categoria
 import com.example.trabajodea10.data.TramaStore
@@ -78,6 +81,60 @@ import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
+
+val PhonkFontFamily = FontFamily(Font(R.font.phonk_regular, FontWeight.Normal))
+val BrittiFontFamily = FontFamily(Font(R.font.britti_bold, FontWeight.Bold))
+
+enum class TipoFuente(val id: String, val etiqueta: String) {
+    PHONK("phonk", "Phonk"),
+    BRITTI("britti", "Britti Sans"),
+    SANS("sans", "Sans Serif"),
+    EDITORIAL("editorial", "Editorial")
+}
+
+fun obtenerFontFamily(tipo: TipoFuente): FontFamily {
+    return when (tipo) {
+        TipoFuente.PHONK -> PhonkFontFamily
+        TipoFuente.BRITTI -> BrittiFontFamily
+        TipoFuente.SANS -> FontFamily.SansSerif
+        TipoFuente.EDITORIAL -> FontFamily.Serif
+    }
+}
+
+data class OpcionColorFlyer(
+    val id: String,
+    val etiqueta: String,
+    val color: Color?
+)
+
+val OpcionesColoresFlyer = listOf(
+    OpcionColorFlyer("original", "Original", null),
+    OpcionColorFlyer("carbon", "Carbón", Color(0xFF18181B)),
+    OpcionColorFlyer("carmin", "Carmín", Color(0xFFDC2626)),
+    OpcionColorFlyer("ambar", "Ámbar", Color(0xFFF59E0B)),
+    OpcionColorFlyer("cobalto", "Cobalto", Color(0xFF1D4ED8)),
+    OpcionColorFlyer("bosque", "Bosque", Color(0xFF047857)),
+    OpcionColorFlyer("violeta", "Violeta", Color(0xFF7C3AED)),
+    OpcionColorFlyer("fucsia", "Fucsia", Color(0xFFDB2777))
+)
+
+fun oscurecerColorCompose(color: Color, factor: Float = 0.4f): Color {
+    return Color(
+        red = (color.red * (1f - factor)).coerceIn(0f, 1f),
+        green = (color.green * (1f - factor)).coerceIn(0f, 1f),
+        blue = (color.blue * (1f - factor)).coerceIn(0f, 1f),
+        alpha = color.alpha
+    )
+}
+
+fun aclararColorCompose(color: Color, factor: Float = 0.4f): Color {
+    return Color(
+        red = (color.red + (1f - color.red) * factor).coerceIn(0f, 1f),
+        green = (color.green + (1f - color.green) * factor).coerceIn(0f, 1f),
+        blue = (color.blue + (1f - color.blue) * factor).coerceIn(0f, 1f),
+        alpha = color.alpha
+    )
+}
 
 enum class EstiloFlyer(
     val id: String,
@@ -127,6 +184,8 @@ fun PantallaProductoDetalle(
     var publicado by remember(original.id) { mutableStateOf(original.publicado) }
     var destacado by remember(original.id) { mutableStateOf(original.destacado) }
     var estiloSeleccionado by remember { mutableStateOf(EstiloFlyer.ESTILO_1) }
+    var colorSeleccionado by remember { mutableStateOf(OpcionesColoresFlyer[0]) }
+    var fuenteSeleccionada by remember { mutableStateOf(TipoFuente.PHONK) }
     var selloFlyer by remember { mutableStateOf("EDICIÓN LIMITADA") }
     var tipoDisponibilidad by remember {
         mutableStateOf(if (original.variantes.any { it.stock > 0 }) "inmediato" else "pedido")
@@ -201,6 +260,102 @@ fun PantallaProductoDetalle(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Selector de Color
+                    Text(
+                        text = "Color",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = NegroApple
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OpcionesColoresFlyer.forEach { opcion ->
+                            val activa = opcion == colorSeleccionado
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (activa) NegroApple else SuperficieVariante,
+                                border = BorderStroke(1.dp, if (activa) NegroApple else GrisBorde),
+                                modifier = Modifier.clickable { colorSeleccionado = opcion }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (opcion.color != null) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(13.dp)
+                                                .background(opcion.color, CircleShape)
+                                                .border(1.dp, Color(0x33000000), CircleShape)
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(13.dp)
+                                                .background(
+                                                    Brush.linearGradient(
+                                                        listOf(Color(0xFF111111), Color(0xFF888888), Color(0xFFFFFFFF))
+                                                    ),
+                                                    CircleShape
+                                                )
+                                                .border(1.dp, Color(0x33000000), CircleShape)
+                                        )
+                                    }
+                                    Text(
+                                        text = opcion.etiqueta,
+                                        fontWeight = if (activa) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 11.5.sp,
+                                        color = if (activa) Color.White else NegroApple
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Selector de Tipografía
+                    Text(
+                        text = "Tipografía",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = NegroApple
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TipoFuente.entries.forEach { tipo ->
+                            val activa = tipo == fuenteSeleccionada
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (activa) NegroApple else SuperficieVariante,
+                                border = BorderStroke(1.dp, if (activa) NegroApple else GrisBorde),
+                                modifier = Modifier.clickable { fuenteSeleccionada = tipo }
+                            ) {
+                                Text(
+                                    text = tipo.etiqueta,
+                                    fontFamily = obtenerFontFamily(tipo),
+                                    fontWeight = if (activa) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    color = if (activa) Color.White else NegroApple,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // LIENZO VIVO DEL FLYER (Letras detrás, producto al frente)
@@ -209,7 +364,9 @@ fun PantallaProductoDetalle(
                         titulo = nombre,
                         precio = precio,
                         sello = selloFlyer,
-                        fotoUri = fotoUri
+                        fotoUri = fotoUri,
+                        color = colorSeleccionado.color,
+                        fuente = fuenteSeleccionada
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -456,23 +613,30 @@ fun FlyerPreviewCard(
     titulo: String,
     precio: String,
     sello: String,
-    fotoUri: String?
+    fotoUri: String?,
+    color: Color? = null,
+    fuente: TipoFuente = TipoFuente.PHONK
 ) {
     val tituloFinal = titulo.ifBlank { "Producto" }
     val precioFinal = formatearPrecio(precio)
     val selloFinal = sello.ifBlank { "OFERTA" }
+    val fontFamily = obtenerFontFamily(fuente)
 
     when (estilo) {
         // ------------------------------------------------------------
         // ESTILO 1: SPLIT URBANO (Fondo dividido, letras verticales detrás, producto al frente)
         // ------------------------------------------------------------
         EstiloFlyer.ESTILO_1 -> {
+            val colIzq = color ?: Color(0xFF33353A)
+            val colDer = if (color != null) oscurecerColorCompose(color, 0.45f) else Color(0xFF0D0E10)
+            val colLetrasAtras = if (color != null) aclararColorCompose(color, 0.25f) else Color(0xFF6E7178)
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0D0E10))
+                colors = CardDefaults.cardColors(containerColor = colDer)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // Fondo dividido en 2 columnas
@@ -481,13 +645,13 @@ fun FlyerPreviewCard(
                             modifier = Modifier
                                 .weight(0.48f)
                                 .fillMaxHeight()
-                                .background(Color(0xFF33353A))
+                                .background(colIzq)
                         )
                         Box(
                             modifier = Modifier
                                 .weight(0.52f)
                                 .fillMaxHeight()
-                                .background(Color(0xFF0D0E10))
+                                .background(colDer)
                         )
                     }
 
@@ -505,7 +669,8 @@ fun FlyerPreviewCard(
                                 text = letra,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Black,
-                                color = Color(0xFF6E7178),
+                                color = colLetrasAtras,
+                                fontFamily = fontFamily,
                                 lineHeight = 28.sp
                             )
                         }
@@ -562,12 +727,13 @@ fun FlyerPreviewCard(
                                 fontWeight = FontWeight.Black,
                                 fontStyle = FontStyle.Italic,
                                 fontSize = 22.sp,
+                                fontFamily = fontFamily,
                                 color = Color.White
                             )
                             Text(
                                 text = selloFinal,
                                 fontSize = 12.sp,
-                                color = Color(0xFFC0C0C0),
+                                color = Color(0xFFE0E0E0),
                                 fontStyle = FontStyle.Italic
                             )
                         }
@@ -576,7 +742,7 @@ fun FlyerPreviewCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .background(Color(0xFFE5E5E5), RoundedCornerShape(4.dp))
+                                    .background(Color.White, RoundedCornerShape(4.dp))
                                     .border(1.5.dp, Color.White, RoundedCornerShape(4.dp))
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
@@ -584,6 +750,7 @@ fun FlyerPreviewCard(
                                     text = "$$precioFinal",
                                     fontWeight = FontWeight.Black,
                                     fontSize = 17.sp,
+                                    fontFamily = fontFamily,
                                     color = Color.Black
                                 )
                             }
@@ -596,22 +763,33 @@ fun FlyerPreviewCard(
         }
 
         // ------------------------------------------------------------
-        // ESTILO 2: IMPACTO TIPOGRÁFICO (Fondo ámbar, letras huecas gigantes detrás, producto al frente)
+        // ESTILO 2: IMPACTO TIPOGRÁFICO (Fondo en degradé, letras huecas gigantes detrás, producto al frente)
         // ------------------------------------------------------------
         EstiloFlyer.ESTILO_2 -> {
+            val baseCol = color ?: Color(0xFFE59807)
+            val gradientCol1 = if (color != null) aclararColorCompose(color, 0.18f) else Color(0xFFF3A410)
+            val gradientCol2 = if (color != null) oscurecerColorCompose(color, 0.2f) else Color(0xFFD68700)
+            val badgeBg = if (color != null) oscurecerColorCompose(color, 0.65f) else Color(0xFF421C05)
+            val bannerBg = if (color != null) oscurecerColorCompose(color, 0.7f) else Color(0xFF381D0F)
+            val textAccent = if (color != null) aclararColorCompose(color, 0.6f) else Color(0xFFFFC555)
+
+            val palabras = tituloFinal.uppercase().split(" ").filter { it.isNotBlank() }
+            val linea1 = if (palabras.isNotEmpty()) palabras[0].take(4) else "TOP"
+            val linea2 = if (palabras.size > 1) palabras[1].take(4) else if (tituloFinal.length > 3) tituloFinal.uppercase().drop(3).take(4) else "OFR"
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE59807))
+                colors = CardDefaults.cardColors(containerColor = baseCol)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
                             Brush.verticalGradient(
-                                listOf(Color(0xFFF3A410), Color(0xFFD68700))
+                                listOf(gradientCol1, gradientCol2)
                             )
                         )
                 ) {
@@ -624,17 +802,19 @@ fun FlyerPreviewCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "BUR",
+                            text = linea1,
                             fontSize = 76.sp,
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             color = Color(0x35FFFFFF),
                             letterSpacing = 6.sp,
                             lineHeight = 76.sp
                         )
                         Text(
-                            text = "GER",
+                            text = linea2,
                             fontSize = 76.sp,
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             color = Color(0x35FFFFFF),
                             letterSpacing = 6.sp,
                             lineHeight = 76.sp
@@ -677,13 +857,14 @@ fun FlyerPreviewCard(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(14.dp)
-                            .background(Color(0xFF421C05), RoundedCornerShape(50))
+                            .background(badgeBg, RoundedCornerShape(50))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = selloFinal.uppercase(),
-                            color = Color(0xFFFFB703),
+                            color = textAccent,
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             fontSize = 9.sp
                         )
                     }
@@ -693,7 +874,7 @@ fun FlyerPreviewCard(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .padding(14.dp)
-                            .background(Color(0xFF381D0F), RoundedCornerShape(10.dp))
+                            .background(bannerBg, RoundedCornerShape(10.dp))
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Column {
@@ -701,12 +882,14 @@ fun FlyerPreviewCard(
                                 text = tituloFinal.uppercase(),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 10.sp,
-                                color = Color(0xFFFFC555)
+                                fontFamily = fontFamily,
+                                color = textAccent
                             )
                             Text(
                                 text = "$$precioFinal",
                                 fontWeight = FontWeight.Black,
                                 fontSize = 20.sp,
+                                fontFamily = fontFamily,
                                 color = Color.White
                             )
                         }
@@ -716,28 +899,32 @@ fun FlyerPreviewCard(
         }
 
         // ------------------------------------------------------------
-        // ESTILO 3: SPLASH POP (Azul eléctrico, explosión amarilla detrás, producto al frente)
+        // ESTILO 3: SPLASH POP (Fondo vibrante, explosión de contraste detrás, producto al frente)
         // ------------------------------------------------------------
         EstiloFlyer.ESTILO_3 -> {
+            val bgCol = color ?: Color(0xFF0055D4)
+            val sunCol = if (color != null) aclararColorCompose(color, 0.5f) else Color(0xFFFFB800)
+            val btnTextCol = if (color != null) oscurecerColorCompose(color, 0.6f) else Color(0xFF00388C)
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0055D4))
+                colors = CardDefaults.cardColors(containerColor = bgCol)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF0055D4))
+                        .background(bgCol)
                 ) {
-                    // CAPA DETRÁS: Explosión / Sol orgánico amarillo
+                    // CAPA DETRÁS: Explosión / Sol orgánico de contraste
                     Box(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(230.dp)
                             .rotate(18f)
-                            .background(Color(0xFFFFB800), RoundedCornerShape(55.dp))
+                            .background(sunCol, RoundedCornerShape(55.dp))
                     )
 
                     // CAPA AL FRENTE: Producto en el centro
@@ -770,7 +957,7 @@ fun FlyerPreviewCard(
                         }
                     }
 
-                    // Título superior estilo retro
+                    // Título superior estilo pop
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
@@ -780,6 +967,7 @@ fun FlyerPreviewCard(
                         Text(
                             text = "SUPER PROMO",
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             fontSize = 11.sp,
                             color = Color.White,
                             letterSpacing = 2.sp
@@ -787,8 +975,9 @@ fun FlyerPreviewCard(
                         Text(
                             text = tituloFinal.uppercase(),
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             fontSize = 20.sp,
-                            color = Color(0xFFFFB800)
+                            color = sunCol
                         )
                     }
 
@@ -799,12 +988,12 @@ fun FlyerPreviewCard(
                             .padding(end = 12.dp)
                             .rotate(12f)
                             .background(Color.White, RoundedCornerShape(10.dp))
-                            .border(2.dp, Color(0xFF0055D4), RoundedCornerShape(10.dp))
+                            .border(2.dp, bgCol, RoundedCornerShape(10.dp))
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(selloFinal, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0055D4))
-                            Text("$$precioFinal", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color(0xFF0055D4))
+                            Text(selloFinal, fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = fontFamily, color = bgCol)
+                            Text("$$precioFinal", fontSize = 14.sp, fontWeight = FontWeight.Black, fontFamily = fontFamily, color = bgCol)
                         }
                     }
 
@@ -813,14 +1002,15 @@ fun FlyerPreviewCard(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 12.dp)
-                            .background(Color(0xFFFFB800), RoundedCornerShape(50))
+                            .background(sunCol, RoundedCornerShape(50))
                             .padding(horizontal = 24.dp, vertical = 7.dp)
                     ) {
                         Text(
                             text = "➔ PEDIR AHORA",
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             fontSize = 12.sp,
-                            color = Color(0xFF00388C)
+                            color = btnTextCol
                         )
                     }
                 }
@@ -831,13 +1021,15 @@ fun FlyerPreviewCard(
         // ESTILO 4: EDITORIAL MINIMAL (Apple / Farfetch)
         // ------------------------------------------------------------
         EstiloFlyer.ESTILO_4 -> {
+            val accentCol = color ?: Color(0xFF1A1A1A)
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F7F4)),
-                border = BorderStroke(1.5.dp, Color(0xFF1A1A1A))
+                border = BorderStroke(1.5.dp, accentCol)
             ) {
                 Column(
                     modifier = Modifier
@@ -848,6 +1040,7 @@ fun FlyerPreviewCard(
                         text = "EDICIÓN ARTESANAL",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
+                        fontFamily = fontFamily,
                         color = Color(0xFF666666),
                         letterSpacing = 2.sp
                     )
@@ -881,12 +1074,13 @@ fun FlyerPreviewCard(
                         Column {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFF1A1A1A)
+                                color = accentCol
                             ) {
                                 Text(
                                     text = selloFinal.uppercase(),
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold,
+                                    fontFamily = fontFamily,
                                     color = Color.White,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
@@ -895,6 +1089,7 @@ fun FlyerPreviewCard(
                             Text(
                                 text = tituloFinal,
                                 fontWeight = FontWeight.Bold,
+                                fontFamily = fontFamily,
                                 fontSize = 17.sp,
                                 color = Color(0xFF111111)
                             )
@@ -902,6 +1097,7 @@ fun FlyerPreviewCard(
                             Text(
                                 text = "$$precioFinal CLP",
                                 fontWeight = FontWeight.SemiBold,
+                                fontFamily = fontFamily,
                                 fontSize = 16.sp,
                                 color = Color(0xFF111111)
                             )
@@ -926,16 +1122,21 @@ fun FlyerPreviewCard(
         }
 
         // ------------------------------------------------------------
-        // ESTILO 5: TRADICIÓN (Bosque nativo y dorado)
+        // ESTILO 5: TRADICIÓN (Bosque nativo y acento dorado o dinámico)
         // ------------------------------------------------------------
         EstiloFlyer.ESTILO_5 -> {
+            val bgCol = color ?: Color(0xFF163024)
+            val goldCol = if (color != null) aclararColorCompose(color, 0.45f) else Color(0xFFD4AF37)
+            val innerBoxCol = if (color != null) oscurecerColorCompose(color, 0.2f) else Color(0xFF224433)
+            val subtitleCol = if (color != null) aclararColorCompose(color, 0.7f) else Color(0xFFA7D3BA)
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(310.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF163024)),
-                border = BorderStroke(2.dp, Color(0xFFD4AF37))
+                colors = CardDefaults.cardColors(containerColor = bgCol),
+                border = BorderStroke(2.dp, goldCol)
             ) {
                 Column(
                     modifier = Modifier
@@ -946,8 +1147,9 @@ fun FlyerPreviewCard(
                     Text(
                         text = "TRADICIÓN Y SABOR",
                         fontWeight = FontWeight.Black,
+                        fontFamily = fontFamily,
                         fontSize = 11.sp,
-                        color = Color(0xFFD4AF37),
+                        color = goldCol,
                         letterSpacing = 1.5.sp
                     )
 
@@ -957,8 +1159,8 @@ fun FlyerPreviewCard(
                         modifier = Modifier
                             .size(90.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .border(2.dp, Color(0xFFD4AF37), RoundedCornerShape(10.dp))
-                            .background(Color(0xFF224433)),
+                            .border(2.dp, goldCol, RoundedCornerShape(10.dp))
+                            .background(innerBoxCol),
                         contentAlignment = Alignment.Center
                     ) {
                         if (fotoUri != null) {
@@ -978,6 +1180,7 @@ fun FlyerPreviewCard(
                     Text(
                         text = tituloFinal,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily,
                         fontSize = 17.sp,
                         color = Color(0xFFFFF9E6),
                         textAlign = TextAlign.Center
@@ -987,13 +1190,14 @@ fun FlyerPreviewCard(
 
                     Surface(
                         shape = RoundedCornerShape(50),
-                        color = Color(0xFFD4AF37)
+                        color = goldCol
                     ) {
                         Text(
                             text = "$$precioFinal · ARTESANAL",
                             fontWeight = FontWeight.Black,
+                            fontFamily = fontFamily,
                             fontSize = 13.sp,
-                            color = Color(0xFF163024),
+                            color = bgCol,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                         )
                     }
@@ -1001,7 +1205,7 @@ fun FlyerPreviewCard(
                     Text(
                         text = "Alerce · Puerto Montt",
                         fontSize = 10.5.sp,
-                        color = Color(0xFFA7D3BA)
+                        color = subtitleCol
                     )
                 }
             }
