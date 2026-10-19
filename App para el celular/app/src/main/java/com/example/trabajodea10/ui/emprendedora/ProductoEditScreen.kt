@@ -82,11 +82,9 @@ import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
 
-val PhonkFontFamily = FontFamily(Font(R.font.phonk_regular, FontWeight.Normal))
 val BrittiFontFamily = FontFamily(Font(R.font.britti_bold, FontWeight.Bold))
 
 enum class TipoFuente(val id: String, val etiqueta: String) {
-    PHONK("phonk", "Phonk"),
     BRITTI("britti", "Britti Sans"),
     SANS("sans", "Sans Serif"),
     EDITORIAL("editorial", "Editorial")
@@ -94,7 +92,6 @@ enum class TipoFuente(val id: String, val etiqueta: String) {
 
 fun obtenerFontFamily(tipo: TipoFuente): FontFamily {
     return when (tipo) {
-        TipoFuente.PHONK -> PhonkFontFamily
         TipoFuente.BRITTI -> BrittiFontFamily
         TipoFuente.SANS -> FontFamily.SansSerif
         TipoFuente.EDITORIAL -> FontFamily.Serif
@@ -185,7 +182,7 @@ fun PantallaProductoDetalle(
     var destacado by remember(original.id) { mutableStateOf(original.destacado) }
     var estiloSeleccionado by remember { mutableStateOf(EstiloFlyer.ESTILO_1) }
     var colorSeleccionado by remember { mutableStateOf(OpcionesColoresFlyer[0]) }
-    var fuenteSeleccionada by remember { mutableStateOf(TipoFuente.PHONK) }
+    var fuenteSeleccionada by remember { mutableStateOf(TipoFuente.BRITTI) }
     var selloFlyer by remember { mutableStateOf("EDICIÓN LIMITADA") }
     var tipoDisponibilidad by remember {
         mutableStateOf(if (original.variantes.any { it.stock > 0 }) "inmediato" else "pedido")
@@ -615,7 +612,7 @@ fun FlyerPreviewCard(
     sello: String,
     fotoUri: String?,
     color: Color? = null,
-    fuente: TipoFuente = TipoFuente.PHONK
+    fuente: TipoFuente = TipoFuente.BRITTI
 ) {
     val tituloFinal = titulo.ifBlank { "Producto" }
     val precioFinal = formatearPrecio(precio)

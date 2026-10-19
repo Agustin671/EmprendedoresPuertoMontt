@@ -3,14 +3,7 @@
    Alineada 100% con la aplicación móvil Android
    ============================================================ */
 
-/* Tipografías Especiales para Afiches */
-@font-face {
-  font-family: 'Phonk';
-  src: url('../fonts/phonk_regular.otf') format('opentype');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
-}
+/* Tipografía Especial para Afiches */
 
 @font-face {
   font-family: 'Britti Sans';
