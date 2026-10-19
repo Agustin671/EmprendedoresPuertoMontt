@@ -1255,7 +1255,8 @@
 
   var estadoFlyer = {
     plantilla: "estilo1", // 'estilo1' | 'estilo2' | 'estilo3' | 'estilo4' | 'estilo5'
-    fuente: "Impact",
+    fuente: "Phonk",
+    color: "original",
     fotoImg: null,
     fotoUrlActual: ""
   };
@@ -1516,12 +1517,12 @@
       }
     });
 
-    if (plantillaId === "estilo1" || plantillaId === "estilo2" || plantillaId === "estilo3" || plantillaId === "burgerking" || plantillaId === "mcdonalds") {
-      cambiarFuenteFlyer("Impact");
-    } else if (plantillaId === "estilo4" || plantillaId === "editorial") {
-      cambiarFuenteFlyer("Playfair Display");
-    } else if (plantillaId === "estilo5" || plantillaId === "sureno") {
-      cambiarFuenteFlyer("Montserrat");
+    if (!estadoFlyer.fuente || estadoFlyer.fuente === "Impact") {
+      if (plantillaId === "estilo1" || plantillaId === "estilo2" || plantillaId === "estilo3") {
+        cambiarFuenteFlyer("Phonk");
+      } else {
+        cambiarFuenteFlyer("Britti Sans");
+      }
     }
 
     actualizarLienzoFlyer();
@@ -1537,7 +1538,63 @@
         b.classList.remove("activo");
       }
     });
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load("900 48px '" + fuenteNombre + "'").then(function () {
+        actualizarLienzoFlyer();
+      }).catch(function () {
+        actualizarLienzoFlyer();
+      });
+    } else {
+      actualizarLienzoFlyer();
+    }
+  }
+
+  function cambiarColorFlyer(colorHex) {
+    estadoFlyer.color = colorHex;
+    var btns = document.querySelectorAll("#flyer-selector-color .btn-color-chip");
+    btns.forEach(function (b) {
+      if (b.getAttribute("data-color") === colorHex) {
+        b.classList.add("activo");
+      } else {
+        b.classList.remove("activo");
+      }
+    });
+    var colorPicker = document.getElementById("flyer-color-custom");
+    if (colorPicker && colorHex !== "original") {
+      colorPicker.value = colorHex;
+    }
     actualizarLienzoFlyer();
+  }
+
+  function hexToRgb(hex) {
+    if (!hex || hex === "original") return null;
+    var c = hex.replace("#", "");
+    if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+    var num = parseInt(c, 16);
+    if (isNaN(num)) return null;
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255
+    };
+  }
+
+  function oscurecerColor(hex, factor) {
+    var rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    var r = Math.max(0, Math.floor(rgb.r * (1 - factor)));
+    var g = Math.max(0, Math.floor(rgb.g * (1 - factor)));
+    var b = Math.max(0, Math.floor(rgb.b * (1 - factor)));
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+
+  function aclararColor(hex, factor) {
+    var rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    var r = Math.min(255, Math.floor(rgb.r + (255 - rgb.r) * factor));
+    var g = Math.min(255, Math.floor(rgb.g + (255 - rgb.g) * factor));
+    var b = Math.min(255, Math.floor(rgb.b + (255 - rgb.b) * factor));
+    return "rgb(" + r + "," + g + "," + b + ")";
   }
 
   // ============================================================
@@ -1567,7 +1624,8 @@
       sello: (inpSello ? inpSello.value.trim() : "") || "EDICIÓN LIMITADA",
       mensaje: (inpMensaje ? inpMensaje.value.trim() : "") || "+56 9 9123 4567",
       sector: (inpSector ? inpSector.value.trim() : "") || "Alerce · Puerto Montt",
-      fuente: estadoFlyer.fuente || "Impact",
+      fuente: estadoFlyer.fuente || "Phonk",
+      color: estadoFlyer.color || "original",
       img: estadoFlyer.fotoImg
     };
 
@@ -1603,15 +1661,21 @@
 
   // ESTILO 1: SPLIT URBANO (Fondo dividido, letras verticales detrás, producto al frente)
   function dibujarPlantillaEstilo1(ctx, d, w, h) {
+    var c1 = "#2F3136";
+    var c2 = "#0C0D0E";
+    if (d.color && d.color !== "original") {
+      c1 = d.color;
+      c2 = oscurecerColor(d.color, 0.45);
+    }
     // Fondo dividido
-    ctx.fillStyle = "#2F3136";
+    ctx.fillStyle = c1;
     ctx.fillRect(0, 0, w * 0.44, h);
-    ctx.fillStyle = "#0C0D0E";
+    ctx.fillStyle = c2;
     ctx.fillRect(w * 0.44, 0, w * 0.56, h);
 
     // CAPA DETRÁS: Letras gigantes verticales en lado derecho
     ctx.save();
-    ctx.font = "900 64px " + d.fuente + ", sans-serif";
+    ctx.font = "900 64px '" + d.fuente + "', sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
     ctx.textAlign = "center";
     var letras = ["E", "D", "I", "T", "I", "O", "N"];
@@ -1656,14 +1720,14 @@
 
     // CAPA SUPERIOR: Textos frontales
     ctx.save();
-    // Título Marca / Producto en itálica impact
-    ctx.font = "italic 900 46px " + d.fuente + ", sans-serif";
+    // Título Marca / Producto en itálica impact/phonk
+    ctx.font = "italic 900 46px '" + d.fuente + "', sans-serif";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
     ctx.fillText(d.titulo.toUpperCase(), 36, 110, w * 0.42);
 
     // Subtítulo distintivo
-    ctx.font = "italic 600 19px sans-serif";
+    ctx.font = "italic 600 19px '" + d.fuente + "', sans-serif";
     ctx.fillStyle = "#B0B3B8";
     ctx.fillText(d.sello, 36, 150, w * 0.42);
 
@@ -1674,7 +1738,7 @@
     ctx.fill();
 
     ctx.fillStyle = "#000000";
-    ctx.font = "900 38px " + d.fuente + ", sans-serif";
+    ctx.font = "900 38px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 36 + 95, h - 92);
 
@@ -1686,10 +1750,15 @@
 
   // ESTILO 2: IMPACTO TIPOGRÁFICO (Fondo ámbar, letras huecas gigantes detrás, producto al frente)
   function dibujarPlantillaEstilo2(ctx, d, w, h) {
-    // Fondo degradado ámbar cálido
+    // Fondo degradado
     var grad = ctx.createRadialGradient(w / 2, h / 2, 60, w / 2, h / 2, 450);
-    grad.addColorStop(0, "#F5A623");
-    grad.addColorStop(1, "#CE7900");
+    if (d.color && d.color !== "original") {
+      grad.addColorStop(0, aclararColor(d.color, 0.2));
+      grad.addColorStop(1, oscurecerColor(d.color, 0.35));
+    } else {
+      grad.addColorStop(0, "#F5A623");
+      grad.addColorStop(1, "#CE7900");
+    }
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
@@ -1697,7 +1766,7 @@
     ctx.save();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
     ctx.lineWidth = 6;
-    ctx.font = "900 170px " + d.fuente + ", sans-serif";
+    ctx.font = "900 170px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "center";
     ctx.letterSpacing = "6px";
     ctx.strokeText("BUR", w / 2, 230);
@@ -1732,42 +1801,44 @@
 
     // CAPA SUPERIOR: Badge superior derecho
     ctx.save();
-    ctx.fillStyle = "#3D1C06";
+    var badgeBg = (d.color && d.color !== "original") ? oscurecerColor(d.color, 0.55) : "#3D1C06";
+    ctx.fillStyle = badgeBg;
     if (ctx.roundRect) ctx.roundRect(w - 250, 36, 214, 46, 23);
     else ctx.fillRect(w - 250, 36, 214, 46);
     ctx.fill();
 
-    ctx.fillStyle = "#FFAE00";
-    ctx.font = "900 14px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = (d.color && d.color !== "original") ? "#FFFFFF" : "#FFAE00";
+    ctx.font = "900 14px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(d.sello.toUpperCase(), w - 143, 65);
 
     // Badge de precio inferior izquierdo estilo banner chocolate
-    ctx.fillStyle = "#381D0F";
+    ctx.fillStyle = badgeBg;
     if (ctx.roundRect) ctx.roundRect(36, h - 165, 250, 105, 20);
     else ctx.fillRect(36, h - 165, 250, 105);
     ctx.fill();
 
-    ctx.fillStyle = "#FFC555";
-    ctx.font = "800 14px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = (d.color && d.color !== "original") ? "#E0E0E0" : "#FFC555";
+    ctx.font = "800 14px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(d.titulo.toUpperCase(), 56, h - 130, 210);
 
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "900 48px " + d.fuente + ", sans-serif";
+    ctx.font = "900 48px '" + d.fuente + "', sans-serif";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 56, h - 82);
     ctx.restore();
   }
 
   // ESTILO 3: SPLASH POP (Azul eléctrico, explosión amarilla detrás, producto al frente)
   function dibujarPlantillaEstilo3(ctx, d, w, h) {
-    // Fondo azul eléctrico
-    ctx.fillStyle = "#0055D4";
+    // Fondo
+    var bg = (d.color && d.color !== "original") ? d.color : "#0055D4";
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     // CAPA DETRÁS: Explosión / Sol amarillo
     ctx.save();
-    ctx.fillStyle = "#FFB800";
+    ctx.fillStyle = (d.color && d.color === "#F59E0B") ? "#FFFFFF" : "#FFB800";
     ctx.beginPath();
     var cx = w / 2;
     var cy = h / 2 + 15;
@@ -1808,13 +1879,13 @@
 
     // Título superior estilo retro
     ctx.save();
-    ctx.font = "900 22px " + d.fuente + ", sans-serif";
+    ctx.font = "900 22px '" + d.fuente + "', sans-serif";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
     ctx.fillText("SUPER PROMO", w / 2, 55);
 
-    ctx.font = "900 48px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#FFB800";
+    ctx.font = "900 48px '" + d.fuente + "', sans-serif";
+    ctx.fillStyle = (d.color && d.color === "#F59E0B") ? "#FFFFFF" : "#FFB800";
     ctx.fillText(d.titulo.toUpperCase(), w / 2, 110, w - 80);
 
     // Badge lateral dentado
@@ -1826,25 +1897,25 @@
     ctx.arc(0, 0, 68, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 4;
-    ctx.strokeStyle = "#0055D4";
+    ctx.strokeStyle = bg;
     ctx.stroke();
 
-    ctx.fillStyle = "#0055D4";
-    ctx.font = "900 13px " + d.fuente + ", sans-serif";
+    ctx.fillStyle = bg;
+    ctx.font = "900 13px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(d.sello.toUpperCase(), 0, -8);
-    ctx.font = "900 32px " + d.fuente + ", sans-serif";
+    ctx.font = "900 32px '" + d.fuente + "', sans-serif";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), 0, 28);
     ctx.restore();
 
     // Botón inferior
-    ctx.fillStyle = "#FFB800";
+    ctx.fillStyle = (d.color && d.color === "#F59E0B") ? "#FFFFFF" : "#FFB800";
     if (ctx.roundRect) ctx.roundRect(w / 2 - 170, h - 85, 340, 56, 28);
     else ctx.fillRect(w / 2 - 170, h - 85, 340, 56);
     ctx.fill();
 
-    ctx.font = "900 21px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#00388C";
+    ctx.font = "900 21px '" + d.fuente + "', sans-serif";
+    ctx.fillStyle = (d.color && d.color === "#F59E0B") ? "#000000" : "#00388C";
     ctx.textAlign = "center";
     ctx.fillText("➔ PEDIR AHORA: " + d.mensaje, w / 2, h - 50, 310);
     ctx.restore();
@@ -1852,15 +1923,21 @@
 
   // ESTILO 4: MINIMALISTA EDITORIAL (Apple / Farfetch)
   function dibujarPlantillaEstilo4(ctx, d, w, h) {
-    ctx.fillStyle = "#F8F7F4";
+    var bg = "#F8F7F4";
+    var strokeCol = "#1A1A1A";
+    if (d.color && d.color !== "original") {
+      bg = aclararColor(d.color, 0.94);
+      strokeCol = d.color;
+    }
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = "#1A1A1A";
+    ctx.strokeStyle = strokeCol;
     ctx.lineWidth = 1.5;
     ctx.strokeRect(28, 28, w - 56, h - 56);
 
-    ctx.font = "600 13px Montserrat, sans-serif";
-    ctx.fillStyle = "#666666";
+    ctx.font = "600 13px '" + d.fuente + "', sans-serif";
+    ctx.fillStyle = strokeCol;
     ctx.textAlign = "center";
     ctx.letterSpacing = "3px";
     ctx.fillText("EDICIÓN ARTESANAL LOCAL", w / 2, 60);
@@ -1880,23 +1957,23 @@
       ctx.fillText("☕", ex + ew / 2, ey + eh / 2 + 20);
     }
 
-    ctx.fillStyle = "rgba(26, 26, 26, 0.9)";
+    ctx.fillStyle = (d.color && d.color !== "original") ? d.color : "rgba(26, 26, 26, 0.9)";
     ctx.fillRect(ex + 18, ey + 18, 140, 30);
-    ctx.font = "700 11px Montserrat, sans-serif";
+    ctx.font = "700 11px '" + d.fuente + "', sans-serif";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
     ctx.fillText(d.sello.toUpperCase(), ex + 88, ey + 37);
 
-    ctx.font = "700 32px 'Playfair Display', serif";
-    ctx.fillStyle = "#111111";
+    ctx.font = "700 32px '" + d.fuente + "', serif";
+    ctx.fillStyle = strokeCol;
     ctx.textAlign = "left";
     ctx.fillText(d.titulo, ex, 525);
 
-    ctx.font = "700 34px Montserrat, sans-serif";
-    ctx.fillStyle = "#111111";
+    ctx.font = "700 34px '" + d.fuente + "', sans-serif";
+    ctx.fillStyle = strokeCol;
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), ex, 575);
 
-    ctx.font = "400 14px Montserrat, sans-serif";
+    ctx.font = "400 14px sans-serif";
     ctx.fillStyle = "#777777";
     ctx.fillText("CLP", ex + 180, 575);
 
@@ -1907,7 +1984,7 @@
     ctx.lineTo(ex + ew, 605);
     ctx.stroke();
 
-    ctx.font = "600 13px Montserrat, sans-serif";
+    ctx.font = "600 13px sans-serif";
     ctx.fillStyle = "#222222";
     ctx.textAlign = "left";
     ctx.fillText("COMPRA DIRECTA: " + d.mensaje, ex, 638);
@@ -1915,7 +1992,8 @@
 
   // ESTILO 5: TRADICIÓN (Bosque nativo y dorado)
   function dibujarPlantillaEstilo5(ctx, d, w, h) {
-    ctx.fillStyle = "#163024";
+    var bg = (d.color && d.color !== "original") ? oscurecerColor(d.color, 0.35) : "#163024";
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     ctx.strokeStyle = "#D4AF37";
@@ -1923,7 +2001,7 @@
     ctx.strokeRect(20, 20, w - 40, h - 40);
 
     ctx.fillStyle = "#D4AF37";
-    ctx.font = "800 18px " + d.fuente + ", sans-serif";
+    ctx.font = "800 18px '" + d.fuente + "', sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("TRADICIÓN Y SABOR DE ALERCE", w / 2, 62);
 
@@ -1946,7 +2024,7 @@
       ctx.fillText("🌲", sx + sw / 2, sy + sh / 2 + 25);
     }
 
-    ctx.font = "800 36px 'Playfair Display', " + d.fuente + ", serif";
+    ctx.font = "800 36px '" + d.fuente + "', serif";
     ctx.fillStyle = "#FFF9E6";
     ctx.textAlign = "center";
     ctx.fillText(d.titulo, w / 2, 490);
@@ -1959,8 +2037,8 @@
     else ctx.fillRect(rx - 150, ry - 32, 300, 56);
     ctx.fill();
 
-    ctx.font = "900 32px " + d.fuente + ", sans-serif";
-    ctx.fillStyle = "#163024";
+    ctx.font = "900 32px '" + d.fuente + "', sans-serif";
+    ctx.fillStyle = bg;
     ctx.textAlign = "center";
     ctx.fillText("$" + Number(d.precio.replace(/\D/g, "") || 0).toLocaleString("es-CL"), rx, ry + 9);
 
@@ -2144,6 +2222,7 @@
     confirmarPublicacionFB: confirmarPublicacionFB,
     cambiarPlantillaFlyer: cambiarPlantillaFlyer,
     cambiarFuenteFlyer: cambiarFuenteFlyer,
+    cambiarColorFlyer: cambiarColorFlyer,
     onFotoFlyerSubida: onFotoFlyerSubida,
     actualizarLienzoFlyer: actualizarLienzoFlyer,
     descargarFlyerImagen: descargarFlyerImagen,

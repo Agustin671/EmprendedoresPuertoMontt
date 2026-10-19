@@ -758,14 +758,52 @@
               </div>
             </div>
 
-            <!-- 4. Tipografía -->
+            <!-- 4. Color de la plantilla -->
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="label-fb-market" style="margin-bottom: 0;">Color de la plantilla</label>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; color: var(--gris-texto);">Personalizado:</span>
+                  <input type="color" id="flyer-color-custom" value="#DC2626" style="width: 26px; height: 26px; padding: 0; border: 1px solid var(--gris-borde); border-radius: 4px; cursor: pointer; background: transparent;" onchange="TramaWeb.cambiarColorFlyer(this.value)" title="Elegir color personalizado">
+                </div>
+              </div>
+              <div class="fb-selector-colores" id="flyer-selector-color">
+                <button type="button" class="btn-color-chip activo" data-color="original" onclick="TramaWeb.cambiarColorFlyer('original')">
+                  <span class="color-circulo" style="background: linear-gradient(135deg, #111, #888, #fff);"></span> Original
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#18181B" onclick="TramaWeb.cambiarColorFlyer('#18181B')">
+                  <span class="color-circulo" style="background: #18181B;"></span> Carbón
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#DC2626" onclick="TramaWeb.cambiarColorFlyer('#DC2626')">
+                  <span class="color-circulo" style="background: #DC2626;"></span> Carmín
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#F59E0B" onclick="TramaWeb.cambiarColorFlyer('#F59E0B')">
+                  <span class="color-circulo" style="background: #F59E0B;"></span> Ámbar
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#1D4ED8" onclick="TramaWeb.cambiarColorFlyer('#1D4ED8')">
+                  <span class="color-circulo" style="background: #1D4ED8;"></span> Cobalto
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#047857" onclick="TramaWeb.cambiarColorFlyer('#047857')">
+                  <span class="color-circulo" style="background: #047857;"></span> Bosque
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#7C3AED" onclick="TramaWeb.cambiarColorFlyer('#7C3AED')">
+                  <span class="color-circulo" style="background: #7C3AED;"></span> Violeta
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#DB2777" onclick="TramaWeb.cambiarColorFlyer('#DB2777')">
+                  <span class="color-circulo" style="background: #DB2777;"></span> Fucsia
+                </button>
+              </div>
+            </div>
+
+            <!-- 5. Tipografía -->
             <div style="margin-top: 14px;">
               <label class="label-fb-market">Tipografía</label>
               <div class="fb-selector-chips" id="flyer-selector-fuente">
-                <button type="button" class="fb-chip-cat activo" data-fuente="Impact" onclick="TramaWeb.cambiarFuenteFlyer('Impact')">Impact</button>
-                <button type="button" class="fb-chip-cat" data-fuente="Bebas Neue" onclick="TramaWeb.cambiarFuenteFlyer('Bebas Neue')">Bebas Neue</button>
-                <button type="button" class="fb-chip-cat" data-fuente="Montserrat" onclick="TramaWeb.cambiarFuenteFlyer('Montserrat')">Montserrat</button>
-                <button type="button" class="fb-chip-cat" data-fuente="Playfair Display" onclick="TramaWeb.cambiarFuenteFlyer('Playfair Display')">Playfair</button>
+                <button type="button" class="fb-chip-cat activo" data-fuente="Phonk" onclick="TramaWeb.cambiarFuenteFlyer('Phonk')" style="font-family: 'Phonk', sans-serif;">Phonk</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Britti Sans" onclick="TramaWeb.cambiarFuenteFlyer('Britti Sans')" style="font-family: 'Britti Sans', sans-serif;">Britti Sans</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Montserrat" onclick="TramaWeb.cambiarFuenteFlyer('Montserrat')" style="font-family: 'Montserrat', sans-serif;">Sans Serif</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Playfair Display" onclick="TramaWeb.cambiarFuenteFlyer('Playfair Display')" style="font-family: 'Playfair Display', serif;">Editorial</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Bebas Neue" onclick="TramaWeb.cambiarFuenteFlyer('Bebas Neue')" style="font-family: 'Bebas Neue', sans-serif;">Bebas</button>
               </div>
             </div>
 

@@ -3,6 +3,23 @@
    Alineada 100% con la aplicación móvil Android
    ============================================================ */
 
+/* Tipografías Especiales para Afiches */
+@font-face {
+  font-family: 'Phonk';
+  src: url('../fonts/phonk_regular.otf') format('opentype');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Britti Sans';
+  src: url('../fonts/britti_bold.otf') format('opentype');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Paleta Oficial Farfetch / Apple de la App */
   --negro-apple: #111111;
@@ -1595,6 +1612,47 @@ body.alto-contraste .pill-categoria.activa {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Selector de Color de Afiches */
+.fb-selector-colores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.btn-color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-boton);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--negro-apple);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-color-chip:hover {
+  border-color: #a1a1aa;
+  background: #f9fafb;
+}
+.btn-color-chip.activo {
+  border-color: var(--negro-apple);
+  background: var(--negro-apple);
+  color: #ffffff;
+}
+
+.color-circulo {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
 }
 
