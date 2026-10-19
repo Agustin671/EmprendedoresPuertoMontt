@@ -1255,7 +1255,7 @@
 
   var estadoFlyer = {
     plantilla: "estilo1", // 'estilo1' | 'estilo2' | 'estilo3' | 'estilo4' | 'estilo5'
-    fuente: "Phonk",
+    fuente: "Britti Sans",
     color: "original",
     fotoImg: null,
     fotoUrlActual: ""
@@ -1517,12 +1517,8 @@
       }
     });
 
-    if (!estadoFlyer.fuente || estadoFlyer.fuente === "Impact") {
-      if (plantillaId === "estilo1" || plantillaId === "estilo2" || plantillaId === "estilo3") {
-        cambiarFuenteFlyer("Phonk");
-      } else {
-        cambiarFuenteFlyer("Britti Sans");
-      }
+    if (!estadoFlyer.fuente || estadoFlyer.fuente === "Impact" || estadoFlyer.fuente === "Phonk") {
+      cambiarFuenteFlyer("Britti Sans");
     }
 
     actualizarLienzoFlyer();
@@ -1624,7 +1620,7 @@
       sello: (inpSello ? inpSello.value.trim() : "") || "EDICIÓN LIMITADA",
       mensaje: (inpMensaje ? inpMensaje.value.trim() : "") || "+56 9 9123 4567",
       sector: (inpSector ? inpSector.value.trim() : "") || "Alerce · Puerto Montt",
-      fuente: estadoFlyer.fuente || "Phonk",
+      fuente: estadoFlyer.fuente || "Britti Sans",
       color: estadoFlyer.color || "original",
       img: estadoFlyer.fotoImg
     };
