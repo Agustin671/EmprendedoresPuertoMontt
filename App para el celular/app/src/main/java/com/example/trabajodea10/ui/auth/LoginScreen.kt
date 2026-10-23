@@ -20,11 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
@@ -53,20 +54,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.Rol
-import com.example.trabajodea10.data.TramaStore
-import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.theme.BlancoPuro
-import android.widget.Toast
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.fragment.app.FragmentActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -78,8 +72,6 @@ import com.example.trabajodea10.ui.theme.GrisChip
 import com.example.trabajodea10.ui.theme.GrisTexto
 import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoAlerce
-import com.example.trabajodea10.ui.theme.RojoAlerceContenedor
-import com.example.trabajodea10.ui.theme.SuperficieBlanca
 import com.example.trabajodea10.ui.theme.TextoSecundario
 import com.example.trabajodea10.ui.theme.VerdeOk
 import kotlinx.coroutines.launch
@@ -98,6 +90,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     var mensajeError by remember { mutableStateOf<String?>(null) }
     var mensajeExito by remember { mutableStateOf<String?>(null) }
     var puedeUsarBiometria by remember { mutableStateOf(false) }
+    var mostrarDevTools by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val biometricManager = BiometricManager.from(contexto)
@@ -112,7 +105,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
             .background(FondoLimpio)
             .verticalScroll(rememberScrollState())
     ) {
-        // Cabecera Minimalista Editorial (Inspirada en Farfetch & Apple)
+        // Cabecera Editorial Limpia (Estilo Farfetch / Apple)
         Surface(
             color = BlancoPuro,
             modifier = Modifier.fillMaxWidth()
@@ -156,7 +149,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Selector Segmentado Estilo iOS / Farfetch (Pills)
+        // Selector Segmentado de Rol (Emprendedora / Comprador)
         Box(
             modifier = Modifier
                 .padding(horizontal = 20.dp)
@@ -223,7 +216,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Tarjeta con formulario de Firebase Auth
+            // Tarjeta Principal de Autenticación Firebase
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = BlancoPuro,
@@ -234,10 +227,14 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Text(
-                        text = if (esModoRegistro) "Crear cuenta en Firebase" else "Iniciar Sesión",
+                        text = if (esModoRegistro) {
+                            if (pestanaModo == 0) "Crear Tienda en Firebase" else "Crear Cuenta de Comprador"
+                        } else {
+                            if (pestanaModo == 0) "Iniciar Sesión · Emprendedora" else "Iniciar Sesión · Comprador"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = NegroApple
@@ -245,9 +242,9 @@ fun PantallaLogin(nav: ControladorNavegacion) {
 
                     Text(
                         text = if (pestanaModo == 0)
-                            "Ingresa con tus credenciales de la asociación para administrar tu tienda."
+                            "Accede a tu panel para publicar productos, crear afiches comerciales y gestionar tus pedidos online."
                         else
-                            "Ingresa para seguir tus tiendas favoritas y recibir avisos de ferias.",
+                            "Conéctate para comprar con carrito directo, seguir tus tiendas favoritas y recibir avisos de ferias.",
                         style = MaterialTheme.typography.bodySmall,
                         color = TextoSecundario
                     )
@@ -256,7 +253,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         OutlinedTextField(
                             value = nombreRegistro,
                             onValueChange = { nombreRegistro = it },
-                            label = { Text("Nombre o Nombre de la Tienda") },
+                            label = { Text(if (pestanaModo == 0) "Nombre de tu Emprendimiento" else "Tu Nombre Completo") },
                             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null, tint = GrisTexto) },
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
@@ -289,33 +286,11 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     )
 
                     mensajeError?.let {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = if (it.contains("CONFIGURATION_NOT_FOUND"))
-                                    "Nota de Firebase: Se activó 'Correo/contraseña' en la consola. Si aún propaga, puedes entrar con tu nombre abajo:"
-                                else it,
-                                color = RojoAlerce,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            OutlinedButton(
-                                onClick = {
-                                    val nombre = nombreRegistro.ifBlank { correo.substringBefore("@").ifBlank { "Paul Ferrada" } }
-                                    val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
-                                    FirebaseManager.entrarModoDemo(nombre, rol)
-                                    nav.iniciarSesion(rol)
-                                },
-                                shape = RoundedCornerShape(50.dp),
-                                border = BorderStroke(1.dp, NegroApple),
-                                modifier = Modifier.fillMaxWidth().height(42.dp)
-                            ) {
-                                Text(
-                                    text = "Continuar como ${nombreRegistro.ifBlank { correo.substringBefore("@").ifBlank { "Paul" } }} (Acceso Rápido)",
-                                    color = NegroApple,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp
-                                )
-                            }
-                        }
+                        Text(
+                            text = it,
+                            color = RojoAlerce,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
                     mensajeExito?.let {
@@ -332,25 +307,40 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                 mensajeError = "Por favor ingresa correo y contraseña."
                                 return@Button
                             }
+                            if (esModoRegistro && nombreRegistro.isBlank()) {
+                                mensajeError = if (pestanaModo == 0)
+                                    "Por favor ingresa el nombre de tu emprendimiento."
+                                else
+                                    "Por favor ingresa tu nombre."
+                                return@Button
+                            }
+
+                            val rolSeleccionado = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
                             cargando = true
                             mensajeError = null
+                            mensajeExito = null
+
                             coroutineScope.launch {
                                 if (esModoRegistro) {
-                                    val res = FirebaseManager.registrarUsuario(correo, clave, nombreRegistro)
+                                    val res = FirebaseManager.registrarUsuario(
+                                        correo = correo,
+                                        clave = clave,
+                                        nombre = nombreRegistro,
+                                        rol = rolSeleccionado
+                                    )
                                     cargando = false
                                     if (res.isSuccess) {
                                         mensajeExito = "¡Cuenta creada en Firebase! Bienvenido."
-                                        val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
-                                        nav.iniciarSesion(rol)
+                                        nav.iniciarSesion(rolSeleccionado)
                                     } else {
-                                        mensajeError = res.exceptionOrNull()?.localizedMessage ?: "Error al registrar"
+                                        mensajeError = res.exceptionOrNull()?.localizedMessage ?: "Error al registrar en Firebase"
                                     }
                                 } else {
-                                    val res = FirebaseManager.iniciarSesion(correo, clave)
+                                    val res = FirebaseManager.iniciarSesion(correo, clave, rolFallback = rolSeleccionado)
                                     cargando = false
                                     if (res.isSuccess) {
-                                        val rol = if (pestanaModo == 0) Rol.EMPRENDEDORA else Rol.VISITANTE
-                                        nav.iniciarSesion(rol)
+                                        val (_, rolObtenido) = res.getOrThrow()
+                                        nav.iniciarSesion(rolObtenido)
                                     } else {
                                         mensajeError = res.exceptionOrNull()?.localizedMessage ?: "Credenciales incorrectas"
                                     }
@@ -368,14 +358,13 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             CircularProgressIndicator(color = BlancoPuro, modifier = Modifier.size(22.dp))
                         } else {
                             Text(
-                                text = if (esModoRegistro) "Registrarme y Entrar" else "Iniciar Sesión",
+                                text = if (esModoRegistro) "Crear cuenta y entrar" else "Iniciar Sesión",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 15.sp,
                                 color = BlancoPuro
                             )
                         }
                     }
-
 
                     if (pestanaModo == 0 && puedeUsarBiometria) {
                         OutlinedButton(
@@ -391,11 +380,14 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             },
                             shape = RoundedCornerShape(14.dp),
                             border = BorderStroke(1.dp, NegroApple),
-                            modifier = Modifier.fillMaxWidth().height(50.dp)
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
                         ) {
-                            Text("Ingresar con huella digital", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = NegroApple)
+                            Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = NegroApple, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Ingresar con huella digital", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = NegroApple)
                         }
                     }
+
                     TextButton(
                         onClick = {
                             esModoRegistro = !esModoRegistro
@@ -413,126 +405,157 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                 }
             }
 
-            // Separador con texto
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = GrisBorde)
-                Text(
-                    text = "  O ACCESO RÁPIDO PARA DEMOSTRACIÓN  ",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = GrisTexto,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = GrisBorde)
-            }
-
-            // Botones de acceso rápido estilo Apple Cards
+            // SECCIÓN DESARROLLADORES: TIENDAS DE PRUEBA Y ACCESOS RÁPIDOS
             Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = BlancoPuro,
-                border = BorderStroke(1.dp, GrisBorde),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable {
-                        FirebaseManager.entrarModoDemo("Doña Rosa", Rol.EMPRENDEDORA)
-                        nav.iniciarSesion(Rol.EMPRENDEDORA)
-                    }
-            ) {
-                FilaAccesoRapidoEditorial(
-                    badge = "DEMO EMPRENDEDORA",
-                    badgeColor = RojoAlerceContenedor,
-                    badgeTextColor = RojoAlerce,
-                    titulo = "Ingresar como Doña Rosa",
-                    subtitulo = "Minimarket Alerce · Selección de necesidades en vivo.",
-                    icono = Icons.Filled.Store
-                )
-            }
-
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = BlancoPuro,
-                border = BorderStroke(1.dp, GrisBorde),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable {
-                        FirebaseManager.entrarModoDemo("Paul", Rol.VISITANTE)
-                        nav.iniciarSesion(Rol.VISITANTE)
-                    }
-            ) {
-                FilaAccesoRapidoEditorial(
-                    badge = "EXPLORADOR / COMPRADOR",
-                    badgeColor = GrisChip,
-                    badgeTextColor = NegroApple,
-                    titulo = "Explorar como Comprador",
-                    subtitulo = "Ver vitrina de tiendas leídas de Firestore y WhatsApp.",
-                    icono = Icons.Filled.ShoppingBag
-                )
-            }
-
-            OutlinedButton(
-                onClick = { nav.iniciarSesion(Rol.ADMIN) },
                 shape = RoundedCornerShape(14.dp),
+                color = BlancoPuro,
                 border = BorderStroke(1.dp, GrisBorde),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(46.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Acceso Administración de Ferias", color = GrisTexto, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { mostrarDevTools = !mostrarDevTools },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Settings, contentDescription = null, tint = GrisTexto, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Tiendas de prueba (Modo Desarrollador)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = GrisTexto
+                            )
+                        }
+                        Text(
+                            text = if (mostrarDevTools) "▲ Ocultar" else "▼ Abrir",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GrisTexto
+                        )
+                    }
+
+                    if (mostrarDevTools) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Acceso directo para pruebas de desarrollo con las tiendas creadas de Alerce:",
+                            fontSize = 11.5.sp,
+                            color = TextoSecundario
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Botones para las 4 tiendas de prueba
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = {
+                                    FirebaseManager.entrarModoDesarrolladorPrueba("t_minimarket_rosa", Rol.EMPRENDEDORA)
+                                    nav.iniciarSesion(Rol.EMPRENDEDORA)
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    Text("🥖", fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("Minimarket Doña Rosa", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
+                                        Text("Abarrotes y pan amasado con stock", fontSize = 10.5.sp, color = GrisTexto)
+                                    }
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    FirebaseManager.entrarModoDesarrolladorPrueba("t_barberia_alerce", Rol.EMPRENDEDORA)
+                                    nav.iniciarSesion(Rol.EMPRENDEDORA)
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    Text("💈", fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("Barbería & Estilo Alerce", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
+                                        Text("Servicios con agendamiento de horas", fontSize = 10.5.sp, color = GrisTexto)
+                                    }
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    FirebaseManager.entrarModoDesarrolladorPrueba("t_tejidos_austral", Rol.EMPRENDEDORA)
+                                    nav.iniciarSesion(Rol.EMPRENDEDORA)
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    Text("🧶", fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("Tejidos Alerce Austral", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
+                                        Text("Lanares y artesanía a pedido", fontSize = 10.5.sp, color = GrisTexto)
+                                    }
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    FirebaseManager.entrarModoDesarrolladorPrueba("t_reposteria_surena", Rol.EMPRENDEDORA)
+                                    nav.iniciarSesion(Rol.EMPRENDEDORA)
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                                    Text("🍰", fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("Repostería Tradición Sureña", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
+                                        Text("Kuchenes y pasteles a pedido", fontSize = 10.5.sp, color = GrisTexto)
+                                    }
+                                }
+                            }
+
+                            HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 4.dp))
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                OutlinedButton(
+                                    onClick = {
+                                        FirebaseManager.entrarModoDesarrolladorPrueba("t_minimarket_rosa", Rol.VISITANTE)
+                                        nav.iniciarSesion(Rol.VISITANTE)
+                                    },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, GrisBorde),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Entrar Comprador", fontSize = 11.sp, color = NegroApple, fontWeight = FontWeight.Bold)
+                                }
+
+                                OutlinedButton(
+                                    onClick = { nav.iniciarSesion(Rol.ADMIN) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, GrisBorde),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Admin Ferias", fontSize = 11.sp, color = NegroApple, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
-
-@Composable
-private fun FilaAccesoRapidoEditorial(
-    badge: String,
-    badgeColor: Color,
-    badgeTextColor: Color,
-    titulo: String,
-    subtitulo: String,
-    icono: androidx.compose.ui.graphics.vector.ImageVector
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(shape = RoundedCornerShape(12.dp), color = GrisChip) {
-            Box(modifier = Modifier.padding(12.dp)) {
-                Icon(icono, contentDescription = null, tint = NegroApple, modifier = Modifier.size(24.dp))
-            }
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Surface(shape = RoundedCornerShape(4.dp), color = badgeColor) {
-                Text(
-                    text = badge,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.5.sp,
-                    color = badgeTextColor,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(titulo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = NegroApple)
-            Text(subtitulo, style = MaterialTheme.typography.bodySmall, color = GrisTexto)
-        }
-        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = NegroApple.copy(alpha = 0.5f))
-    }
-}
-
-
-
-
 
 fun autenticarConHuella(
     activity: FragmentActivity,
@@ -562,8 +585,8 @@ fun autenticarConHuella(
 
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
         .setTitle("Verificación biométrica")
-        .setSubtitle("Ingresa al modo emprendedora")
-        .setDescription("Usa tu huella o credencial del dispositivo para continuar")
+        .setSubtitle("Ingresa con tu huella digital")
+        .setDescription("Usa tu huella para acceder de forma rápida y segura")
         .setAllowedAuthenticators(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
         )
@@ -571,5 +594,3 @@ fun autenticarConHuella(
 
     biometricPrompt.authenticate(promptInfo)
 }
-
-

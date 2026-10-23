@@ -1,5 +1,6 @@
 package com.example.trabajodea10.data
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -7,13 +8,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Gestor central de Firebase para la aplicación:
+ * - Firebase Authentication: Registro e inicio de sesión de usuarios y emprendedoras.
+ * - Cloud Firestore: Persistencia en la nube de tiendas, perfiles y productos.
+ * - Cloud Storage: Almacenamiento y servicio de fotografías reales y afiches en la nube.
+ */
 object FirebaseManager {
 
     private const val TAG = "FirebaseManager"
     private const val COLECCION_TIENDAS = "tiendas"
+    private const val COLECCION_USUARIOS = "usuarios"
 
     private val auth: FirebaseAuth?
         get() = runCatching { FirebaseAuth.getInstance() }.getOrNull()
@@ -21,14 +32,23 @@ object FirebaseManager {
     private val firestore: FirebaseFirestore?
         get() = runCatching { FirebaseFirestore.getInstance() }.getOrNull()
 
+    private val storage: FirebaseStorage?
+        get() = runCatching { FirebaseStorage.getInstance() }.getOrNull()
+
     // Estado reactivo de usuario actual
     var usuarioActual by mutableStateOf<FirebaseUser?>(null)
         private set
 
-    var nombreUsuarioDemo by mutableStateOf("Emprendedora Alerce")
+    var nombreUsuarioActual by mutableStateOf("Usuario")
         private set
 
-    // Lista en memoria reactiva de tiendas leídas de Firestore (con fallback)
+    val nombreUsuarioDemo: String
+        get() = nombreUsuarioActual
+
+    var rolUsuarioActual by mutableStateOf<Rol?>(null)
+        private set
+
+    // Lista reactiva de tiendas sincronizadas con Firestore
     val tiendas = mutableStateListOf<Tienda>()
 
     var cargando by mutableStateOf(false)
@@ -37,7 +57,7 @@ object FirebaseManager {
     var mensajeError by mutableStateOf<String?>(null)
         private set
 
-    // 4 Tiendas representativas de Alerce para prueba y fallback offline
+    // 4 Tiendas representativas de Alerce para pruebas de desarrolladores y fallback offline
     val TIENDAS_INICIALES_ALERCE = listOf(
         Tienda(
             id = "t_barberia_alerce",
@@ -118,48 +138,181 @@ object FirebaseManager {
     )
 
     init {
-        // Inicializar tiendas en memoria con el set representativo de Alerce
         tiendas.clear()
         tiendas.addAll(TIENDAS_INICIALES_ALERCE)
         try {
-            usuarioActual = auth?.currentUser
+            val user = auth?.currentUser
+            usuarioActual = user
+            if (user != null) {
+                nombreUsuarioActual = user.displayName ?: user.email?.substringBefore("@") ?: "Usuario"
+            }
         } catch (e: Throwable) {
             Log.w(TAG, "No se pudo leer currentUser de Auth: ${e.message}")
         }
     }
 
-    // ---------- Autenticación con Firebase Auth ----------
+    // ============================================================
+    // 1. AUTENTICACIÓN FIREBASE AUTH & FIRESTORE
+    // ============================================================
 
-    suspend fun iniciarSesion(correo: String, clave: String): Result<FirebaseUser> {
-        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible en este dispositivo"))
+    /**
+     * Inicia sesión con correo y contraseña en Firebase Auth.
+     * Recupera el rol y la tienda asignada desde Firestore.
+     */
+    suspend fun iniciarSesion(
+        correo: String,
+        clave: String,
+        rolFallback: Rol = Rol.EMPRENDEDORA
+    ): Result<Pair<FirebaseUser, Rol>> {
+        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible"))
         return try {
             val resultado = fAuth.signInWithEmailAndPassword(correo.trim(), clave).await()
-            val user = resultado.user
+            val user = resultado.user ?: return Result.failure(IllegalStateException("Usuario nulo tras autenticación"))
             usuarioActual = user
-            nombreUsuarioDemo = user?.displayName ?: correo.substringBefore("@").replaceFirstChar { it.uppercase() }
-            Result.success(user!!)
+            nombreUsuarioActual = user.displayName ?: correo.substringBefore("@").replaceFirstChar { it.uppercase() }
+
+            var rolDetectado = rolFallback
+
+            // Consultar datos de usuario en Firestore
+            val fStore = firestore
+            if (fStore != null) {
+                try {
+                    val docUsuario = fStore.collection(COLECCION_USUARIOS).document(user.uid).get().await()
+                    if (docUsuario.exists()) {
+                        val rolString = docUsuario.getString("rol")
+                        if (rolString != null) {
+                            rolDetectado = try {
+                                Rol.valueOf(rolString)
+                            } catch (_: Exception) {
+                                rolFallback
+                            }
+                        }
+
+                        val tiendaId = docUsuario.getString("tiendaId")
+                        if (tiendaId != null) {
+                            val docTienda = fStore.collection(COLECCION_TIENDAS).document(tiendaId).get().await()
+                            if (docTienda.exists() && docTienda.data != null) {
+                                val tiendaFirestore = Tienda.fromMap(docTienda.id, docTienda.data!!)
+                                TramaStore.guardarTienda(tiendaFirestore)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Aviso leyendo perfil Firestore: ${e.message}")
+                }
+            }
+
+            rolUsuarioActual = rolDetectado
+            TramaStore.iniciarSesion(rolDetectado)
+            Result.success(Pair(user, rolDetectado))
         } catch (e: Throwable) {
-            Log.w(TAG, "Error iniciando sesión en Firebase Auth: ${e.message}")
+            Log.w(TAG, "Error iniciando sesión en Firebase: ${e.message}")
             Result.failure(e)
         }
     }
 
-    suspend fun registrarUsuario(correo: String, clave: String, nombre: String): Result<FirebaseUser> {
-        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible en este dispositivo"))
+    /**
+     * Registra un nuevo usuario en Firebase Auth y crea su documento en Firestore.
+     * Si es Emprendedora, crea automáticamente su Tienda asociada en Firestore.
+     */
+    suspend fun registrarUsuario(
+        correo: String,
+        clave: String,
+        nombre: String,
+        rol: Rol
+    ): Result<FirebaseUser> {
+        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible"))
         return try {
             val resultado = fAuth.createUserWithEmailAndPassword(correo.trim(), clave).await()
-            val user = resultado.user
+            val user = resultado.user ?: return Result.failure(IllegalStateException("No se pudo crear el usuario"))
             usuarioActual = user
-            nombreUsuarioDemo = nombre.ifBlank { correo.substringBefore("@") }
-            Result.success(user!!)
+            val nombreFinal = nombre.ifBlank { correo.substringBefore("@").replaceFirstChar { it.uppercase() } }
+            nombreUsuarioActual = nombreFinal
+
+            // Actualizar displayName en Firebase Auth
+            try {
+                val updates = UserProfileChangeRequest.Builder()
+                    .setDisplayName(nombreFinal)
+                    .build()
+                user.updateProfile(updates).await()
+            } catch (e: Exception) {
+                Log.w(TAG, "No se pudo actualizar displayName: ${e.message}")
+            }
+
+            // Crear documento de perfil y tienda en Firestore
+            val fStore = firestore
+            if (fStore != null) {
+                try {
+                    val usuarioMap = hashMapOf<String, Any>(
+                        "uid" to user.uid,
+                        "email" to (user.email ?: correo),
+                        "nombre" to nombreFinal,
+                        "rol" to rol.name,
+                        "fechaRegistro" to System.currentTimeMillis()
+                    )
+
+                    if (rol == Rol.EMPRENDEDORA) {
+                        val tiendaId = "tienda_${user.uid.take(12)}"
+                        usuarioMap["tiendaId"] = tiendaId
+
+                        val nuevaTienda = Tienda(
+                            id = tiendaId,
+                            nombre = nombreFinal,
+                            rubro = "General y Artesanías",
+                            sector = "Alerce",
+                            bio = "Emprendimiento local de Alerce. Consulta nuestros productos y contáctanos por WhatsApp.",
+                            whatsapp = "",
+                            instagram = "",
+                            colorPortada = 0xFF111111L,
+                            colorLogo = 0xFFDC2626L,
+                            necesidades = NecesidadesTienda(
+                                tieneStock = true,
+                                tieneAgendamiento = false,
+                                tieneVentaPorWhatsApp = true,
+                                tieneProductosAPedido = false,
+                                participaEnFerias = true,
+                                tieneForoComunidad = true
+                            )
+                        )
+                        guardarTiendaEnFirestore(nuevaTienda)
+                        TramaStore.guardarTienda(nuevaTienda)
+                    }
+
+                    fStore.collection(COLECCION_USUARIOS).document(user.uid).set(usuarioMap).await()
+                    Log.i(TAG, "Usuario y perfil guardados en Firestore para UID: ${user.uid}")
+                } catch (e: Exception) {
+                    Log.w(TAG, "No se pudo guardar perfil en Firestore: ${e.message}")
+                }
+            }
+
+            rolUsuarioActual = rol
+            TramaStore.iniciarSesion(rol)
+            Result.success(user)
         } catch (e: Throwable) {
-            Log.w(TAG, "Error registrando usuario en Firebase Auth: ${e.message}")
+            Log.e(TAG, "Error registrando usuario en Firebase: ${e.message}")
             Result.failure(e)
         }
+    }
+
+    /**
+     * Acceso rápido exclusivo para pruebas de desarrolladores con las tiendas iniciales.
+     */
+    fun entrarModoDesarrolladorPrueba(tiendaId: String, rol: Rol) {
+        val tiendaPrueba = tiendas.find { it.id == tiendaId }
+            ?: TIENDAS_INICIALES_ALERCE.find { it.id == tiendaId }
+            ?: TIENDAS_INICIALES_ALERCE.first()
+
+        nombreUsuarioActual = tiendaPrueba.nombre
+        rolUsuarioActual = rol
+        if (rol == Rol.EMPRENDEDORA) {
+            TramaStore.guardarTienda(tiendaPrueba)
+        }
+        TramaStore.iniciarSesion(rol)
     }
 
     fun entrarModoDemo(nombre: String, rol: Rol) {
-        nombreUsuarioDemo = nombre
+        nombreUsuarioActual = nombre
+        rolUsuarioActual = rol
         if (rol == Rol.EMPRENDEDORA) {
             val tiendaDemo = tiendas.find { it.id == "t_minimarket_rosa" }
                 ?: TIENDAS_INICIALES_ALERCE.find { it.id == "t_minimarket_rosa" }
@@ -177,24 +330,71 @@ object FirebaseManager {
             Log.w(TAG, "Error al cerrar sesión en Auth: ${e.message}")
         }
         usuarioActual = null
+        rolUsuarioActual = null
         TramaStore.cerrarSesion()
     }
 
-    // ---------- Cloud Firestore: Colección 'tiendas' ----------
+    // ============================================================
+    // 2. CLOUD STORAGE: ALMACENAMIENTO DE FOTOGRAFÍAS REALES
+    // ============================================================
+
+    /**
+     * Sube un archivo de imagen (URI de galería o cámara) a Firebase Cloud Storage
+     * y retorna la URL pública de descarga permanente en internet.
+     */
+    suspend fun subirFotoAStorage(uri: Uri, nombreArchivo: String = "foto_${System.currentTimeMillis()}.jpg"): Result<String> {
+        val fStorage = storage ?: return Result.failure(IllegalStateException("Firebase Cloud Storage no está disponible"))
+        return try {
+            val ref = fStorage.reference.child("fotos_productos/$nombreArchivo")
+            ref.putFile(uri).await()
+            val urlDescarga = ref.downloadUrl.await().toString()
+            Log.i(TAG, "Foto subida exitosamente a Firebase Storage: $urlDescarga")
+            Result.success(urlDescarga)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error subiendo foto a Firebase Storage: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Sube bytes directos de una imagen (ej: generada desde canvas o preview) a Firebase Cloud Storage.
+     */
+    suspend fun subirBytesAStorage(
+        bytes: ByteArray,
+        nombreArchivo: String = "afiche_${System.currentTimeMillis()}.jpg",
+        contentType: String = "image/jpeg"
+    ): Result<String> {
+        val fStorage = storage ?: return Result.failure(IllegalStateException("Firebase Cloud Storage no está disponible"))
+        return try {
+            val ref = fStorage.reference.child("afiches_flyers/$nombreArchivo")
+            val metadata = StorageMetadata.Builder()
+                .setContentType(contentType)
+                .build()
+            ref.putBytes(bytes, metadata).await()
+            val urlDescarga = ref.downloadUrl.await().toString()
+            Log.i(TAG, "Afiche subido exitosamente a Firebase Storage: $urlDescarga")
+            Result.success(urlDescarga)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error subiendo afiche a Firebase Storage: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    // ============================================================
+    // 3. CLOUD FIRESTORE: TIENDAS Y CATÁLOGO
+    // ============================================================
 
     suspend fun cargarTiendasDesdeFirestore(): List<Tienda> {
         cargando = true
         mensajeError = null
         val fStore = firestore
         if (fStore == null) {
-            mensajeError = "Modo Local Alerce (Firebase desconectado)"
             cargando = false
             return tiendas
         }
         return try {
             val snapshot = fStore.collection(COLECCION_TIENDAS).get().await()
             if (snapshot.isEmpty) {
-                Log.d(TAG, "Colección 'tiendas' vacía en Firestore. Sembrando 4 tiendas de Alerce...")
                 sembrarTiendasIniciales()
                 tiendas.clear()
                 tiendas.addAll(TIENDAS_INICIALES_ALERCE)
@@ -210,8 +410,7 @@ object FirebaseManager {
                 resultado
             }
         } catch (e: Throwable) {
-            Log.w(TAG, "No se pudo conectar a Firestore: ${e.message}. Usando datos locales de Alerce.")
-            mensajeError = "Modo sin conexión: mostrando tiendas locales de Alerce."
+            Log.w(TAG, "Aviso leyendo Firestore: ${e.message}. Usando tiendas locales.")
             cargando = false
             if (tiendas.isEmpty()) {
                 tiendas.addAll(TIENDAS_INICIALES_ALERCE)
@@ -229,7 +428,7 @@ object FirebaseManager {
                 batch.set(ref, t.toMap())
             }
             batch.commit().await()
-            Log.d(TAG, "4 tiendas sembradas exitosamente en Firestore")
+            Log.d(TAG, "Tiendas de desarrollador sembradas en Firestore")
             true
         } catch (e: Throwable) {
             Log.e(TAG, "Error sembrando tiendas en Firestore: ${e.message}")
@@ -238,7 +437,6 @@ object FirebaseManager {
     }
 
     suspend fun guardarTiendaEnFirestore(tienda: Tienda): Boolean {
-        // Actualizar localmente de inmediato para reactividad instantánea
         val indice = tiendas.indexOfFirst { it.id == tienda.id }
         if (indice >= 0) {
             tiendas[indice] = tienda
@@ -256,7 +454,7 @@ object FirebaseManager {
             Log.d(TAG, "Tienda ${tienda.id} guardada en Firestore")
             true
         } catch (e: Throwable) {
-            Log.w(TAG, "Error guardando en Firestore (se mantuvo localmente): ${e.message}")
+            Log.w(TAG, "Error guardando en Firestore: ${e.message}")
             false
         }
     }
