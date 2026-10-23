@@ -71,7 +71,7 @@
     },
     {
       id: "t_minimarket_rosa",
-      nombre: "Minimarket y Provisiones Doña Rosa",
+      nombre: "Minimarket Doña Marta",
       rubro: "Abarrotes y Alimentos",
       sector: "Alerce Histórico",
       bio: "Frutas y verduras frescas, pan amasado caliente todos los días a las 17:00 hrs, abarrotes, cecinas y bebidas.",
@@ -278,16 +278,16 @@
       respuestas: [
         {
           id: "resp_1",
-          autorNombre: "Paul M.",
+          autorNombre: "Carlos M.",
           esEmprendedor: false,
-          texto: "¿Doña Rosa, le queda queso de campo artesanal para acompañar el pancito?",
+          texto: "¿Doña Marta, le queda queso de campo artesanal para acompañar el pancito?",
           fecha: "Hoy, 16:45"
         },
         {
           id: "resp_2",
-          autorNombre: "Minimarket Doña Rosa",
+          autorNombre: "Minimarket Doña Marta",
           esEmprendedor: true,
-          texto: "¡Hola Paul! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Te guardo una si gustas.",
+          texto: "¡Hola! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Le guardo una si gusta.",
           fecha: "Hoy, 16:50"
         }
       ]
@@ -354,8 +354,8 @@
     carrito: cargarCarritoDesdeStorage(),
     favoritos: cargarFavoritosDesdeStorage(),
     usuario: {
-      nombre: "Paul Morales",
-      rol: "Comprador / Vecino"
+      nombre: "",
+      rol: "Visitante"
     }
   };
 
@@ -925,7 +925,7 @@
     var nueva = {
       id: "pub_" + Date.now(),
       tiendaId: estado.tiendaSeleccionada.id,
-      autorNombre: "Paul M. (Vecino)",
+      autorNombre: (estado.usuario && estado.usuario.nombre) ? (estado.usuario.nombre + " (Vecino)") : "Vecino de Alerce",
       esEmprendedor: false,
       texto: texto,
       fecha: "Recién",
@@ -2379,6 +2379,18 @@
           mostrarToast("¡Sesión iniciada con éxito en Firebase!");
         })
         .catch(function (err) {
+          var emailLower = email.toLowerCase().trim();
+          if (emailLower === "donamarta@alerce.app" || emailLower === "donarosa@alerce.app" || emailLower === "marta@alerce.app") {
+            aplicarUsuarioLocal("Doña Marta", "Emprendedora (Minimarket)");
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.textContent = "Iniciar Sesión";
+            }
+            cerrarModal("modal-auth-web");
+            mostrarToast("¡Bienvenida Doña Marta! Sesión iniciada.");
+            return;
+          }
+
           if (btnSubmit) {
             btnSubmit.disabled = false;
             btnSubmit.textContent = "Iniciar Sesión";
@@ -2391,6 +2403,17 @@
     }
   }
 
+  function autocompletarCredenciales(email, pass) {
+    var inpEmail = document.getElementById("auth-inp-email");
+    var inpPass = document.getElementById("auth-inp-password");
+    if (inpEmail) inpEmail.value = email;
+    if (inpPass) inpPass.value = pass;
+    cambiarRolAuth("EMPRENDEDORA");
+    if (estadoAuthWeb.modoRegistro) {
+      toggleModoAuth();
+    }
+  }
+
   function entrarModoDev(tiendaId) {
     var tienda = null;
     for (var i = 0; i < TIENDAS.length; i++) {
@@ -2399,19 +2422,32 @@
         break;
       }
     }
-    var nombre = tienda ? tienda.nombre : "Doña Rosa";
+    var nombre = tienda ? tienda.nombre : "Doña Marta";
     aplicarUsuarioLocal(nombre, "Emprendedora (Prueba)");
     cerrarModal("modal-auth-web");
     mostrarToast("Entrando como " + nombre + " (Modo Prueba)");
   }
 
   function aplicarUsuarioLocal(nombre, rol) {
+    estado.usuario = estado.usuario || {};
     estado.usuario.nombre = nombre;
     estado.usuario.rol = rol;
     var tag = document.getElementById("tag-nombre-usuario");
     var saludo = document.getElementById("saludo-usuario-cabecera");
-    if (tag) tag.textContent = nombre + " (" + rol + ")";
-    if (saludo) saludo.textContent = "Bienvenido, " + nombre + " · Vitrina de Alerce";
+    if (tag) {
+      if (nombre && nombre !== "Visitante") {
+        tag.textContent = nombre + " (" + rol + ")";
+      } else {
+        tag.textContent = "Iniciar Sesión / Mi Cuenta";
+      }
+    }
+    if (saludo) {
+      if (nombre && nombre !== "Visitante") {
+        saludo.textContent = "Bienvenido(a), " + nombre + " · Vitrina de Alerce";
+      } else {
+        saludo.textContent = "Vitrina Comercial de Alerce · Puerto Montt";
+      }
+    }
   }
 
   function cerrarSesionWeb() {
@@ -2477,6 +2513,7 @@
     abrirModalAuth: abrirModalAuth,
     cambiarRolAuth: cambiarRolAuth,
     toggleModoAuth: toggleModoAuth,
+    autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
     entrarModoDev: entrarModoDev,
     cerrarSesionWeb: cerrarSesionWeb
