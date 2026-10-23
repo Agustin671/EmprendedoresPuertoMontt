@@ -75,14 +75,20 @@
           <span>App Android</span>
         </a>
 
-        <!-- Botón Punto de Venta / POS (Emprendedoras) -->
-        <button type="button" class="btn-accion-pill" id="btn-abrir-pos-nav" onclick="TramaWeb.abrirModalPOS()" style="padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Caja rápida y registro de ventas (POS)">
+        <!-- Botón de Invitación para Emprendedoras (Visible si NO hay sesión activa) -->
+        <button type="button" class="btn-accion-pill" id="btn-header-acceso-emp" onclick="TramaWeb.abrirModalAuthEmprendedora()" style="padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Acceso para Emprendedoras de Alerce">
+          <span>🏪</span>
+          <span>Soy Emprendedora</span>
+        </button>
+
+        <!-- Botón Punto de Venta / POS (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill" id="btn-abrir-pos-nav" onclick="TramaWeb.abrirModalPOS()" style="display: none; padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Caja rápida y registro de ventas (POS)">
           <span>🏷️</span>
           <span>Caja POS</span>
         </button>
 
-        <!-- Botón de Añadir Producto / Vender (Emprendedoras) -->
-        <button type="button" class="btn-accion-pill btn-negro" id="btn-abrir-publicar-nav" onclick="TramaWeb.abrirModalPublicarProducto()" style="padding: 0 12px; font-weight: 700; height: 36px;" title="Publicar producto estilo Facebook Marketplace">
+        <!-- Botón de Añadir Producto (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill btn-negro" id="btn-abrir-publicar-nav" onclick="TramaWeb.abrirModalPublicarProducto()" style="display: none; padding: 0 12px; font-weight: 700; height: 36px;" title="Publicar producto estilo Facebook Marketplace">
           <span>➕</span>
           <span>Añadir Producto</span>
         </button>
@@ -97,7 +103,7 @@
         <!-- Indicador de Usuario y Cierre de Sesión -->
         <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuth()" style="cursor: pointer;" title="Iniciar sesión o cambiar cuenta">Iniciar Sesión / Mi Cuenta</span>
         
-        <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión" style="display: none;">
           🚪
         </button>
       </div>
@@ -171,8 +177,22 @@
         </div>
       </div>
 
-      <!-- Banner Destacado para Emprendedoras (Estilo Facebook Marketplace & Flyer Maker) -->
-      <aside class="banner-emprendedoras-cta">
+      <!-- Banner de Invitación para Emprendedoras (Visible si NO hay sesión activa) -->
+      <aside class="banner-invitacion-emprendedora" id="banner-invitacion-emprendedora" style="background: #fafafa; border: 1px dashed var(--gris-borde); border-radius: 16px; padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">🏪</span>
+          <div>
+            <strong style="font-size: 13.5px; color: var(--negro-apple); display: block;">¿Tienes un negocio o emprendimiento en Alerce?</strong>
+            <span style="font-size: 12px; color: var(--gris-texto);">Inicia sesión como emprendedora para publicar productos en tu vitrina, diseñar afiches y cobrar con Caja POS.</span>
+          </div>
+        </div>
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 36px; font-size: 12px; padding: 0 16px;" onclick="TramaWeb.abrirModalAuthEmprendedora()">
+          Acceso Emprendedoras
+        </button>
+      </aside>
+
+      <!-- Banner de Herramientas para Emprendedoras (Visible SOLO cuando hay sesión iniciada como Emprendedora) -->
+      <aside class="banner-emprendedoras-cta" id="banner-emprendedoras-cta" style="display: none;">
         <div class="banner-emprendedoras-info">
           <div class="badge-emprendedora-pulsante">
             <span class="punto-verde-latido"></span>
