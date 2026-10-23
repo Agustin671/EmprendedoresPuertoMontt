@@ -110,6 +110,20 @@ object TramaStore {
     // Carrito de venta (persiste entre navegación)
     val carritoVenta = mutableStateListOf<ItemVenta>()
 
+    fun agregarAlCarrito(item: ItemVenta) {
+        val existente = carritoVenta.firstOrNull {
+            it.productoId == item.productoId && it.varianteId == item.varianteId
+        }
+        if (existente != null) {
+            val indice = carritoVenta.indexOf(existente)
+            if (indice >= 0) {
+                carritoVenta[indice] = existente.copy(cantidad = existente.cantidad + item.cantidad)
+            }
+        } else {
+            carritoVenta.add(item)
+        }
+    }
+
     var tienda by mutableStateOf(MockData.tienda)
         private set
 
@@ -468,6 +482,7 @@ object TramaStore {
     }
 
     fun eliminarProducto(id: String) {
+        productos.filter { it.id == id }.forEach { FotoProductoStore.eliminar(it.fotoUrl) }
         productos.removeAll { it.id == id }
         persistir()
     }

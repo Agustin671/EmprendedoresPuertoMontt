@@ -22,6 +22,7 @@ import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
+import com.example.trabajodea10.ui.componentes.FotoProducto
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.theme.VerdeContenedor
 import com.example.trabajodea10.ui.theme.VerdeOk
@@ -821,6 +822,17 @@ private fun DialogoDetalleTienda(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
+                                    FotoProducto(
+                                        fotoUrl = producto.fotoUrl,
+                                        colorRespaldo = producto.colorFoto,
+                                        inicial = producto.nombre,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(120.dp),
+                                        forma = RoundedCornerShape(10.dp),
+                                        tamanoInicial = 38.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -40,12 +41,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
 import androidx.compose.foundation.text.KeyboardOptions
 import com.example.trabajodea10.data.EstadoAsistencia
 import com.example.trabajodea10.data.EstadoCuenta
@@ -723,5 +729,51 @@ fun ContenedorChips(
             }
         }
     }
+}
+
+private fun modeloFoto(foto: String): Any =
+    if (foto.startsWith("http") || foto.startsWith("content://")) foto else java.io.File(foto)
+
+/**
+ * Muestra la foto real del producto si existe; si no, mantiene el bloque de
+ * color con la inicial para no romper el diseño de las tarjetas antiguas.
+ */
+@Composable
+fun FotoProducto(
+    fotoUrl: String?,
+    colorRespaldo: Long,
+    inicial: String,
+    modifier: Modifier = Modifier,
+    forma: Shape = RoundedCornerShape(16.dp),
+    tamanoInicial: TextUnit = 26.sp
+) {
+    Box(
+        modifier = modifier.clip(forma).background(Color(colorRespaldo)),
+        contentAlignment = Alignment.Center
+    ) {
+        val foto = fotoUrl?.trim().orEmpty()
+        if (foto.isNotEmpty()) {
+            SubcomposeAsyncImage(
+                model = modeloFoto(foto),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                loading = { FotoRespaldo(inicial, tamanoInicial) },
+                error = { FotoRespaldo(inicial, tamanoInicial) }
+            )
+        } else {
+            FotoRespaldo(inicial, tamanoInicial)
+        }
+    }
+}
+
+@Composable
+private fun FotoRespaldo(inicial: String, tamano: TextUnit) {
+    Text(
+        text = inicial.ifBlank { "?" }.take(1).uppercase(),
+        color = Color.White,
+        fontWeight = FontWeight.Bold,
+        fontSize = tamano
+    )
 }
 

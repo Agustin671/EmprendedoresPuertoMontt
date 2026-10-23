@@ -5,6 +5,11 @@ import android.content.Intent
 import android.net.Uri
 
 /**
+ * Vitrina pública que se comparte por WhatsApp y se codifica en el QR.
+ */
+const val URL_VITRINA = "https://agustin671.github.io/EmprendedoresPuertoMontt/"
+
+/**
  * Acciones externas (mapas, teléfono, WhatsApp) pensadas para botones grandes.
  * Se usan desde las pantallas públicas (Visitante) para que las personas mayores
  * puedan llamar o escribir con un solo toque, sin escribir números.
@@ -34,4 +39,25 @@ fun abrirWhatsApp(contexto: Context, numero: String, mensaje: String) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     runCatching { contexto.startActivity(intent) }
+}
+
+/** Comparte un texto directamente en WhatsApp; si no está instalado, abre el selector. */
+fun compartirPorWhatsApp(contexto: Context, mensaje: String) {
+    val enviar = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, mensaje)
+        setPackage("com.whatsapp")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    val abrioWhatsApp = runCatching { contexto.startActivity(enviar) }.isSuccess
+    if (!abrioWhatsApp) {
+        val alternativo = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, mensaje)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        runCatching {
+            contexto.startActivity(Intent.createChooser(alternativo, "Compartir tienda"))
+        }
+    }
 }

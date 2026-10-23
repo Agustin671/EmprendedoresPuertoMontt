@@ -49,6 +49,7 @@ import com.example.trabajodea10.ui.componentes.CampoBusqueda
 import com.example.trabajodea10.ui.componentes.ChipEstado
 import com.example.trabajodea10.ui.componentes.ChipFiltro
 import com.example.trabajodea10.ui.componentes.ColorEstado
+import com.example.trabajodea10.ui.componentes.FotoProducto
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.Vacio
 import com.example.trabajodea10.ui.componentes.colorDeStock
@@ -197,19 +198,14 @@ fun TarjetaProducto(producto: Producto) {
         modifier = Modifier.fillMaxWidth().padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .background(Color(producto.colorFoto), RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = producto.nombre.firstOrNull()?.uppercase() ?: "?",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp
-            )
-        }
+        FotoProducto(
+            fotoUrl = producto.fotoUrl,
+            colorRespaldo = producto.colorFoto,
+            inicial = producto.nombre,
+            modifier = Modifier.size(64.dp),
+            forma = RoundedCornerShape(16.dp),
+            tamanoInicial = 26.sp
+        )
 
         Spacer(modifier = Modifier.width(12.dp))
 
