@@ -8,6 +8,45 @@
   "use strict";
 
   // ============================================================
+  // CONEXIÓN OFICIAL FIREBASE WEB (AUTH, FIRESTORE, STORAGE)
+  // ============================================================
+  var firebaseConfig = {
+    apiKey: "AIzaSyBmxcinIPVJB-AKgHQQ9iEp3p6-uRS58oI",
+    authDomain: "alercei7.firebaseapp.com",
+    projectId: "alercei7",
+    storageBucket: "alercei7.firebasestorage.app",
+    messagingSenderId: "60295127775",
+    appId: "1:60295127775:web:4e6ec2188b21076f01ff6a"
+  };
+
+  var firebaseApp = null;
+  var firebaseAuth = null;
+  var firebaseFirestore = null;
+  var firebaseStorage = null;
+
+  try {
+    if (typeof firebase !== "undefined") {
+      if (!firebase.apps || !firebase.apps.length) {
+        firebaseApp = firebase.initializeApp(firebaseConfig);
+      } else {
+        firebaseApp = firebase.app();
+      }
+      firebaseAuth = firebase.auth();
+      firebaseFirestore = firebase.firestore();
+      firebaseStorage = firebase.storage();
+      console.log("Firebase Web SDK conectado a proyecto alercei7");
+    }
+  } catch (errFb) {
+    console.warn("Aviso inicializando Firebase Web:", errFb);
+  }
+
+  var estadoAuthWeb = {
+    modoRegistro: false,
+    rolSeleccionado: "EMPRENDEDORA"
+  };
+
+
+  // ============================================================
   // DATOS LOCALES SINCRONIZADOS CON ANDROID TRAMASTORE & FIRESTORE
   // ============================================================
 
@@ -2153,7 +2192,9 @@
     var btnLogout = document.getElementById("btn-logout");
     if (btnLogout) {
       btnLogout.addEventListener("click", function () {
-        if (confirm("¿Deseas cerrar la sesión de Paul?")) {
+        if (confirm("¿Deseas cerrar la sesión activa?")) {
+          cerrarSesionWeb(); return;
+
           estado.usuario.nombre = "Visitante";
           estado.usuario.rol = "Visitante";
           var tag = document.getElementById("tag-nombre-usuario");
@@ -2180,6 +2221,216 @@
     actualizarBadgesCarrito();
     renderizarTiendasMarketplace();
     renderizarAsociaciones();
+    configurarObservadorAuthFirebase();
+  }
+
+  
+  // ============================================================
+  // MÓDULO DE AUTENTICACIÓN FIREBASE WEB
+  // ============================================================
+
+  function abrirModalAuth() {
+    var errorDiv = document.getElementById("auth-aviso-error");
+    var exitoDiv = document.getElementById("auth-aviso-exito");
+    if (errorDiv) errorDiv.style.display = "none";
+    if (exitoDiv) exitoDiv.style.display = "none";
+    abrirModal("modal-auth-web");
+  }
+
+  function cambiarRolAuth(rol) {
+    estadoAuthWeb.rolSeleccionado = rol;
+    var btnEmp = document.getElementById("btn-tab-auth-emprendedora");
+    var btnComp = document.getElementById("btn-tab-auth-comprador");
+    if (rol === "EMPRENDEDORA") {
+      if (btnEmp) {
+        btnEmp.className = "btn-accion-pill btn-negro";
+        btnEmp.style.background = "";
+      }
+      if (btnComp) {
+        btnComp.className = "btn-accion-pill";
+        btnComp.style.background = "transparent";
+      }
+    } else {
+      if (btnEmp) {
+        btnEmp.className = "btn-accion-pill";
+        btnEmp.style.background = "transparent";
+      }
+      if (btnComp) {
+        btnComp.className = "btn-accion-pill btn-negro";
+        btnComp.style.background = "";
+      }
+    }
+  }
+
+  function toggleModoAuth() {
+    estadoAuthWeb.modoRegistro = !estadoAuthWeb.modoRegistro;
+    var camposReg = document.getElementById("auth-campos-registro");
+    var titulo = document.getElementById("modal-auth-titulo");
+    var btnSubmit = document.getElementById("btn-submit-auth");
+    var btnToggle = document.getElementById("btn-toggle-modo-auth");
+    var errorDiv = document.getElementById("auth-aviso-error");
+    if (errorDiv) errorDiv.style.display = "none";
+
+    if (estadoAuthWeb.modoRegistro) {
+      if (camposReg) camposReg.style.display = "block";
+      if (titulo) titulo.textContent = "Crear Cuenta en Firebase";
+      if (btnSubmit) btnSubmit.textContent = "Registrarme en Firebase";
+      if (btnToggle) btnToggle.textContent = "¿Ya tienes cuenta? Inicia sesión aquí";
+    } else {
+      if (camposReg) camposReg.style.display = "none";
+      if (titulo) titulo.textContent = "Iniciar Sesión";
+      if (btnSubmit) btnSubmit.textContent = "Iniciar Sesión";
+      if (btnToggle) btnToggle.textContent = "¿No tienes cuenta? Regístrate en Firebase aquí";
+    }
+  }
+
+  function ejecutarAuthFirebase() {
+    var inpEmail = document.getElementById("auth-inp-email");
+    var inpPass = document.getElementById("auth-inp-password");
+    var inpNombre = document.getElementById("auth-inp-nombre");
+    var errorDiv = document.getElementById("auth-aviso-error");
+    var exitoDiv = document.getElementById("auth-aviso-exito");
+    var btnSubmit = document.getElementById("btn-submit-auth");
+
+    var email = inpEmail ? inpEmail.value.trim() : "";
+    var pass = inpPass ? inpPass.value : "";
+    var nombre = inpNombre ? inpNombre.value.trim() : "";
+
+    if (!email || !pass) {
+      if (errorDiv) {
+        errorDiv.textContent = "Por favor ingresa tu correo y contraseña.";
+        errorDiv.style.display = "block";
+      }
+      return;
+    }
+
+    if (estadoAuthWeb.modoRegistro && !nombre) {
+      if (errorDiv) {
+        errorDiv.textContent = "Por favor ingresa tu nombre o el de tu emprendimiento.";
+        errorDiv.style.display = "block";
+      }
+      return;
+    }
+
+    if (errorDiv) errorDiv.style.display = "none";
+    if (exitoDiv) exitoDiv.style.display = "none";
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Conectando con Firebase...";
+    }
+
+    if (!firebaseAuth) {
+      // Modo local si Firebase no está disponible
+      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Iniciar Sesión";
+      }
+      cerrarModal("modal-auth-web");
+      mostrarToast("¡Bienvenido! Sesión iniciada.");
+      return;
+    }
+
+    if (estadoAuthWeb.modoRegistro) {
+      firebaseAuth.createUserWithEmailAndPassword(email, pass)
+        .then(function (cred) {
+          var user = cred.user;
+          return user.updateProfile({ displayName: nombre }).then(function () {
+            // Guardar documento en Firestore
+            if (firebaseFirestore) {
+              firebaseFirestore.collection("usuarios").doc(user.uid).set({
+                uid: user.uid,
+                email: email,
+                nombre: nombre,
+                rol: estadoAuthWeb.rolSeleccionado,
+                fechaRegistro: Date.now()
+              }).catch(function(e){ console.warn("Aviso Firestore:", e); });
+            }
+            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.textContent = "Registrarme en Firebase";
+            }
+            cerrarModal("modal-auth-web");
+            mostrarToast("¡Cuenta creada exitosamente en Firebase!");
+          });
+        })
+        .catch(function (err) {
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Registrarme en Firebase";
+          }
+          if (errorDiv) {
+            errorDiv.textContent = "Error de Firebase: " + (err.message || err);
+            errorDiv.style.display = "block";
+          }
+        });
+    } else {
+      firebaseAuth.signInWithEmailAndPassword(email, pass)
+        .then(function (cred) {
+          var user = cred.user;
+          var nombreDetectado = user.displayName || email.split("@")[0];
+          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Iniciar Sesión";
+          }
+          cerrarModal("modal-auth-web");
+          mostrarToast("¡Sesión iniciada con éxito en Firebase!");
+        })
+        .catch(function (err) {
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Iniciar Sesión";
+          }
+          if (errorDiv) {
+            errorDiv.textContent = "Error: " + (err.message || "Credenciales incorrectas");
+            errorDiv.style.display = "block";
+          }
+        });
+    }
+  }
+
+  function entrarModoDev(tiendaId) {
+    var tienda = null;
+    for (var i = 0; i < TIENDAS.length; i++) {
+      if (TIENDAS[i].id === tiendaId) {
+        tienda = TIENDAS[i];
+        break;
+      }
+    }
+    var nombre = tienda ? tienda.nombre : "Doña Rosa";
+    aplicarUsuarioLocal(nombre, "Emprendedora (Prueba)");
+    cerrarModal("modal-auth-web");
+    mostrarToast("Entrando como " + nombre + " (Modo Prueba)");
+  }
+
+  function aplicarUsuarioLocal(nombre, rol) {
+    estado.usuario.nombre = nombre;
+    estado.usuario.rol = rol;
+    var tag = document.getElementById("tag-nombre-usuario");
+    var saludo = document.getElementById("saludo-usuario-cabecera");
+    if (tag) tag.textContent = nombre + " (" + rol + ")";
+    if (saludo) saludo.textContent = "Bienvenido, " + nombre + " · Vitrina de Alerce";
+  }
+
+  function cerrarSesionWeb() {
+    if (firebaseAuth) {
+      try { firebaseAuth.signOut(); } catch(e){}
+    }
+    aplicarUsuarioLocal("Visitante", "Visitante");
+    mostrarToast("Sesión cerrada");
+  }
+
+  function configurarObservadorAuthFirebase() {
+    if (firebaseAuth && firebaseAuth.onAuthStateChanged) {
+      firebaseAuth.onAuthStateChanged(function (user) {
+        if (user) {
+          var nombre = user.displayName || (user.email ? user.email.split("@")[0] : "Usuario");
+          aplicarUsuarioLocal(nombre, "Usuario Firebase");
+        }
+      });
+    }
   }
 
   // Exponer API global para callbacks en línea
@@ -2222,7 +2473,13 @@
     onFotoFlyerSubida: onFotoFlyerSubida,
     actualizarLienzoFlyer: actualizarLienzoFlyer,
     descargarFlyerImagen: descargarFlyerImagen,
-    aplicarFlyerComoFotoProducto: aplicarFlyerComoFotoProducto
+    aplicarFlyerComoFotoProducto: aplicarFlyerComoFotoProducto,
+    abrirModalAuth: abrirModalAuth,
+    cambiarRolAuth: cambiarRolAuth,
+    toggleModoAuth: toggleModoAuth,
+    ejecutarAuthFirebase: ejecutarAuthFirebase,
+    entrarModoDev: entrarModoDev,
+    cerrarSesionWeb: cerrarSesionWeb
   };
 
   // Ejecutar al cargar el DOM

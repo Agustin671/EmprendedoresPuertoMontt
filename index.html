@@ -83,7 +83,7 @@
         </button>
 
         <!-- Indicador de Usuario y Cierre de Sesión -->
-        <span class="tag-usuario" id="tag-nombre-usuario">Paul (Vecino)</span>
+        <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuth()" style="cursor: pointer;" title="Iniciar sesión o cambiar cuenta">Paul (Vecino)</span>
         
         <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
           🚪
@@ -811,6 +811,88 @@
       </div>
     </div>
   </div>
+
+  
+  <!-- MODAL AUTENTICACION FIREBASE WEB -->
+  <div class="modal-fondo" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo" style="display: none;">
+    <div class="modal-contenedor modal-contenedor-fb" style="max-width: 440px;">
+      <div class="modal-cabecera">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: var(--rojo-alerce); text-transform: uppercase; letter-spacing: 1px;">Conexion Oficial Firebase</span>
+          <h2 id="modal-auth-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">Iniciar Sesion</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-auth-web')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <!-- Selector de Modo Emprendedora / Comprador -->
+        <div style="display: flex; background: var(--gris-chip); border-radius: 8px; padding: 4px; gap: 4px;">
+          <button type="button" id="btn-tab-auth-emprendedora" class="btn-accion-pill btn-negro" style="flex: 1; height: 34px; font-size: 12px; justify-content: center;" onclick="TramaWeb.cambiarRolAuth('EMPRENDEDORA')">
+            🏪 Emprendedora
+          </button>
+          <button type="button" id="btn-tab-auth-comprador" class="btn-accion-pill" style="flex: 1; height: 34px; font-size: 12px; justify-content: center; background: transparent; border: none;" onclick="TramaWeb.cambiarRolAuth('VISITANTE')">
+            🛍️ Comprador
+          </button>
+        </div>
+
+        <!-- Formulario -->
+        <div id="auth-campos-registro" style="display: none;">
+          <label class="label-fb-market">Nombre o Nombre del Emprendimiento</label>
+          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Doña Rosa o Panaderia Los Lagos">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Correo electronico</label>
+          <input type="email" id="auth-inp-email" class="input-fb-market" placeholder="tu-correo@gmail.com">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Contraseña</label>
+          <input type="password" id="auth-inp-password" class="input-fb-market" placeholder="Minimo 6 caracteres">
+        </div>
+
+        <div id="auth-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
+        <div id="auth-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+
+        <button type="button" id="btn-submit-auth" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 14px; font-weight: 800;" onclick="TramaWeb.ejecutarAuthFirebase()">
+          Iniciar Sesion
+        </button>
+
+        <div style="text-align: center;">
+          <button type="button" id="btn-toggle-modo-auth" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.toggleModoAuth()">
+            ¿No tienes cuenta? Registrate en Firebase aqui
+          </button>
+        </div>
+
+        <!-- Seccion Desarrollador: Tiendas de prueba -->
+        <details style="margin-top: 6px; border-top: 1px solid var(--gris-borde); padding-top: 10px;">
+          <summary style="font-size: 11.5px; font-weight: 700; color: var(--gris-texto); cursor: pointer;">
+            ⚙️ Tiendas de Prueba (Modo Desarrollador)
+          </summary>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_minimarket_rosa')">
+              🥖 Doña Rosa
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_barberia_alerce')">
+              💈 Barberia
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_tejidos_austral')">
+              🧶 Tejidos
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_reposteria_surena')">
+              🍰 Reposteria
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts Firebase SDK Oficial -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 
   <!-- Scripts -->
   <script src="js/qrcode.min.js"></script>
