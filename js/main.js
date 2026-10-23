@@ -1451,6 +1451,28 @@
       console.warn("No se pudo guardar en localStorage", e);
     }
 
+    // Sincronizar con Cloud Firestore en tiempo real si está conectado
+    if (firebaseFirestore) {
+      try {
+        firebaseFirestore.collection("tiendas").doc(tiendaId).collection("productos").doc(nuevoProducto.id).set({
+          id: nuevoProducto.id,
+          nombre: nuevoProducto.nombre,
+          precio: nuevoProducto.precio,
+          stockTotal: nuevoProducto.stockTotal,
+          descripcion: nuevoProducto.descripcion,
+          fotoUrl: nuevoProducto.fotoUrl,
+          publicado: true,
+          fechaCreacion: Date.now()
+        }).then(function () {
+          console.log("Producto guardado exitosamente en Firestore online");
+        }).catch(function (err) {
+          console.warn("Aviso Firestore al guardar producto:", err);
+        });
+      } catch (errFs) {
+        console.warn("Excepción guardando producto en Firestore:", errFs);
+      }
+    }
+
     // Agregar al listado en memoria
     PRODUCTOS.unshift(nuevoProducto);
 
@@ -2222,6 +2244,349 @@
     renderizarTiendasMarketplace();
     renderizarAsociaciones();
     configurarObservadorAuthFirebase();
+    cargarProductosDesdeFirestore();
+  }
+
+  // ============================================================
+  // MÓDULO 9: PUNTO DE VENTA (POS) Y REGISTRO DE VENTAS EN VIVO
+  // ============================================================
+
+  var estadoPOS = {
+    tiendaId: "t_minimarket_rosa",
+    medioPago: "Efectivo",
+    ticket: [],
+    montoPagaCon: 0
+  };
+
+  function abrirModalPOS() {
+    var selectTienda = document.getElementById("pos-select-tienda");
+    if (selectTienda) {
+      selectTienda.innerHTML = "";
+      TIENDAS.forEach(function (t) {
+        var opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.nombre;
+        if (t.id === estadoPOS.tiendaId) opt.selected = true;
+        selectTienda.appendChild(opt);
+      });
+    }
+    renderizarPOS();
+    abrirModal("modal-pos");
+  }
+
+  function cambiarTiendaPOS(nuevaTiendaId) {
+    estadoPOS.tiendaId = nuevaTiendaId;
+    renderizarPOS();
+  }
+
+  function renderizarPOS() {
+    var tienda = null;
+    for (var i = 0; i < TIENDAS.length; i++) {
+      if (TIENDAS[i].id === estadoPOS.tiendaId) {
+        tienda = TIENDAS[i];
+        break;
+      }
+    }
+    var sub = document.getElementById("pos-tienda-subtitulo");
+    if (sub && tienda) {
+      sub.textContent = "Catálogo y caja de " + tienda.nombre + " · " + tienda.rubro;
+    }
+
+    var prods = PRODUCTOS.filter(function (p) {
+      return p.tiendaId === estadoPOS.tiendaId;
+    });
+
+    var conteoDisp = document.getElementById("pos-conteo-disponibles");
+    if (conteoDisp) {
+      conteoDisp.textContent = prods.length + " productos listados";
+    }
+
+    var grid = document.getElementById("pos-grid-productos");
+    if (grid) {
+      grid.innerHTML = "";
+      if (prods.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--gris-texto); font-size: 12px;">No hay productos registrados en esta tienda.<br>Usa el botón "Añadir Producto" para crear uno.</div>';
+      } else {
+        prods.forEach(function (prod) {
+          var tarjeta = document.createElement("div");
+          tarjeta.style.cssText = "background: #fff; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: transform .15s ease, border-color .15s ease;";
+          tarjeta.onmouseover = function () { this.style.borderColor = "var(--negro-apple)"; };
+          tarjeta.onmouseout = function () { this.style.borderColor = "var(--gris-borde)"; };
+          tarjeta.onclick = function () { agregarProductoTicketPOS(prod.id); };
+
+          var fotoHtml = prod.fotoUrl
+            ? '<img src="' + prod.fotoUrl + '" alt="' + prod.nombre + '" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 6px;">'
+            : '<div style="width: 100%; height: 50px; background: #e4e4e7; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #71717a; margin-bottom: 6px;">📦</div>';
+
+          tarjeta.innerHTML = fotoHtml +
+            '<strong style="font-size: 11.5px; color: var(--negro-apple); line-height: 1.2; margin-bottom: 4px;">' + prod.nombre + '</strong>' +
+            '<span style="font-size: 12.5px; font-weight: 800; color: var(--rojo-alerce);">' + formatearMoneda(prod.precio) + '</span>';
+
+          grid.appendChild(tarjeta);
+        });
+      }
+    }
+
+    renderizarTicketPOS();
+  }
+
+  function agregarProductoTicketPOS(prodId) {
+    var prod = null;
+    for (var i = 0; i < PRODUCTOS.length; i++) {
+      if (PRODUCTOS[i].id === prodId) {
+        prod = PRODUCTOS[i];
+        break;
+      }
+    }
+    if (!prod) return;
+
+    var existe = null;
+    for (var j = 0; j < estadoPOS.ticket.length; j++) {
+      if (estadoPOS.ticket[j].productoId === prodId) {
+        existe = estadoPOS.ticket[j];
+        break;
+      }
+    }
+
+    if (existe) {
+      existe.cantidad++;
+    } else {
+      estadoPOS.ticket.push({
+        id: "tick_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+        productoId: prod.id,
+        nombre: prod.nombre,
+        precio: prod.precio,
+        cantidad: 1,
+        fotoUrl: prod.fotoUrl || ""
+      });
+    }
+
+    renderizarTicketPOS();
+  }
+
+  function modificarCantidadTicketPOS(index, delta) {
+    if (estadoPOS.ticket[index]) {
+      estadoPOS.ticket[index].cantidad += delta;
+      if (estadoPOS.ticket[index].cantidad <= 0) {
+        estadoPOS.ticket.splice(index, 1);
+      }
+    }
+    renderizarTicketPOS();
+  }
+
+  function vaciarTicketPOS() {
+    estadoPOS.ticket = [];
+    renderizarTicketPOS();
+  }
+
+  function renderizarTicketPOS() {
+    var lista = document.getElementById("pos-lista-items");
+    var totalCobrarEl = document.getElementById("pos-total-cobrar");
+    var total = 0;
+
+    if (!lista) return;
+    lista.innerHTML = "";
+
+    if (estadoPOS.ticket.length === 0) {
+      lista.innerHTML = '<div style="color: var(--gris-texto); text-align: center; padding: 24px 0;">El ticket está vacío.<br>Haz clic en los productos para agregarlos.</div>';
+    } else {
+      estadoPOS.ticket.forEach(function (item, idx) {
+        var subtotal = item.precio * item.cantidad;
+        total += subtotal;
+
+        var fila = document.createElement("div");
+        fila.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;";
+        fila.innerHTML =
+          '<div style="flex: 1; padding-right: 6px;">' +
+            '<div style="font-weight: 700; color: var(--negro-apple); line-height: 1.2;">' + item.nombre + '</div>' +
+            '<div style="font-size: 11px; color: var(--gris-texto);">' + formatearMoneda(item.precio) + ' c/u</div>' +
+          '</div>' +
+          '<div style="display: flex; align-items: center; gap: 4px;">' +
+            '<button type="button" style="width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--gris-borde); background: #fff; font-weight: 800; cursor: pointer;" onclick="TramaWeb.modificarCantidadTicketPOS(' + idx + ', -1)">-</button>' +
+            '<span style="font-weight: 800; min-width: 18px; text-align: center;">' + item.cantidad + '</span>' +
+            '<button type="button" style="width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--gris-borde); background: #fff; font-weight: 800; cursor: pointer;" onclick="TramaWeb.modificarCantidadTicketPOS(' + idx + ', 1)">+</button>' +
+          '</div>' +
+          '<div style="min-width: 65px; text-align: right; font-weight: 800; color: var(--negro-apple);">' + formatearMoneda(subtotal) + '</div>';
+
+        lista.appendChild(fila);
+      });
+    }
+
+    if (totalCobrarEl) {
+      totalCobrarEl.textContent = formatearMoneda(total);
+    }
+
+    calcularVueltoPOS();
+  }
+
+  function seleccionarMedioPagoPOS(medio) {
+    estadoPOS.medioPago = medio;
+    var btnEfe = document.getElementById("btn-pos-pago-efectivo");
+    var btnTra = document.getElementById("btn-pos-pago-transferencia");
+    var btnTar = document.getElementById("btn-pos-pago-tarjeta");
+    var cajaVuelto = document.getElementById("pos-caja-calculo-vuelto");
+
+    [btnEfe, btnTra, btnTar].forEach(function (b) {
+      if (b) {
+        b.className = "btn-accion-pill";
+        b.style.background = "#fff";
+        b.style.color = "var(--negro-apple)";
+        b.style.border = "1px solid var(--gris-borde)";
+      }
+    });
+
+    if (medio === "Efectivo" && btnEfe) {
+      btnEfe.className = "btn-accion-pill btn-negro";
+      btnEfe.style.background = "var(--negro-apple)";
+      btnEfe.style.color = "#fff";
+      if (cajaVuelto) cajaVuelto.style.display = "block";
+    } else if (medio === "Transferencia" && btnTra) {
+      btnTra.className = "btn-accion-pill btn-negro";
+      btnTra.style.background = "var(--negro-apple)";
+      btnTra.style.color = "#fff";
+      if (cajaVuelto) cajaVuelto.style.display = "none";
+    } else if (medio === "Tarjeta" && btnTar) {
+      btnTar.className = "btn-accion-pill btn-negro";
+      btnTar.style.background = "var(--negro-apple)";
+      btnTar.style.color = "#fff";
+      if (cajaVuelto) cajaVuelto.style.display = "none";
+    }
+
+    calcularVueltoPOS();
+  }
+
+  function calcularVueltoPOS() {
+    var inp = document.getElementById("pos-inp-paga-con");
+    var valorVueltoEl = document.getElementById("pos-valor-vuelto");
+    if (!valorVueltoEl) return;
+
+    var total = 0;
+    estadoPOS.ticket.forEach(function (i) { total += (i.precio * i.cantidad); });
+
+    var pagaCon = inp ? (parseInt(inp.value, 10) || 0) : 0;
+    estadoPOS.montoPagaCon = pagaCon;
+
+    if (estadoPOS.medioPago !== "Efectivo") {
+      valorVueltoEl.textContent = "$ 0 (Monto exacto)";
+      valorVueltoEl.style.color = "var(--gris-texto)";
+      return;
+    }
+
+    if (pagaCon >= total && total > 0) {
+      var vuelto = pagaCon - total;
+      valorVueltoEl.textContent = formatearMoneda(vuelto);
+      valorVueltoEl.style.color = "#16a34a";
+    } else if (pagaCon > 0 && pagaCon < total) {
+      var falta = total - pagaCon;
+      valorVueltoEl.textContent = "Faltan " + formatearMoneda(falta);
+      valorVueltoEl.style.color = "#dc2626";
+    } else {
+      valorVueltoEl.textContent = "$ 0";
+      valorVueltoEl.style.color = "var(--gris-texto)";
+    }
+  }
+
+  function confirmarVentaPOS() {
+    if (estadoPOS.ticket.length === 0) {
+      mostrarToast("⚠️ El ticket está vacío. Agrega productos para cobrar.");
+      return;
+    }
+
+    var total = 0;
+    var cantTotal = 0;
+    var resumenTexto = "🛒 Comprobante de Venta - Alerce Emprende\n";
+    var tienda = null;
+    for (var i = 0; i < TIENDAS.length; i++) {
+      if (TIENDAS[i].id === estadoPOS.tiendaId) {
+        tienda = TIENDAS[i];
+        break;
+      }
+    }
+    if (tienda) resumenTexto += "🏪 Tienda: " + tienda.nombre + "\n\n";
+
+    estadoPOS.ticket.forEach(function (it) {
+      var sub = it.precio * it.cantidad;
+      total += sub;
+      cantTotal += it.cantidad;
+      resumenTexto += "• " + it.nombre + " x" + it.cantidad + " = " + formatearMoneda(sub) + "\n";
+    });
+
+    resumenTexto += "\n💰 Total: " + formatearMoneda(total);
+    resumenTexto += "\n💳 Medio de Pago: " + estadoPOS.medioPago;
+
+    if (estadoPOS.medioPago === "Efectivo" && estadoPOS.montoPagaCon > 0) {
+      resumenTexto += "\n💵 Pagado con: " + formatearMoneda(estadoPOS.montoPagaCon);
+      var vto = Math.max(0, estadoPOS.montoPagaCon - total);
+      resumenTexto += "\n🪙 Vuelto entregado: " + formatearMoneda(vto);
+    }
+
+    resumenTexto += "\n\n¡Gracias por apoyar a los emprendedores locales de Alerce!";
+
+    // Guardar en Firestore si está conectado
+    if (firebaseFirestore) {
+      try {
+        firebaseFirestore.collection("tiendas").doc(estadoPOS.tiendaId).collection("ventas").add({
+          items: estadoPOS.ticket,
+          total: total,
+          cantArticulos: cantTotal,
+          medioPago: estadoPOS.medioPago,
+          fecha: Date.now()
+        }).catch(function (e) { console.warn("Aviso Firestore al guardar venta:", e); });
+      } catch (err) {
+        console.warn("Excepción guardando venta:", err);
+      }
+    }
+
+    // Ofrecer enviar recibo por WhatsApp
+    if (confirm("✅ Venta de " + formatearMoneda(total) + " registrada con éxito.\n¿Deseas enviar o compartir el comprobante por WhatsApp al cliente?")) {
+      var urlWsp = "https://wa.me/?text=" + encodeURIComponent(resumenTexto);
+      window.open(urlWsp, "_blank");
+    } else {
+      mostrarToast("✅ Venta de " + formatearMoneda(total) + " registrada en caja.");
+    }
+
+    vaciarTicketPOS();
+    cerrarModal("modal-pos");
+  }
+
+  // Sincronización en vivo con Cloud Firestore
+  function cargarProductosDesdeFirestore() {
+    if (!firebaseFirestore) return;
+    try {
+      firebaseFirestore.collection("tiendas").get().then(function (snapshotTiendas) {
+        snapshotTiendas.forEach(function (docTienda) {
+          docTienda.ref.collection("productos").get().then(function (snapProds) {
+            snapProds.forEach(function (docP) {
+              var data = docP.data();
+              if (data && data.nombre) {
+                var yaExiste = false;
+                for (var i = 0; i < PRODUCTOS.length; i++) {
+                  if (PRODUCTOS[i].id === docP.id) {
+                    yaExiste = true;
+                    break;
+                  }
+                }
+                if (!yaExiste) {
+                  PRODUCTOS.unshift({
+                    id: docP.id,
+                    tiendaId: docTienda.id,
+                    nombre: data.nombre,
+                    precio: Number(data.precio) || 0,
+                    stockTotal: Number(data.stockTotal) || 10,
+                    descripcion: data.descripcion || "",
+                    fotoUrl: data.fotoUrl || "",
+                    variantes: data.variantes || [{ nombre: "Unidad", precio: Number(data.precio) || 0 }]
+                  });
+                }
+              }
+            });
+            renderizarTiendasMarketplace();
+          }).catch(function(e){ console.warn("Aviso Firestore productos:", e); });
+        });
+      }).catch(function(e){ console.warn("Aviso Firestore tiendas:", e); });
+    } catch(err) {
+      console.warn("Error conectando Firestore:", err);
+    }
   }
 
   
@@ -2516,6 +2881,15 @@
     autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
     entrarModoDev: entrarModoDev,
+    // Módulo 9: Punto de Venta (POS) y Caja Rápida
+    abrirModalPOS: abrirModalPOS,
+    cambiarTiendaPOS: cambiarTiendaPOS,
+    agregarProductoTicketPOS: agregarProductoTicketPOS,
+    modificarCantidadTicketPOS: modificarCantidadTicketPOS,
+    vaciarTicketPOS: vaciarTicketPOS,
+    seleccionarMedioPagoPOS: seleccionarMedioPagoPOS,
+    calcularVueltoPOS: calcularVueltoPOS,
+    confirmarVentaPOS: confirmarVentaPOS,
     cerrarSesionWeb: cerrarSesionWeb
   };
 

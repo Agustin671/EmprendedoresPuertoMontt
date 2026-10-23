@@ -67,8 +67,20 @@
                aria-label="Buscar en la vitrina">
       </div>
 
-      <!-- Acciones de cabecera: Carrito y Usuario -->
+      <!-- Acciones de cabecera: Carrito, POS, Descarga y Usuario -->
       <div class="header-acciones">
+        <!-- Descarga directa APK Android -->
+        <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" id="btn-descarga-apk-header" style="text-decoration: none; background: var(--gris-chip); border: 1px solid var(--gris-borde); color: var(--negro-apple); font-weight: 700; height: 36px; padding: 0 11px; gap: 5px;" title="Descargar APK oficial para Android (30 MB)">
+          <span>📱</span>
+          <span>App Android</span>
+        </a>
+
+        <!-- Botón Punto de Venta / POS (Emprendedoras) -->
+        <button type="button" class="btn-accion-pill" id="btn-abrir-pos-nav" onclick="TramaWeb.abrirModalPOS()" style="padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Caja rápida y registro de ventas (POS)">
+          <span>🏷️</span>
+          <span>Caja POS</span>
+        </button>
+
         <!-- Botón de Añadir Producto / Vender (Emprendedoras) -->
         <button type="button" class="btn-accion-pill btn-negro" id="btn-abrir-publicar-nav" onclick="TramaWeb.abrirModalPublicarProducto()" style="padding: 0 12px; font-weight: 700; height: 36px;" title="Publicar producto estilo Facebook Marketplace">
           <span>➕</span>
@@ -139,6 +151,26 @@
         <button type="button" class="pill-categoria" data-categoria="Pastelería y Gastronomía">Pastelería y Gastronomía</button>
       </nav>
 
+      <!-- Banner Descarga de la Aplicación Móvil Android -->
+      <div class="banner-app-android" style="background: linear-gradient(135deg, #111111 0%, #1e1e24 100%); color: #fff; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border: 1px solid #27272a;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 44px; height: 44px; background: #27272a; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📱</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">App Oficial para Celulares Android</h3>
+              <span style="background: #22c55e; color: #052e16; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 20px;">v1.0.0 Oficial</span>
+            </div>
+            <p style="margin: 3px 0 0 0; font-size: 12px; color: #a1a1aa;">Incluye Punto de Venta (POS), lector de QR, soporte biométrico y sincronización en vivo con Firebase.</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" style="background: var(--rojo-alerce); color: #fff; border: none; font-weight: 800; height: 40px; padding: 0 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);">
+            <span>📥</span>
+            <span>Descargar APK (30.2 MB)</span>
+          </a>
+        </div>
+      </div>
+
       <!-- Banner Destacado para Emprendedoras (Estilo Facebook Marketplace & Flyer Maker) -->
       <aside class="banner-emprendedoras-cta">
         <div class="banner-emprendedoras-info">
@@ -147,7 +179,7 @@
             <span>Espacio de Emprendedoras de Alerce</span>
           </div>
           <h3 class="banner-emprendedoras-titulo">¿Tienes algo para vender o promocionar hoy?</h3>
-          <p class="banner-emprendedoras-desc">Sube artículos en 1 minuto con una interfaz fácil como Facebook Marketplace, o diseña afiches llamativos con plantillas estilo Burger King y McDonald's para compartir en tus grupos de WhatsApp.</p>
+          <p class="banner-emprendedoras-desc">Publica tus productos en segundos y diseña afiches comerciales de alto impacto con plantillas modernas para compartir en WhatsApp y ferias.</p>
         </div>
         <div class="banner-emprendedoras-botones">
           <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPublicarProducto()">
@@ -156,7 +188,11 @@
           </button>
           <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEstudioFlyer()">
             <span style="font-size: 18px;">🎨</span>
-            <span>Crear Flyer Comercial</span>
+            <span>Estudio de Afiches</span>
+          </button>
+          <button type="button" class="btn-flyer-cta" style="background: #27272a; border-color: #3f3f46;" onclick="TramaWeb.abrirModalPOS()">
+            <span style="font-size: 18px;">🏷️</span>
+            <span>Caja Rápida POS</span>
           </button>
         </div>
       </aside>
@@ -813,6 +849,93 @@
   </div>
 
   
+  <!-- 8. MODAL PUNTO DE VENTA (POS) / REGISTRO DE VENTAS EN VIVO -->
+  <div class="modal-overlay" id="modal-pos" role="dialog" aria-modal="true" aria-labelledby="modal-pos-titulo">
+    <div class="modal-panel-editorial" style="max-width: 860px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🏷️</span>
+          <div>
+            <h2 id="modal-pos-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple); margin: 0;">Punto de Venta (POS) · Caja Rápida</h2>
+            <p id="pos-tienda-subtitulo" style="font-size: 12px; color: var(--gris-texto); margin: 2px 0 0 0;">Cobra a clientes en ferias o local con cálculo de vuelto automático</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-pos')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="padding: 16px;">
+        <!-- Selector de Tienda activa en POS -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f4f4f5; padding: 8px 12px; border-radius: 8px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 12px; font-weight: 700;">Emprendimiento activo:</span>
+          <select id="pos-select-tienda" class="input-fb-market" style="width: auto; height: 32px; font-size: 12px; padding: 2px 8px;" onchange="TramaWeb.cambiarTiendaPOS(this.value)">
+            <!-- Opciones dinámicas -->
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+          <!-- Columna Izquierda: Catálogo para agregar con 1 clic -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong style="font-size: 13px;">Toca un producto para sumar al ticket:</strong>
+              <span id="pos-conteo-disponibles" style="font-size: 11px; color: var(--gris-texto);"></span>
+            </div>
+            <div id="pos-grid-productos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+              <!-- Productos renderizados dinámicamente -->
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Ticket actual y Cálculo de Vuelto -->
+          <div style="background: #fafafa; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 14px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong style="font-size: 14px;">🧾 Ticket de Venta</strong>
+              <button type="button" style="background: none; border: none; font-size: 11px; color: #dc2626; font-weight: 700; cursor: pointer;" onclick="TramaWeb.vaciarTicketPOS()">Vaciar</button>
+            </div>
+
+            <!-- Lista de items del ticket -->
+            <div id="pos-lista-items" style="flex: 1; min-height: 120px; max-height: 180px; overflow-y: auto; margin-bottom: 12px; font-size: 12px;">
+              <!-- Items en el ticket -->
+            </div>
+
+            <!-- Totales y Medio de Pago -->
+            <div style="border-top: 1px dashed var(--gris-borde); padding-top: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 900; color: var(--negro-apple); margin-bottom: 10px;">
+                <span>Total a cobrar:</span>
+                <span id="pos-total-cobrar">$ 0</span>
+              </div>
+
+              <!-- Selector medio de pago -->
+              <div style="margin-bottom: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--gris-texto); display: block; margin-bottom: 4px;">Medio de Pago:</label>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-accion-pill btn-negro" id="btn-pos-pago-efectivo" style="flex: 1; height: 30px; font-size: 11px; justify-content: center;" onclick="TramaWeb.seleccionarMedioPagoPOS('Efectivo')">💵 Efectivo</button>
+                  <button type="button" class="btn-accion-pill" id="btn-pos-pago-transferencia" style="flex: 1; height: 30px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.seleccionarMedioPagoPOS('Transferencia')">📱 Transf.</button>
+                  <button type="button" class="btn-accion-pill" id="btn-pos-pago-tarjeta" style="flex: 1; height: 30px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.seleccionarMedioPagoPOS('Tarjeta')">💳 Tarjeta</button>
+                </div>
+              </div>
+
+              <!-- Calculadora de efectivo si es Efectivo -->
+              <div id="pos-caja-calculo-vuelto" style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 8px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  <span style="font-size: 11px; font-weight: 700;">Cliente paga con:</span>
+                  <input type="number" id="pos-inp-paga-con" class="input-fb-market" style="width: 110px; height: 28px; font-size: 12px; text-align: right;" placeholder="$" oninput="TramaWeb.calcularVueltoPOS()">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; font-size: 12px; font-weight: 800; color: #16a34a;">
+                  <span>Vuelto a entregar:</span>
+                  <span id="pos-valor-vuelto">$ 0</span>
+                </div>
+              </div>
+
+              <!-- Botón Confirmar Venta -->
+              <button type="button" class="btn-accion-pill btn-negro" style="width: 100%; height: 42px; font-size: 13.5px; font-weight: 800; justify-content: center;" onclick="TramaWeb.confirmarVentaPOS()">
+                <span>✅ Registrar Venta y Comprobante</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL AUTENTICACION FIREBASE WEB -->
   <div class="modal-fondo" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo" style="display: none;">
     <div class="modal-contenedor modal-contenedor-fb" style="max-width: 440px;">
