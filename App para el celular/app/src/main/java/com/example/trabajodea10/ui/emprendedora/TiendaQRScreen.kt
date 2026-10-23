@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
+import com.example.trabajodea10.ui.publico.URL_VITRINA
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 
@@ -31,7 +32,7 @@ fun PantallaTiendaQR(
     tiendaId: String,
     nav: ControladorNavegacion
 ) {
-    val url = "https://trama.app/tienda/"
+    val url = URL_VITRINA
     val bitmap = remember(url) { generarQR(url, 400) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -52,7 +53,7 @@ fun PantallaTiendaQR(
             }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Escanea este código QR para compartir tu tienda",
+                text = "Escanea este código QR para abrir la vitrina de la tienda",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center

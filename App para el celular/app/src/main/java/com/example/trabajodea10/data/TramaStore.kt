@@ -468,6 +468,7 @@ object TramaStore {
     }
 
     fun eliminarProducto(id: String) {
+        productos.filter { it.id == id }.forEach { FotoProductoStore.eliminar(it.fotoUrl) }
         productos.removeAll { it.id == id }
         persistir()
     }

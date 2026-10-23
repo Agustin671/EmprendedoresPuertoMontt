@@ -57,6 +57,7 @@ import com.example.trabajodea10.ui.componentes.ChipEstado
 import com.example.trabajodea10.ui.componentes.ChipFiltro
 import com.example.trabajodea10.ui.componentes.ColorEstado
 import com.example.trabajodea10.ui.componentes.ContadorCantidad
+import com.example.trabajodea10.ui.componentes.FotoProducto
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.componentes.Vacio
@@ -191,6 +192,17 @@ fun PantallaVenta(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    FotoProducto(
+                                        fotoUrl = item.fotoUrl
+                                            ?: TramaStore.productoPorId(item.productoId)?.fotoUrl,
+                                        colorRespaldo = TramaStore.productoPorId(item.productoId)
+                                            ?.colorFoto ?: 0xFF8E6B94,
+                                        inicial = item.nombre,
+                                        modifier = Modifier.size(44.dp),
+                                        forma = RoundedCornerShape(10.dp),
+                                        tamanoInicial = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = item.nombre,
@@ -337,19 +349,14 @@ private fun FilaProductoVenta(producto: Producto) {
         modifier = Modifier.fillMaxWidth().padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .background(Color(producto.colorFoto), RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = producto.nombre.firstOrNull()?.uppercase() ?: "?",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-        }
+        FotoProducto(
+            fotoUrl = producto.fotoUrl,
+            colorRespaldo = producto.colorFoto,
+            inicial = producto.nombre,
+            modifier = Modifier.size(46.dp),
+            forma = RoundedCornerShape(12.dp),
+            tamanoInicial = 18.sp
+        )
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -413,6 +420,16 @@ private fun HojaProductoVenta(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TituloSeccion(texto = producto.nombre, accion = "Cerrar", onAccion = onCerrar)
+            FotoProducto(
+                fotoUrl = producto.fotoUrl,
+                colorRespaldo = producto.colorFoto,
+                inicial = producto.nombre,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
+                forma = RoundedCornerShape(14.dp),
+                tamanoInicial = 42.sp
+            )
             Text(
                 text = formatearMoneda(producto.precio),
                 style = MaterialTheme.typography.titleMedium,
@@ -456,7 +473,8 @@ private fun HojaProductoVenta(
                             nombre = producto.nombre,
                             detalle = varianteSel.nombre,
                             precio = producto.precio,
-                            cantidad = cantidad
+                            cantidad = cantidad,
+                            fotoUrl = producto.fotoUrl
                         )
                     )
                 }
@@ -506,17 +524,60 @@ private fun HojaVentaConfirmada(
 
             Tarjeta {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Productos vendidos",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    venta.items.forEachIndexed { index, item ->
+                        if (index > 0) {
+                            androidx.compose.material3.HorizontalDivider(
+                                color = LineaSuave,
+                                modifier = Modifier.padding(vertical = 6.dp)
+                            )
+                        }
+                        val producto = TramaStore.productoPorId(item.productoId)
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FotoProducto(
+                                fotoUrl = item.fotoUrl ?: producto?.fotoUrl,
+                                colorRespaldo = producto?.colorFoto ?: 0xFF8E6B94,
+                                inicial = item.nombre,
+                                modifier = Modifier.size(44.dp),
+                                forma = RoundedCornerShape(10.dp),
+                                tamanoInicial = 16.sp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = item.nombre,
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "${item.detalle} · x${item.cantidad}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextoSecundario
+                                )
+                            }
+                            Text(
+                                text = formatearMoneda(item.precio * item.cantidad),
+                                fontWeight = FontWeight.SemiBold,
+                                color = Berenjena
+                            )
+                        }
+                    }
+                    androidx.compose.material3.HorizontalDivider(
+                        color = LineaSuave,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
                     FilaResumen("Medio de pago", venta.medioPago.etiqueta)
                     FilaResumen("Feria vinculada", TramaStore.feriaDeLaVenta(venta.feriaId))
                     FilaResumen(
                         "Artículos",
                         venta.items.sumOf { it.cantidad }.toString()
-                    )
-                    Text(
-                        text = "El stock se descontó automáticamente.",
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextoSecundario
                     )
                 }
             }

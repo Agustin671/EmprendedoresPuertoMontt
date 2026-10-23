@@ -33,6 +33,7 @@ import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.BotonPrimario
 import com.example.trabajodea10.ui.componentes.BotonesTamanoTexto
+import com.example.trabajodea10.ui.componentes.FotoProducto
 import com.example.trabajodea10.ui.componentes.Vacio
 import com.example.trabajodea10.ui.theme.Berenjena
 
@@ -99,19 +100,16 @@ private fun TarjetaProductoGrande(producto: Producto, onConsultar: () -> Unit) {
         )
     ) {
         Column {
-            // "Foto" del producto: bloque de color con la inicial en grande.
-            Box(
+            FotoProducto(
+                fotoUrl = producto.fotoUrl,
+                colorRespaldo = producto.colorFoto,
+                inicial = producto.nombre,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
-                    .background(Color(producto.colorFoto), RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "🧶",
-                    fontSize = 56.sp
-                )
-            }
+                    .height(150.dp),
+                forma = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                tamanoInicial = 56.sp
+            )
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = producto.nombre,

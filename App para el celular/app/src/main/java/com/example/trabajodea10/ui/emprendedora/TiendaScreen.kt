@@ -77,6 +77,8 @@ import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
+import com.example.trabajodea10.ui.publico.URL_VITRINA
+import com.example.trabajodea10.ui.publico.compartirPorWhatsApp
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
 import com.example.trabajodea10.ui.theme.BerenjenaOscuro
@@ -492,12 +494,11 @@ fun PantallaTienda(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(
                     onClick = {
-                        val texto = "Mira mi tienda en Alerce Trama: https://trama.app/tienda/" + tiendaActualizada.id
-                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(android.content.Intent.EXTRA_TEXT, texto)
-                        }
-                        context.startActivity(android.content.Intent.createChooser(intent, "Compartir"))
+                        compartirPorWhatsApp(
+                            context,
+                            "¡Mira mi tienda ${tiendaActualizada.nombre}! " +
+                                "Puedes ver mis productos y pedir en línea aquí: $URL_VITRINA"
+                        )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = VerdeOk),
                     shape = RoundedCornerShape(50.dp),

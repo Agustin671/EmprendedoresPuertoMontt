@@ -110,7 +110,8 @@ data class Producto(
     val publicado: Boolean,
     val destacado: Boolean,
     val colorFoto: Long,
-    val variantes: List<Variante>
+    val variantes: List<Variante>,
+    val fotoUrl: String? = null
 ) {
     val stockTotal: Int get() = variantes.sumOf { it.stock }
     val agotado: Boolean get() = stockTotal == 0
@@ -124,7 +125,8 @@ data class ItemVenta(
     val nombre: String,
     val detalle: String,
     val precio: Double,
-    val cantidad: Int
+    val cantidad: Int,
+    val fotoUrl: String? = null
 )
 
 @Serializable

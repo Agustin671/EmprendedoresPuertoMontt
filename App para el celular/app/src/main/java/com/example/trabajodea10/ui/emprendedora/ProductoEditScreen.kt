@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +62,13 @@ import androidx.compose.ui.text.font.FontFamily
 import com.example.trabajodea10.R
 import coil.compose.AsyncImage
 import com.example.trabajodea10.data.Categoria
+import com.example.trabajodea10.data.FotoProductoStore
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.Variante
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.BotonPrimario
 import com.example.trabajodea10.ui.componentes.BotonSecundario
@@ -150,6 +156,12 @@ private fun formatearPrecio(precio: String): String {
     return java.text.NumberFormat.getIntegerInstance(java.util.Locale("es", "CL")).format(valor)
 }
 
+private fun modeloFoto(foto: String?): Any? {
+    val ruta = foto?.trim().orEmpty()
+    if (ruta.isEmpty()) return null
+    return if (ruta.startsWith("http") || ruta.startsWith("content://")) ruta else File(ruta)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaProductoDetalle(
@@ -188,13 +200,23 @@ fun PantallaProductoDetalle(
         mutableStateOf(if (original.variantes.any { it.stock > 0 }) "inmediato" else "pedido")
     }
     var detalles by remember { mutableStateOf("") }
-    var fotoUri by remember { mutableStateOf<String?>(null) }
+    var fotoUri by remember(original.id) { mutableStateOf(original.fotoUrl) }
+    val scope = rememberCoroutineScope()
 
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            fotoUri = uri.toString()
+            scope.launch {
+                val ruta = withContext(Dispatchers.IO) {
+                    FotoProductoStore.copiarDesdeUri(context, uri, original.id)
+                }
+                if (ruta != null) {
+                    fotoUri = ruta
+                } else {
+                    avisar("No se pudo guardar la imagen. Intenta nuevamente.")
+                }
+            }
         }
     }
 
@@ -566,6 +588,7 @@ fun PantallaProductoDetalle(
                     } else {
                         val stockFinal = if (tipoDisponibilidad == "inmediato") 15 else 0
                         val variantesFinales = listOf(Variante("${original.id}v1", "Unidad", stockFinal))
+                        val fotoAnterior = original.fotoUrl
 
                         TramaStore.guardarProducto(
                             original.copy(
@@ -574,9 +597,13 @@ fun PantallaProductoDetalle(
                                 categoria = categoria,
                                 publicado = publicado,
                                 destacado = destacado,
-                                variantes = variantesFinales
+                                variantes = variantesFinales,
+                                fotoUrl = fotoUri
                             )
                         )
+                        if (fotoAnterior != fotoUri) {
+                            FotoProductoStore.eliminar(fotoAnterior)
+                        }
                         avisar("Producto guardado")
                         nav.volver()
                     }
@@ -684,7 +711,7 @@ fun FlyerPreviewCard(
                     ) {
                         if (fotoUri != null) {
                             AsyncImage(
-                                model = fotoUri,
+                                model = modeloFoto(fotoUri),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -827,7 +854,7 @@ fun FlyerPreviewCard(
                     ) {
                         if (fotoUri != null) {
                             AsyncImage(
-                                model = fotoUri,
+                                model = modeloFoto(fotoUri),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -933,7 +960,7 @@ fun FlyerPreviewCard(
                     ) {
                         if (fotoUri != null) {
                             AsyncImage(
-                                model = fotoUri,
+                                model = modeloFoto(fotoUri),
                                 contentDescription = null,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -1056,7 +1083,7 @@ fun FlyerPreviewCard(
                         ) {
                             if (fotoUri != null) {
                                 AsyncImage(
-                                    model = fotoUri,
+                                    model = modeloFoto(fotoUri),
                                     contentDescription = null,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
@@ -1162,7 +1189,7 @@ fun FlyerPreviewCard(
                     ) {
                         if (fotoUri != null) {
                             AsyncImage(
-                                model = fotoUri,
+                                model = modeloFoto(fotoUri),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
