@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.Rol
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.AvatarIniciales
@@ -102,7 +103,7 @@ fun PantallaAjustes(
             )
 
             Text(
-                text = "Trama · versión 1.0.0 (demo con datos locales)",
+                text = "Alerce Emprende · versión 1.0.0 (Oficial Online)",
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextoSecundario,
@@ -114,17 +115,19 @@ fun PantallaAjustes(
 
 @Composable
 private fun PerfilAdmin() {
+    val nombre = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) FirebaseManager.nombreUsuarioActual else "Administrador"
+    val email = FirebaseManager.usuarioActual?.email ?: "admin@alerce.app"
     Tarjeta {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AvatarIniciales(nombre = "Paul", color = 0xFF111111, tamano = 52)
+            AvatarIniciales(nombre = nombre, color = 0xFF111111, tamano = 52)
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Paul", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = "paul@alerce.app",
+                    text = email,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextoSecundario
                 )

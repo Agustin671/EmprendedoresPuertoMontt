@@ -317,7 +317,7 @@ object MockData {
             colorFoto = 0xFFC07A3E,
             variantes = listOf(Variante("v_rep4", "Bolsa 250g", 12))
         ),
-        // Productos para Minimarket Doña Rosa
+        // Productos para Minimarket Doña Marta
         Producto(
             id = "p_mini_1",
             tiendaId = "t_minimarket_rosa",

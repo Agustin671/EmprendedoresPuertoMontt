@@ -249,6 +249,61 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         color = TextoSecundario
                     )
 
+                    if (pestanaModo == 0 && !esModoRegistro) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF8F9FA),
+                            border = BorderStroke(1.dp, GrisBorde),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Tienda Creada para Revisión",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.5.sp,
+                                        color = NegroApple
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(50.dp),
+                                        color = NegroApple
+                                    ) {
+                                        Text(
+                                            text = "Doña Marta",
+                                            color = BlancoPuro,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Correo: donamarta@alerce.app\nClave: alerce123",
+                                    fontSize = 11.sp,
+                                    color = TextoSecundario,
+                                    lineHeight = 16.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        correo = "donamarta@alerce.app"
+                                        clave = "alerce123"
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, NegroApple),
+                                    modifier = Modifier.fillMaxWidth().height(32.dp)
+                                ) {
+                                    Text("Usar credenciales de Doña Marta", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NegroApple)
+                                }
+                            }
+                        }
+                    }
+
                     if (esModoRegistro) {
                         OutlinedTextField(
                             value = nombreRegistro,
@@ -462,7 +517,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                     Text("🥖", fontSize = 16.sp)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
-                                        Text("Minimarket Doña Rosa", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
+                                        Text("Minimarket Doña Marta", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = NegroApple)
                                         Text("Abarrotes y pan amasado con stock", fontSize = 10.5.sp, color = GrisTexto)
                                     }
                                 }

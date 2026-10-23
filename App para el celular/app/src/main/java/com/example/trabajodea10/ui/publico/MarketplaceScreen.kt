@@ -174,8 +174,13 @@ fun PantallaMarketplace(
                                     .background(RojoAlerce, CircleShape)
                             )
                         }
+                        val saludoCabecera = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) {
+                            "Bienvenido(a), ${FirebaseManager.nombreUsuarioActual} · Vitrina de Alerce"
+                        } else {
+                            "Vitrina Comercial de Alerce · Puerto Montt"
+                        }
                         Text(
-                            text = "Bienvenido, Paul · Vitrina de Alerce",
+                            text = saludoCabecera,
                             style = MaterialTheme.typography.bodySmall,
                             color = GrisTexto
                         )
@@ -1073,7 +1078,7 @@ private fun DialogoDetalleTienda(
                         }
                     }
 
-                    // Formulario para que el cliente (Paul) pregunte
+                    // Formulario para que el cliente pregunte
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = Color(0xFFF9FAFB),
@@ -1099,9 +1104,13 @@ private fun DialogoDetalleTienda(
                             Button(
                                 onClick = {
                                     if (nuevaPreguntaCliente.isNotBlank()) {
+                                        val nombreFirma = if (FirebaseManager.nombreUsuarioActual.isNotBlank())
+                                            "${FirebaseManager.nombreUsuarioActual} (Vecino)"
+                                        else
+                                            "Vecino de Alerce"
                                         TramaStore.agregarPublicacionForo(
                                             tiendaId = tienda.id,
-                                            autorNombre = "Paul M. (Vecino)",
+                                            autorNombre = nombreFirma,
                                             esEmprendedor = false,
                                             texto = nuevaPreguntaCliente.trim()
                                         )
@@ -1117,7 +1126,11 @@ private fun DialogoDetalleTienda(
                             ) {
                                 Icon(Icons.Filled.Send, contentDescription = null, tint = BlancoPuro, modifier = Modifier.size(13.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Publicar Consulta como Paul", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BlancoPuro)
+                                val textoBotonPublicar = if (FirebaseManager.nombreUsuarioActual.isNotBlank())
+                                    "Publicar Consulta como ${FirebaseManager.nombreUsuarioActual}"
+                                else
+                                    "Publicar Consulta en el Muro"
+                                Text(textoBotonPublicar, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BlancoPuro)
                             }
                         }
                     }
@@ -1177,7 +1190,7 @@ fun DialogoAgendamientoTienda(
     var bloqueSeleccionado by remember { mutableStateOf<BloqueHorario?>(null) }
 
     var nombreCliente by remember {
-        mutableStateOf(if (FirebaseManager.nombreUsuarioDemo.isNotBlank()) FirebaseManager.nombreUsuarioDemo else "Paul Ferrada")
+        mutableStateOf(FirebaseManager.nombreUsuarioActual)
     }
     var telefonoCliente by remember { mutableStateOf("+56 9 ") }
     var servicio by remember { mutableStateOf("Atención / Corte de Cabello") }

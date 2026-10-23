@@ -1,4 +1,4 @@
-﻿package com.example.trabajodea10.ui.emprendedora
+package com.example.trabajodea10.ui.emprendedora
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -787,7 +787,7 @@ private fun SeccionGestionAgenda(
                                     if (bloque.reservado) {
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "Cliente: ${bloque.clienteNombre ?: "Paul"} · ${bloque.clienteTelefono ?: ""}",
+                                            text = "Cliente: ${bloque.clienteNombre ?: "Vecino"} · ${bloque.clienteTelefono ?: ""}",
                                             fontSize = 11.sp,
                                             color = NegroApple,
                                             fontWeight = FontWeight.Medium

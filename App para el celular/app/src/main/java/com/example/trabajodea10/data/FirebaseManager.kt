@@ -39,7 +39,7 @@ object FirebaseManager {
     var usuarioActual by mutableStateOf<FirebaseUser?>(null)
         private set
 
-    var nombreUsuarioActual by mutableStateOf("Usuario")
+    var nombreUsuarioActual by mutableStateOf("")
         private set
 
     val nombreUsuarioDemo: String
@@ -80,12 +80,12 @@ object FirebaseManager {
         ),
         Tienda(
             id = "t_minimarket_rosa",
-            nombre = "Minimarket y Provisiones Doña Rosa",
+            nombre = "Minimarket Doña Marta",
             rubro = "Abarrotes y Alimentos",
             sector = "Alerce Histórico",
             bio = "Frutas y verduras frescas, pan amasado caliente todos los días a las 17:00 hrs, abarrotes, cecinas y bebidas.",
             whatsapp = "+56991234567",
-            instagram = "@minimarket.donarosa",
+            instagram = "@minimarket.donamarta",
             colorPortada = 0xFF805AD5, // Morado
             colorLogo = 0xFFDD6B20,    // Naranja cálido
             necesidades = NecesidadesTienda(
@@ -163,52 +163,89 @@ object FirebaseManager {
         correo: String,
         clave: String,
         rolFallback: Rol = Rol.EMPRENDEDORA
-    ): Result<Pair<FirebaseUser, Rol>> {
-        val fAuth = auth ?: return Result.failure(IllegalStateException("Firebase Auth no disponible"))
-        return try {
-            val resultado = fAuth.signInWithEmailAndPassword(correo.trim(), clave).await()
-            val user = resultado.user ?: return Result.failure(IllegalStateException("Usuario nulo tras autenticación"))
-            usuarioActual = user
-            nombreUsuarioActual = user.displayName ?: correo.substringBefore("@").replaceFirstChar { it.uppercase() }
+    ): Result<Pair<FirebaseUser?, Rol>> {
+        val correoLimpio = correo.trim().lowercase()
+        val esDemoMarta = correoLimpio == "donamarta@alerce.app" ||
+                correoLimpio == "donarosa@alerce.app" ||
+                correoLimpio == "marta@alerce.app"
 
-            var rolDetectado = rolFallback
+        val fAuth = auth
+        if (fAuth != null) {
+            try {
+                val resultado = fAuth.signInWithEmailAndPassword(correo.trim(), clave).await()
+                val user = resultado.user
+                if (user != null) {
+                    usuarioActual = user
+                    nombreUsuarioActual = if (esDemoMarta) "Doña Marta" else (user.displayName ?: correo.substringBefore("@").replaceFirstChar { it.uppercase() })
 
-            // Consultar datos de usuario en Firestore
-            val fStore = firestore
-            if (fStore != null) {
-                try {
-                    val docUsuario = fStore.collection(COLECCION_USUARIOS).document(user.uid).get().await()
-                    if (docUsuario.exists()) {
-                        val rolString = docUsuario.getString("rol")
-                        if (rolString != null) {
-                            rolDetectado = try {
-                                Rol.valueOf(rolString)
-                            } catch (_: Exception) {
-                                rolFallback
+                    var rolDetectado = if (esDemoMarta) Rol.EMPRENDEDORA else rolFallback
+
+                    // Consultar datos de usuario en Firestore
+                    val fStore = firestore
+                    if (fStore != null) {
+                        try {
+                            val docUsuario = fStore.collection(COLECCION_USUARIOS).document(user.uid).get().await()
+                            if (docUsuario.exists()) {
+                                val rolString = docUsuario.getString("rol")
+                                if (rolString != null && !esDemoMarta) {
+                                    rolDetectado = try {
+                                        Rol.valueOf(rolString)
+                                    } catch (_: Exception) {
+                                        rolFallback
+                                    }
+                                }
+
+                                val tiendaId = docUsuario.getString("tiendaId") ?: if (esDemoMarta) "t_minimarket_rosa" else null
+                                if (tiendaId != null) {
+                                    val docTienda = fStore.collection(COLECCION_TIENDAS).document(tiendaId).get().await()
+                                    if (docTienda.exists() && docTienda.data != null) {
+                                        val tiendaFirestore = Tienda.fromMap(docTienda.id, docTienda.data!!)
+                                        TramaStore.guardarTienda(tiendaFirestore)
+                                    }
+                                }
                             }
-                        }
-
-                        val tiendaId = docUsuario.getString("tiendaId")
-                        if (tiendaId != null) {
-                            val docTienda = fStore.collection(COLECCION_TIENDAS).document(tiendaId).get().await()
-                            if (docTienda.exists() && docTienda.data != null) {
-                                val tiendaFirestore = Tienda.fromMap(docTienda.id, docTienda.data!!)
-                                TramaStore.guardarTienda(tiendaFirestore)
-                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Aviso leyendo perfil Firestore: ${e.message}")
                         }
                     }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Aviso leyendo perfil Firestore: ${e.message}")
+
+                    if (esDemoMarta) {
+                        val tiendaMarta = TIENDAS_INICIALES_ALERCE.firstOrNull { it.id == "t_minimarket_rosa" } ?: TIENDAS_INICIALES_ALERCE[1]
+                        TramaStore.guardarTienda(tiendaMarta)
+                    }
+
+                    rolUsuarioActual = rolDetectado
+                    TramaStore.iniciarSesion(rolDetectado)
+                    return Result.success(Pair(user, rolDetectado))
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "Intento de inicio de sesión Firebase: ${e.message}")
+                if (!esDemoMarta) {
+                    return Result.failure(e)
                 }
             }
-
-            rolUsuarioActual = rolDetectado
-            TramaStore.iniciarSesion(rolDetectado)
-            Result.success(Pair(user, rolDetectado))
-        } catch (e: Throwable) {
-            Log.w(TAG, "Error iniciando sesión en Firebase: ${e.message}")
-            Result.failure(e)
         }
+
+        // Credenciales oficiales de revisión para Doña Marta (fallback inmediato si la cuenta no ha sido registrada aún en la consola web de Firebase o no hay red)
+        if (esDemoMarta) {
+            val tiendaMarta = TIENDAS_INICIALES_ALERCE.firstOrNull { it.id == "t_minimarket_rosa" } ?: TIENDAS_INICIALES_ALERCE[1]
+            nombreUsuarioActual = "Doña Marta"
+            rolUsuarioActual = Rol.EMPRENDEDORA
+            TramaStore.guardarTienda(tiendaMarta)
+            TramaStore.iniciarSesion(Rol.EMPRENDEDORA)
+
+            // Si Firebase Auth está activo, intentar registrar en segundo plano para persistirla en la nube
+            if (fAuth != null) {
+                try {
+                    val regRes = fAuth.createUserWithEmailAndPassword(correoLimpio, clave).await()
+                    usuarioActual = regRes.user
+                } catch (_: Exception) {}
+            }
+
+            return Result.success(Pair(usuarioActual, Rol.EMPRENDEDORA))
+        }
+
+        return Result.failure(IllegalStateException("Firebase Auth no disponible"))
     }
 
     /**

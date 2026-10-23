@@ -188,16 +188,16 @@ object TramaStore {
                     respuestas = listOf(
                         RespuestaForo(
                             id = "resp_rosa_1_1",
-                            autorNombre = "Paul M.",
+                            autorNombre = "Carlos M.",
                             esEmprendedor = false,
-                            texto = "¿Doña Rosa, le queda queso de campo artesanal para acompañar el pancito?",
+                            texto = "¿Doña Marta, le queda queso de campo artesanal para acompañar el pancito?",
                             fecha = "Hoy, 16:45"
                         ),
                         RespuestaForo(
                             id = "resp_rosa_1_2",
-                            autorNombre = "Minimarket Doña Rosa",
+                            autorNombre = "Minimarket Doña Marta",
                             esEmprendedor = true,
-                            texto = "¡Hola Paul! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Te guardo una si gustas.",
+                            texto = "¡Hola vecino! Sí, nos llegaron 3 piezas recién traídas de Los Muermos. Le guardo una si gusta.",
                             fecha = "Hoy, 16:50"
                         )
                     )
@@ -205,16 +205,16 @@ object TramaStore {
                 PublicacionForo(
                     id = "pub_rosa_2",
                     tiendaId = "t_minimarket_rosa",
-                    autorNombre = "Marta Gómez",
+                    autorNombre = "Vecina Alerce",
                     esEmprendedor = false,
-                    texto = "¿Vecina Doña Rosa, hasta qué hora atiende hoy domingo? Necesito pasar por abarrotes y bebidas para la once familiar.",
+                    texto = "¿Vecina Doña Marta, hasta qué hora atiende hoy domingo? Necesito pasar por abarrotes y bebidas para la once familiar.",
                     fecha = "Ayer, 18:20",
                     respuestas = listOf(
                         RespuestaForo(
                             id = "resp_rosa_2_1",
-                            autorNombre = "Minimarket Doña Rosa",
+                            autorNombre = "Minimarket Doña Marta",
                             esEmprendedor = true,
-                            texto = "¡Hola Marta! Atendemos de corrido hasta las 21:30 hrs todos los días.",
+                            texto = "¡Hola vecina! Atendemos de corrido hasta las 21:30 hrs todos los días.",
                             fecha = "Ayer, 18:35"
                         )
                     )

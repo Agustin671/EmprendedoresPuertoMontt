@@ -53,7 +53,7 @@
           <span class="logo-alerce">ALERCE</span>
           <span class="punto-rojo"></span>
         </a>
-        <span class="logo-subtitulo" id="saludo-usuario-cabecera">Bienvenido, Paul · Vitrina de Alerce</span>
+        <span class="logo-subtitulo" id="saludo-usuario-cabecera">Vitrina Comercial de Alerce · Puerto Montt</span>
       </div>
 
       <!-- Buscador tipo Apple / Pinterest -->
@@ -83,7 +83,7 @@
         </button>
 
         <!-- Indicador de Usuario y Cierre de Sesión -->
-        <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuth()" style="cursor: pointer;" title="Iniciar sesión o cambiar cuenta">Paul (Vecino)</span>
+        <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuth()" style="cursor: pointer;" title="Iniciar sesión o cambiar cuenta">Iniciar Sesión / Mi Cuenta</span>
         
         <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
           🚪
@@ -377,7 +377,7 @@
             <strong style="font-size: 12px; color: var(--negro-apple);" id="label-pregunta-muro">Pregúntale a la tienda en el Muro:</strong>
             <textarea id="input-pregunta-muro" class="textarea-muro" placeholder="Ej: ¿Vecina, tiene stock disponible hoy o atiende por la tarde?"></textarea>
             <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; align-self: flex-start; padding: 0 20px;" onclick="TramaWeb.publicarPreguntaEnMuro()">
-              Publicar Consulta como Paul
+              Publicar Consulta en el Muro
             </button>
           </div>
         </div>
@@ -518,7 +518,7 @@
 
         <!-- Datos del cliente -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <input type="text" id="agenda-nombre-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Tu nombre completo (ej. Paul M.)" value="Paul Morales">
+          <input type="text" id="agenda-nombre-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Tu nombre completo (ej. Marta Gómez)" value="">
           <input type="tel" id="agenda-telefono-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Teléfono de contacto (+56 9 ...)" value="+56 9 8765 4321">
         </div>
 
@@ -599,7 +599,7 @@
           <div>
             <label for="fb-select-tienda" class="label-fb-market">Negocio</label>
             <select id="fb-select-tienda" class="input-fb-market" style="height: 44px; background: #ffffff;">
-              <option value="t_minimarket_rosa">Minimarket Doña Rosa</option>
+              <option value="t_minimarket_rosa">Minimarket Doña Marta</option>
               <option value="t_tejidos_austral">Tejidos & Lanares Austral</option>
               <option value="t_reposteria_surena">Repostería Casera Tradición Sureña</option>
               <option value="t_barberia_alerce">Barbería & Estilo Alerce</option>
@@ -835,10 +835,24 @@
           </button>
         </div>
 
+        <!-- Tarjeta de Credenciales de Prueba (Doña Marta) -->
+        <div id="auth-box-demo-marta" style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong>🏪 Minimarket Doña Marta</strong>
+            <span style="background: var(--negro-apple); color: #fff; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700;">Tienda para Revisión</span>
+          </div>
+          <div style="color: var(--gris-texto); font-size: 11px;">
+            Correo: <code>donamarta@alerce.app</code> &middot; Clave: <code>alerce123</code>
+          </div>
+          <button type="button" class="btn-accion-pill" style="margin-top: 6px; width: 100%; height: 28px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--negro-apple);" onclick="TramaWeb.autocompletarCredenciales('donamarta@alerce.app', 'alerce123')">
+            Autocompletar credenciales de Doña Marta
+          </button>
+        </div>
+
         <!-- Formulario -->
         <div id="auth-campos-registro" style="display: none;">
           <label class="label-fb-market">Nombre o Nombre del Emprendimiento</label>
-          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Doña Rosa o Panaderia Los Lagos">
+          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Marta o Panaderia Los Lagos">
         </div>
 
         <div>
@@ -871,7 +885,7 @@
           </summary>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
             <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_minimarket_rosa')">
-              🥖 Doña Rosa
+              🥖 Doña Marta
             </button>
             <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_barberia_alerce')">
               💈 Barberia

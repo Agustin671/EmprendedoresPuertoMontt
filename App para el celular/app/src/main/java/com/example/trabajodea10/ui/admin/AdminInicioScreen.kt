@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.EstadoFeria
 import com.example.trabajodea10.data.Feria
+import com.example.trabajodea10.data.FirebaseManager
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.rangoDeFechas
 import com.example.trabajodea10.ui.componentes.BarraSuperior
@@ -71,7 +72,7 @@ fun PantallaAdminInicio(
             .background(FondoLimpio)
     ) {
         BarraSuperior(
-            titulo = "Bienvenido, Paul",
+            titulo = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) "Bienvenido, ${FirebaseManager.nombreUsuarioActual}" else "Panel de Administración",
             subtitulo = "Panel de administración · Alerce Emprende",
             acciones = {
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
