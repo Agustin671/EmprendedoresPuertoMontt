@@ -1302,6 +1302,11 @@
 
   // Abrir Modal Publicar estilo FB Marketplace
   function abrirModalPublicarProducto() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para añadir productos.");
+      return;
+    }
     renderizarGaleriaSugeridaFB();
     abrirModal("modal-publicar-producto");
   }
@@ -1399,6 +1404,12 @@
 
   // Confirmar publicación estilo Facebook Marketplace
   function confirmarPublicacionFB() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para publicar productos.");
+      return;
+    }
+
     var inpTitulo = document.getElementById("fb-inp-titulo");
     var inpPrecio = document.getElementById("fb-inp-precio");
     var selectTienda = document.getElementById("fb-select-tienda");
@@ -1512,6 +1523,11 @@
 
   // Abrir Modal Estudio de Flyers
   function abrirModalEstudioFlyer() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para diseñar afiches comerciales.");
+      return;
+    }
     renderizarGaleriaFotosFlyer();
     abrirModal("modal-estudio-flyer");
     setTimeout(function () {
@@ -2245,6 +2261,7 @@
     renderizarAsociaciones();
     configurarObservadorAuthFirebase();
     cargarProductosDesdeFirestore();
+    actualizarUIControlesSegunRol();
   }
 
   // ============================================================
@@ -2259,6 +2276,11 @@
   };
 
   function abrirModalPOS() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para acceder a la Caja POS.");
+      return;
+    }
     var selectTienda = document.getElementById("pos-select-tienda");
     if (selectTienda) {
       selectTienda.innerHTML = "";
@@ -2793,6 +2815,41 @@
     mostrarToast("Entrando como " + nombre + " (Modo Prueba)");
   }
 
+  function esUsuarioEmprendedora() {
+    if (!estado.usuario || !estado.usuario.nombre || estado.usuario.nombre === "Visitante") {
+      return false;
+    }
+    var rol = (estado.usuario.rol || "").toLowerCase();
+    return rol.indexOf("emprendedor") !== -1 || rol.indexOf("admin") !== -1;
+  }
+
+  function actualizarUIControlesSegunRol() {
+    var esEmp = esUsuarioEmprendedora();
+
+    var btnPubNav = document.getElementById("btn-abrir-publicar-nav");
+    var btnPosNav = document.getElementById("btn-abrir-pos-nav");
+    var btnAccesoEmp = document.getElementById("btn-header-acceso-emp");
+    var bannerEmp = document.getElementById("banner-emprendedoras-cta");
+    var bannerInvitaEmp = document.getElementById("banner-invitacion-emprendedora");
+    var btnLogout = document.getElementById("btn-logout");
+
+    if (btnPubNav) btnPubNav.style.display = esEmp ? "inline-flex" : "none";
+    if (btnPosNav) btnPosNav.style.display = esEmp ? "inline-flex" : "none";
+    if (btnAccesoEmp) btnAccesoEmp.style.display = esEmp ? "none" : "inline-flex";
+
+    if (bannerEmp) bannerEmp.style.display = esEmp ? "flex" : "none";
+    if (bannerInvitaEmp) bannerInvitaEmp.style.display = esEmp ? "none" : "flex";
+
+    if (btnLogout) {
+      btnLogout.style.display = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre !== "Visitante") ? "inline-flex" : "none";
+    }
+  }
+
+  function abrirModalAuthEmprendedora() {
+    cambiarRolAuth('EMPRENDEDORA');
+    abrirModalAuth();
+  }
+
   function aplicarUsuarioLocal(nombre, rol) {
     estado.usuario = estado.usuario || {};
     estado.usuario.nombre = nombre;
@@ -2813,6 +2870,7 @@
         saludo.textContent = "Vitrina Comercial de Alerce · Puerto Montt";
       }
     }
+    actualizarUIControlesSegunRol();
   }
 
   function cerrarSesionWeb() {
@@ -2828,7 +2886,21 @@
       firebaseAuth.onAuthStateChanged(function (user) {
         if (user) {
           var nombre = user.displayName || (user.email ? user.email.split("@")[0] : "Usuario");
-          aplicarUsuarioLocal(nombre, "Usuario Firebase");
+          if (firebaseFirestore) {
+            firebaseFirestore.collection("usuarios").doc(user.uid).get().then(function (docU) {
+              var rol = "Visitante";
+              if (docU.exists && docU.data().rol) {
+                rol = docU.data().rol === "EMPRENDEDORA" ? "Emprendedora" : "Comprador";
+              }
+              aplicarUsuarioLocal(nombre, rol);
+            }).catch(function () {
+              aplicarUsuarioLocal(nombre, "Usuario");
+            });
+          } else {
+            aplicarUsuarioLocal(nombre, "Usuario");
+          }
+        } else {
+          aplicarUsuarioLocal("Visitante", "Visitante");
         }
       });
     }
@@ -2876,6 +2948,7 @@
     descargarFlyerImagen: descargarFlyerImagen,
     aplicarFlyerComoFotoProducto: aplicarFlyerComoFotoProducto,
     abrirModalAuth: abrirModalAuth,
+    abrirModalAuthEmprendedora: abrirModalAuthEmprendedora,
     cambiarRolAuth: cambiarRolAuth,
     toggleModoAuth: toggleModoAuth,
     autocompletarCredenciales: autocompletarCredenciales,
