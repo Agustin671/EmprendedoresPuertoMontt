@@ -153,6 +153,7 @@ fun PantallaPagoVenta(
                     val pago = medio ?: return@BotonPrimario
                     val venta = TramaStore.registrarVenta(carrito.toList(), pago, null)
                     val archivo = generarPdfVenta(context, venta)
+                    ventaConfirmada = venta
                     carrito.clear()
                     medio = null
                     if (archivo != null) {
@@ -161,7 +162,6 @@ fun PantallaPagoVenta(
                     } else {
                         avisar("Venta registrada")
                     }
-                    ventaConfirmada = venta
                 }
             )
             if (medio == null) {
