@@ -27,6 +27,7 @@ import com.example.trabajodea10.ui.auth.PantallaLogin
 import com.example.trabajodea10.ui.emprendedora.PantallaCatalogo
 import com.example.trabajodea10.ui.emprendedora.PantallaEmprendedoraInicio
 import com.example.trabajodea10.ui.emprendedora.PantallaMisFerias
+import com.example.trabajodea10.ui.emprendedora.PantallaPagoVenta
 import com.example.trabajodea10.ui.emprendedora.PantallaProductoDetalle
 import com.example.trabajodea10.ui.emprendedora.PantallaTienda
 import com.example.trabajodea10.ui.emprendedora.PantallaTiendaQR
@@ -157,6 +158,7 @@ private fun ContenidoSegunRuta(
         Ruta.EmpInicio -> PantallaEmprendedoraInicio(nav = nav, avisar = avisar)
         Ruta.EmpCatalogo -> PantallaCatalogo(nav = nav, avisar = avisar)
         Ruta.EmpVenta -> PantallaVenta(nav = nav, avisar = avisar)
+        Ruta.PagoVenta -> PantallaPagoVenta(nav = nav, avisar = avisar)
         Ruta.EmpFerias -> PantallaMisFerias(nav = nav, avisar = avisar)
         Ruta.EmpTienda -> PantallaTienda(nav = nav, avisar = avisar)
         is Ruta.EmpTiendaQR -> PantallaTiendaQR(tiendaId = ruta.tiendaId, nav = nav)

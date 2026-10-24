@@ -39,6 +39,7 @@ sealed class Ruta(val grafica: String? = null) {
     data object EmpInicio : Ruta("emp_inicio")
     data object EmpCatalogo : Ruta("emp_catalogo")
     data object EmpVenta : Ruta("emp_venta")
+    data object PagoVenta : Ruta()
     data object EmpFerias : Ruta("emp_ferias")
     data object EmpTienda : Ruta("emp_tienda")
     data class EmpTiendaQR(val tiendaId: String) : Ruta()

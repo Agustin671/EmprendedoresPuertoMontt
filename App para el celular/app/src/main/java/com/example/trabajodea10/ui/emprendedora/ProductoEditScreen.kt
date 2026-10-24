@@ -87,6 +87,7 @@ import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
+import androidx.compose.material.icons.filled.AddShoppingCart
 
 val BrittiFontFamily = FontFamily(Font(R.font.britti_bold, FontWeight.Bold))
 
@@ -608,6 +609,31 @@ fun PantallaProductoDetalle(
                         nav.volver()
                     }
                 }
+            )
+
+            BotonSecundario(
+                texto = "Agregar al carrito",
+                enabled = precio.isNotBlank(),
+                onClick = {
+                    if (nombre.isBlank()) {
+                        avisar("Guarda el producto primero")
+                        return@BotonSecundario
+                    }
+                    val variante = original.variantes.firstOrNull() ?: Variante("${original.id}v1", "Unidad", 999)
+                    TramaStore.agregarAlCarrito(
+                        com.example.trabajodea10.data.ItemVenta(
+                            productoId = original.id,
+                            varianteId = variante.id,
+                            nombre = nombre.trim(),
+                            detalle = variante.nombre,
+                            precio = precio.toDoubleOrNull() ?: original.precio,
+                            cantidad = 1,
+                            fotoUrl = fotoUri
+                        )
+                    )
+                    avisar("Producto agregado al carrito")
+                },
+                icono = { Icon(Icons.Filled.AddShoppingCart, contentDescription = null, tint = NegroApple) }
             )
 
             if (!esNuevo) {

@@ -184,7 +184,7 @@ fun PantallaCatalogo(
             ) {
                 items(visibles, key = { it.id }) { producto ->
                     Tarjeta(onClick = { nav.irA(Ruta.ProductoDetalle(producto.id)) }) {
-                        TarjetaProducto(producto)
+                        TarjetaProducto(producto, nav, avisar)
                     }
                 }
             }
@@ -193,7 +193,11 @@ fun PantallaCatalogo(
 }
 
 @Composable
-fun TarjetaProducto(producto: Producto) {
+fun TarjetaProducto(
+    producto: Producto,
+    nav: ControladorNavegacion,
+    avisar: (String) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -250,22 +254,47 @@ fun TarjetaProducto(producto: Producto) {
                     color = colorDeStock(producto.stockTotal)
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = if (producto.publicado) "Publicado" else "Borrador",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (producto.publicado) VerdeOk else NaranjaAlerta,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Switch(
-                    checked = producto.publicado,
-                    onCheckedChange = { TramaStore.togglePublicado(producto.id) },
-                    colors = SwitchDefaults.colors(
-                        checkedTrackColor = Berenjena,
-                        uncheckedTrackColor = SuperficieVariante,
-                        uncheckedBorderColor = com.example.trabajodea10.ui.theme.LineaSuave
+                if (!producto.agotado && producto.publicado) {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            val variante = producto.variantes.firstOrNull { it.stock > 0 } ?: producto.variantes.firstOrNull()
+                            if (variante != null) {
+                                TramaStore.agregarAlCarrito(
+                                    com.example.trabajodea10.data.ItemVenta(
+                                        productoId = producto.id,
+                                        varianteId = variante.id,
+                                        nombre = producto.nombre,
+                                        detalle = variante.nombre,
+                                        precio = producto.precio,
+                                        cantidad = 1,
+                                        fotoUrl = producto.fotoUrl
+                                    )
+                                )
+                                avisar("${producto.nombre} agregado al carrito")
+                            }
+                        },
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("Agregar al carrito", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                } else {
+                    Text(
+                        text = if (producto.publicado) "Publicado" else "Borrador",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (producto.publicado) VerdeOk else NaranjaAlerta,
+                        fontWeight = FontWeight.SemiBold
                     )
-                )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Switch(
+                        checked = producto.publicado,
+                        onCheckedChange = { TramaStore.togglePublicado(producto.id) },
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = Berenjena,
+                            uncheckedTrackColor = SuperficieVariante,
+                            uncheckedBorderColor = com.example.trabajodea10.ui.theme.LineaSuave
+                        )
+                    )
+                }
             }
         }
     }

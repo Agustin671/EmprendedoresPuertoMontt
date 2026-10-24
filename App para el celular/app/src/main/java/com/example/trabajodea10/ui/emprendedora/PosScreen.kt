@@ -76,13 +76,16 @@ fun PantallaVenta(
     nav: ControladorNavegacion,
     avisar: (String) -> Unit
 ) {
-    var feriaId by remember { mutableStateOf(TramaStore.feriasEnCurso().firstOrNull()?.id) }
+    var feriaId by remember { mutableStateOf<String?>(null) }
     // Usa carrito persistente en store
     val carrito = TramaStore.carritoVenta
-    var medio by remember { mutableStateOf<MedioPago?>(null) }
     var busqueda by remember { mutableStateOf("") }
     var productoSel by remember { mutableStateOf<Producto?>(null) }
     var ventaConfirmada by remember { mutableStateOf<Venta?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        carrito.clear()
+    }
 
     val publicados = TramaStore.productos.filter { it.publicado }
     val visibles = publicados.filter { it.nombre.contains(busqueda, true) }
@@ -251,24 +254,6 @@ fun PantallaVenta(
             }
 
             item {
-                TituloSeccion(texto = "3 · Medio de pago")
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    MedioPago.entries.forEach { opcion ->
-                        ChipFiltro(
-                            texto = opcion.etiqueta,
-                            seleccionado = medio == opcion,
-                            onClick = { medio = opcion }
-                        )
-                    }
-                }
-            }
-
-            item {
                 Tarjeta {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -294,26 +279,12 @@ fun PantallaVenta(
 
             item {
                 BotonPrimario(
-                    texto = if (carrito.isEmpty()) "Agregá productos" else "Confirmar venta · ${formatearMoneda(total)}",
-                    enabled = carrito.isNotEmpty() && medio != null,
+                    texto = if (carrito.isEmpty()) "Agregá productos" else "Continuar al pago · ${formatearMoneda(total)}",
+                    enabled = carrito.isNotEmpty(),
                     onClick = {
-                        val pago = medio ?: return@BotonPrimario
-                        val venta = TramaStore.registrarVenta(carrito, pago, feriaId)
-                        carrito.clear()
-                        medio = null
-                        busqueda = ""
-                        ventaConfirmada = venta
+                        nav.irA(com.example.trabajodea10.ui.navegacion.Ruta.PagoVenta)
                     }
                 )
-                if (medio == null && carrito.isNotEmpty()) {
-                    Text(
-                        text = "Elegí el medio de pago para continuar.",
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextoSecundario,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
             }
         }
     }
