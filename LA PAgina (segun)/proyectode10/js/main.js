@@ -364,16 +364,36 @@
     return "$ " + Math.round(valor).toLocaleString("es-CL");
   }
 
-  function mostrarToast(mensaje) {
+  var toastTimer = null;
+  function mostrarToast(mensaje, botonTexto, botonAccion) {
     var toast = document.getElementById("toast-alerta");
     var texto = document.getElementById("toast-texto");
-    if (toast && texto) {
-      texto.textContent = mensaje;
-      toast.style.display = "flex";
-      setTimeout(function () {
+    if (!toast || !texto) return;
+
+    texto.textContent = mensaje;
+
+    // Remover botón previo si existe
+    var btnPrevio = toast.querySelector(".btn-toast-ver-carrito");
+    if (btnPrevio) btnPrevio.remove();
+
+    if (botonTexto && typeof botonAccion === "function") {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-toast-ver-carrito";
+      btn.textContent = botonTexto;
+      btn.onclick = function (e) {
+        e.stopPropagation();
         toast.style.display = "none";
-      }, 3500);
+        botonAccion();
+      };
+      toast.appendChild(btn);
     }
+
+    toast.style.display = "flex";
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toast.style.display = "none";
+    }, 4500);
   }
 
   // ============================================================
@@ -411,11 +431,24 @@
     } catch (e) {}
   }
 
+  function obtenerIconoProducto(nombre) {
+    var n = (nombre || "").toLowerCase();
+    if (n.includes("pan") || n.includes("marraqueta") || n.includes("hallulla")) return "🥖";
+    if (n.includes("huevo")) return "🥚";
+    if (n.includes("miel")) return "🍯";
+    if (n.includes("tejido") || n.includes("lana") || n.includes("chaleco") || n.includes("gorro") || n.includes("cuello") || n.includes("piecera")) return "🧶";
+    if (n.includes("corte") || n.includes("barba") || n.includes("pelo") || n.includes("cera")) return "💈";
+    if (n.includes("torta") || n.includes("kuchen") || n.includes("alfajor") || n.includes("dulce") || n.includes("pasteleria")) return "🍰";
+    if (n.includes("cafe") || n.includes("te")) return "☕";
+    if (n.includes("pizza") || n.includes("empanada")) return "🍕";
+    return "🛍️";
+  }
+
   function agregarAlCarrito(productoId, varianteIndice) {
     var prod = PRODUCTOS.find(function (p) { return p.id === productoId; });
     if (!prod) return;
     var tienda = TIENDAS.find(function (t) { return t.id === prod.tiendaId; });
-    var variante = prod.variantes[varianteIndice || 0] || { nombre: "Estándar", precio: prod.precio };
+    var variante = (prod.variantes && prod.variantes[varianteIndice || 0]) || { nombre: "Estándar", precio: prod.precio };
 
     var itemExistente = estado.carrito.find(function (item) {
       return item.productoId === prod.id && item.varianteNombre === variante.nombre;
@@ -424,6 +457,7 @@
     if (itemExistente) {
       itemExistente.cantidad += 1;
     } else {
+      var foto = prod.fotoUrl || (prod.fotos && prod.fotos[0]) || "";
       estado.carrito.push({
         id: "cart_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
         productoId: prod.id,
@@ -433,12 +467,17 @@
         nombre: prod.nombre,
         varianteNombre: variante.nombre,
         precio: variante.precio,
-        cantidad: 1
+        cantidad: 1,
+        fotoUrl: foto
       });
     }
 
     guardarCarritoEnStorage();
-    mostrarToast("¡" + prod.nombre + " agregado al carrito!");
+    renderizarCarrito();
+    mostrarToast("¡" + prod.nombre + " agregado al carrito!", "Ver Carrito 🛒", function () {
+      renderizarCarrito();
+      abrirModal("modal-carrito");
+    });
   }
 
   function actualizarCantidadCarrito(itemId, delta) {
@@ -457,13 +496,17 @@
     estado.carrito = estado.carrito.filter(function (i) { return i.id !== itemId; });
     guardarCarritoEnStorage();
     renderizarCarrito();
+    mostrarToast("Producto quitado del carrito");
   }
 
   function vaciarCarrito() {
-    estado.carrito = [];
-    guardarCarritoEnStorage();
-    renderizarCarrito();
-    mostrarToast("Carrito vaciado");
+    if (estado.carrito.length === 0) return;
+    if (confirm("¿Deseas vaciar todos los productos del carrito?")) {
+      estado.carrito = [];
+      guardarCarritoEnStorage();
+      renderizarCarrito();
+      mostrarToast("Carrito vaciado");
+    }
   }
 
   function actualizarBadgesCarrito() {
@@ -503,35 +546,83 @@
     if (avisoVacio) avisoVacio.style.display = "none";
     if (seccionResumen) seccionResumen.style.display = "block";
 
-    var html = "";
-    var total = 0;
+    // Agrupar items por tienda para orden y claridad
+    var tiendasMap = {};
+    var totalGlobal = 0;
 
     estado.carrito.forEach(function (item) {
-      var subtotalItem = item.precio * item.cantidad;
-      total += subtotalItem;
+      if (!tiendasMap[item.tiendaId]) {
+        tiendasMap[item.tiendaId] = {
+          tiendaId: item.tiendaId,
+          nombre: item.tiendaNombre,
+          whatsapp: item.tiendaWhatsapp,
+          items: [],
+          subtotal: 0
+        };
+      }
+      tiendasMap[item.tiendaId].items.push(item);
+      tiendasMap[item.tiendaId].subtotal += item.precio * item.cantidad;
+      totalGlobal += item.precio * item.cantidad;
+    });
 
-      html += '<div class="item-carrito-fila">';
-      html += '  <div class="item-carrito-info">';
-      html += '    <h4 class="item-carrito-titulo">' + escaparHtml(item.nombre) + '</h4>';
-      html += '    <p class="item-carrito-tienda">' + escaparHtml(item.tiendaNombre) + ' · ' + escaparHtml(item.varianteNombre) + '</p>';
-      html += '    <p class="item-carrito-precio">' + formatearMoneda(item.precio) + ' c/u · Subtotal: <strong>' + formatearMoneda(subtotalItem) + '</strong></p>';
-      html += '  </div>';
-      html += '  <div class="controles-cantidad">';
-      html += '    <button type="button" class="btn-qty" onclick="TramaWeb.actualizarCantidadCarrito(\'' + item.id + '\', -1)">−</button>';
-      html += '    <span class="qty-numero">' + item.cantidad + '</span>';
-      html += '    <button type="button" class="btn-qty" onclick="TramaWeb.actualizarCantidadCarrito(\'' + item.id + '\', 1)">+</button>';
-      html += '    <button type="button" style="margin-left: 6px; font-size: 14px; cursor: pointer;" onclick="TramaWeb.eliminarItemCarrito(\'' + item.id + '\')" title="Quitar">🗑️</button>';
-      html += '  </div>';
-      html += '</div>';
+    var keysTiendas = Object.keys(tiendasMap);
+    var html = "";
+
+    keysTiendas.forEach(function (tId) {
+      var grupo = tiendasMap[tId];
+      var esMultipleTienda = keysTiendas.length > 1;
+
+      if (esMultipleTienda) {
+        html += '<div class="item-carrito-grupo-tienda">';
+        html += '  <div class="item-carrito-grupo-tienda-cabecera">';
+        html += '    <strong style="font-size: 13px; color: var(--negro-apple);">🏪 ' + escaparHtml(grupo.nombre) + '</strong>';
+        html += '    <span style="font-size: 11.5px; font-weight: 700; color: var(--gris-texto);">Subtotal: ' + formatearMoneda(grupo.subtotal) + '</span>';
+        html += '  </div>';
+      }
+
+      grupo.items.forEach(function (item) {
+        var subtotalItem = item.precio * item.cantidad;
+        var thumbHtml = item.fotoUrl
+          ? '<img src="' + escaparHtml(item.fotoUrl) + '" alt="' + escaparHtml(item.nombre) + '" class="item-carrito-img">'
+          : '<div class="item-carrito-img-placeholder">' + obtenerIconoProducto(item.nombre) + '</div>';
+
+        html += '<div class="item-carrito-fila">';
+        html += '  ' + thumbHtml;
+        html += '  <div class="item-carrito-info">';
+        html += '    <h4 class="item-carrito-titulo">' + escaparHtml(item.nombre) + '</h4>';
+        html += '    <p class="item-carrito-tienda">' + escaparHtml(item.tiendaNombre) + (item.varianteNombre && item.varianteNombre !== "Estándar" ? ' · ' + escaparHtml(item.varianteNombre) : '') + '</p>';
+        html += '    <p class="item-carrito-precio">' + formatearMoneda(item.precio) + ' c/u · Subtotal: <strong>' + formatearMoneda(subtotalItem) + '</strong></p>';
+        html += '  </div>';
+        html += '  <div class="controles-cantidad">';
+        html += '    <button type="button" class="btn-qty" onclick="TramaWeb.actualizarCantidadCarrito(\'' + item.id + '\', -1)" aria-label="Disminuir">−</button>';
+        html += '    <span class="qty-numero">' + item.cantidad + '</span>';
+        html += '    <button type="button" class="btn-qty" onclick="TramaWeb.actualizarCantidadCarrito(\'' + item.id + '\', 1)" aria-label="Aumentar">+</button>';
+        html += '    <button type="button" class="btn-eliminar-item" onclick="TramaWeb.eliminarItemCarrito(\'' + item.id + '\')" title="Quitar producto" aria-label="Quitar">🗑️</button>';
+        html += '  </div>';
+        html += '</div>';
+      });
+
+      if (esMultipleTienda) {
+        html += '  <div style="text-align: right; margin-top: 8px;">';
+        html += '    <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 12px;" onclick="TramaWeb.finalizarPedidoWhatsApp(\'' + tId + '\')">';
+        html += '      Pedir a ' + escaparHtml(grupo.nombre) + ' por WhatsApp ➔';
+        html += '    </button>';
+        html += '  </div>';
+        html += '</div>';
+      }
     });
 
     listaContainer.innerHTML = html;
-    if (subtotalTexto) subtotalTexto.textContent = formatearMoneda(total);
-    if (totalTexto) totalTexto.textContent = formatearMoneda(total);
+    if (subtotalTexto) subtotalTexto.textContent = formatearMoneda(totalGlobal);
+    if (totalTexto) totalTexto.textContent = formatearMoneda(totalGlobal);
 
     // Si está seleccionado Pago QR, actualizar el código QR
     if (estado.medioPagoSeleccionado === "QR") {
-      generarQRPago(total);
+      generarQRPago(totalGlobal);
+    }
+    // Si Efectivo estaba activo, recalcular vuelto
+    if (estado.medioPagoSeleccionado === "Efectivo" && estado.pagoConEfectivo) {
+      calcularVueltoEfectivo(estado.pagoConEfectivo);
     }
   }
 
@@ -547,12 +638,36 @@
     });
 
     var cajaQR = document.getElementById("caja-qr-pago");
+    var cajaEfectivo = document.getElementById("caja-efectivo-pago");
+
     if (medio === "QR") {
       if (cajaQR) cajaQR.style.display = "block";
       var total = estado.carrito.reduce(function (acc, i) { return acc + (i.precio * i.cantidad); }, 0);
       generarQRPago(total);
     } else {
       if (cajaQR) cajaQR.style.display = "none";
+    }
+
+    if (medio === "Efectivo") {
+      if (cajaEfectivo) cajaEfectivo.style.display = "block";
+    } else {
+      if (cajaEfectivo) cajaEfectivo.style.display = "none";
+    }
+  }
+
+  function calcularVueltoEfectivo(montoIngresado) {
+    var total = estado.carrito.reduce(function (acc, i) { return acc + (i.precio * i.cantidad); }, 0);
+    var cajaResultado = document.getElementById("caja-resultado-vuelto");
+    var textoVuelto = document.getElementById("texto-monto-vuelto");
+    var monto = parseInt(montoIngresado, 10);
+    if (!isNaN(monto) && monto >= total) {
+      var vuelto = monto - total;
+      if (cajaResultado) cajaResultado.style.display = "flex";
+      if (textoVuelto) textoVuelto.textContent = formatearMoneda(vuelto);
+      estado.pagoConEfectivo = monto;
+    } else {
+      if (cajaResultado) cajaResultado.style.display = "none";
+      estado.pagoConEfectivo = 0;
     }
   }
 
@@ -573,24 +688,45 @@
     }
   }
 
-  function finalizarPedidoWhatsApp() {
-    if (estado.carrito.length === 0) return;
+  function finalizarPedidoWhatsApp(tiendaIdFiltro) {
+    if (estado.carrito.length === 0) {
+      mostrarToast("Tu carrito está vacío.");
+      return;
+    }
 
-    var primerItem = estado.carrito[0];
-    var telefono = primerItem.tiendaWhatsapp.replace(/[^0-9]/g, "");
-    var total = estado.carrito.reduce(function (acc, i) { return acc + (i.precio * i.cantidad); }, 0);
+    var itemsParaEnviar = estado.carrito;
+    if (tiendaIdFiltro) {
+      itemsParaEnviar = estado.carrito.filter(function (i) { return i.tiendaId === tiendaIdFiltro; });
+    }
 
-    var mensaje = "¡Hola! Quiero confirmar mi pedido desde la vitrina de Alerce Emprende:\n\n";
-    estado.carrito.forEach(function (i) {
-      mensaje += "• " + i.cantidad + "x " + i.nombre + " (" + i.varianteNombre + ") — " + formatearMoneda(i.precio * i.cantidad) + "\n";
+    if (itemsParaEnviar.length === 0) return;
+
+    var primerItem = itemsParaEnviar[0];
+    var telefono = primerItem.tiendaWhatsapp ? primerItem.tiendaWhatsapp.replace(/[^0-9]/g, "") : "56961230000";
+    var total = itemsParaEnviar.reduce(function (acc, i) { return acc + (i.precio * i.cantidad); }, 0);
+    var nombreCliente = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre.trim() !== "" && estado.usuario.nombre !== "Visitante")
+      ? estado.usuario.nombre.trim()
+      : "Vecino(a) de Alerce";
+
+    var mensaje = "👋 ¡Hola *" + primerItem.tiendaNombre + "*! Quiero confirmar mi pedido desde la vitrina de *Alerce Emprende*:\n\n";
+    mensaje += "📦 *Detalle de la compra:*\n";
+    itemsParaEnviar.forEach(function (i) {
+      var variante = (i.varianteNombre && i.varianteNombre !== "Estándar") ? " (" + i.varianteNombre + ")" : "";
+      mensaje += "• " + i.cantidad + "x " + i.nombre + variante + " — " + formatearMoneda(i.precio * i.cantidad) + "\n";
     });
-    mensaje += "\n💰 Total: " + formatearMoneda(total);
-    mensaje += "\n💳 Medio de Pago: " + estado.medioPagoSeleccionado;
-    mensaje += "\n👤 Cliente: " + estado.usuario.nombre;
+    mensaje += "\n💰 *Total a pagar:* " + formatearMoneda(total);
+    mensaje += "\n💳 *Medio de Pago:* " + (estado.medioPagoSeleccionado || "Efectivo");
+    if (estado.medioPagoSeleccionado === "Efectivo" && estado.pagoConEfectivo && estado.pagoConEfectivo >= total) {
+      var vuelto = estado.pagoConEfectivo - total;
+      mensaje += " (Paga con: " + formatearMoneda(estado.pagoConEfectivo) + " · Vuelto: " + formatearMoneda(vuelto) + ")";
+    }
+    mensaje += "\n👤 *Cliente:* " + nombreCliente;
+    mensaje += "\n📍 *Sector:* Alerce, Puerto Montt\n";
+    mensaje += "\n_Pedido coordinado mediante Trama Alerce Emprende._";
 
     var url = "https://wa.me/" + telefono + "?text=" + encodeURIComponent(mensaje);
     window.open(url, "_blank");
-    mostrarToast("¡Abriendo WhatsApp para confirmar pedido!");
+    mostrarToast("¡Abriendo WhatsApp para confirmar tu pedido con " + primerItem.tiendaNombre + "!");
   }
 
   // ============================================================
@@ -2920,6 +3056,7 @@
     eliminarItemCarrito: eliminarItemCarrito,
     vaciarCarrito: vaciarCarrito,
     seleccionarMedioPago: seleccionarMedioPago,
+    calcularVueltoEfectivo: calcularVueltoEfectivo,
     finalizarPedidoWhatsApp: finalizarPedidoWhatsApp,
     copiarEnlaceQR: copiarEnlaceQR,
     seleccionarHora: seleccionarHora,
