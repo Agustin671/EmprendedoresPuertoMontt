@@ -71,10 +71,10 @@
     },
     {
       id: "t_minimarket_rosa",
-      nombre: "Minimarket Doña Marta",
+      nombre: "Minimarket Doña Rosa",
       rubro: "Abarrotes y Alimentos",
       sector: "Alerce Histórico",
-      bio: "Frutas y verduras frescas, pan amasado caliente todos los días a las 17:00 hrs, abarrotes, cecinas y bebidas.",
+      bio: "Frutas y verduras frescas, pan amasado caliente todos los días a las 17:00 hrs, abarrotes, cecinas artesanales y bebidas para los vecinos de Alerce.",
       whatsapp: "+56991234567",
       colorPortada: "#C53030",
       colorLogo: "#DD6B20",
@@ -82,8 +82,8 @@
         tieneStock: true,
         tieneAgendamiento: false,
         tieneVentaPorWhatsApp: true,
-        tieneProductosAPedido: false,
-        participaEnFerias: false,
+        tieneProductosAPedido: true,
+        participaEnFerias: true,
         tieneForoComunidad: true
       }
     },
@@ -257,12 +257,20 @@
 
   function cargarProductosDeStorage() {
     try {
+      var completo = localStorage.getItem("trama_productos_completo");
+      if (completo) return JSON.parse(completo);
       var guardados = localStorage.getItem("trama_productos_custom");
       var custom = guardados ? JSON.parse(guardados) : [];
       return PRODUCTOS_BASE.concat(custom);
     } catch (e) {
       return PRODUCTOS_BASE.slice();
     }
+  }
+
+  function guardarProductosEnStorage() {
+    try {
+      localStorage.setItem("trama_productos_completo", JSON.stringify(PRODUCTOS));
+    } catch (e) {}
   }
 
   var PRODUCTOS = cargarProductosDeStorage();
@@ -280,12 +288,12 @@
           id: "resp_1",
           autorNombre: "Carlos M.",
           esEmprendedor: false,
-          texto: "¿Doña Marta, le queda queso de campo artesanal para acompañar el pancito?",
+          texto: "¿Doña Rosa, le queda queso de campo artesanal para acompañar el pancito?",
           fecha: "Hoy, 16:45"
         },
         {
           id: "resp_2",
-          autorNombre: "Minimarket Doña Marta",
+          autorNombre: "Minimarket Doña Rosa",
           esEmprendedor: true,
           texto: "¡Hola! Sí vecino, nos llegaron 3 piezas recién traídas de Los Muermos. Le guardo una si gusta.",
           fecha: "Hoy, 16:50"
@@ -2903,14 +2911,12 @@
         })
         .catch(function (err) {
           var emailLower = email.toLowerCase().trim();
-          if (emailLower === "donamarta@alerce.app" || emailLower === "donarosa@alerce.app" || emailLower === "marta@alerce.app") {
-            aplicarUsuarioLocal("Doña Marta", "Emprendedora (Minimarket)");
+          if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {
             if (btnSubmit) {
               btnSubmit.disabled = false;
               btnSubmit.textContent = "Iniciar Sesión";
             }
-            cerrarModal("modal-auth-web");
-            mostrarToast("¡Bienvenida Doña Marta! Sesión iniciada.");
+            entrarModoDonaRosa();
             return;
           }
 
@@ -2938,6 +2944,10 @@
   }
 
   function entrarModoDev(tiendaId) {
+    if (tiendaId === "t_minimarket_rosa") {
+      entrarModoDonaRosa();
+      return;
+    }
     var tienda = null;
     for (var i = 0; i < TIENDAS.length; i++) {
       if (TIENDAS[i].id === tiendaId) {
@@ -2945,10 +2955,21 @@
         break;
       }
     }
-    var nombre = tienda ? tienda.nombre : "Doña Marta";
+    var nombre = tienda ? tienda.nombre : "Minimarket Doña Rosa";
+    estado.tiendaEmprendedoraId = tiendaId;
+    estadoPOS.tiendaId = tiendaId;
     aplicarUsuarioLocal(nombre, "Emprendedora (Prueba)");
     cerrarModal("modal-auth-web");
-    mostrarToast("Entrando como " + nombre + " (Modo Prueba)");
+    mostrarToast("Entrando como " + nombre + " (Modo Emprendedora)");
+  }
+
+  function entrarModoDonaRosa() {
+    aplicarUsuarioLocal("Minimarket Doña Rosa", "Emprendedora (Minimarket)");
+    estado.tiendaEmprendedoraId = "t_minimarket_rosa";
+    estadoPOS.tiendaId = "t_minimarket_rosa";
+    cerrarModal("modal-auth-web");
+    actualizarDashboardEmprendedora();
+    mostrarToast("¡Bienvenida Doña Rosa! Modo Emprendedora activado con todas las funciones de la app Android.");
   }
 
   function esUsuarioEmprendedora() {
@@ -2964,6 +2985,7 @@
 
     var btnPubNav = document.getElementById("btn-abrir-publicar-nav");
     var btnPosNav = document.getElementById("btn-abrir-pos-nav");
+    var btnCatNav = document.getElementById("btn-abrir-catalogo-nav");
     var btnAccesoEmp = document.getElementById("btn-header-acceso-emp");
     var bannerEmp = document.getElementById("banner-emprendedoras-cta");
     var bannerInvitaEmp = document.getElementById("banner-invitacion-emprendedora");
@@ -2971,6 +2993,7 @@
 
     if (btnPubNav) btnPubNav.style.display = esEmp ? "inline-flex" : "none";
     if (btnPosNav) btnPosNav.style.display = esEmp ? "inline-flex" : "none";
+    if (btnCatNav) btnCatNav.style.display = esEmp ? "inline-flex" : "none";
     if (btnAccesoEmp) btnAccesoEmp.style.display = esEmp ? "none" : "inline-flex";
 
     if (bannerEmp) bannerEmp.style.display = esEmp ? "flex" : "none";
@@ -2978,6 +3001,10 @@
 
     if (btnLogout) {
       btnLogout.style.display = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre !== "Visitante") ? "inline-flex" : "none";
+    }
+
+    if (esEmp) {
+      actualizarDashboardEmprendedora();
     }
   }
 
@@ -3042,6 +3069,376 @@
     }
   }
 
+  // ============================================================
+  // MÓDULO 10: FUNCIONALIDADES DE EMPRENDEDORA (Matching Android)
+  // DashboardScreen, CatalogoScreen, MisFeriasScreen, TiendaScreen
+  // ============================================================
+
+  function actualizarDashboardEmprendedora() {
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; }) || TIENDAS[1];
+    var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
+    var prodsActivos = prodsTienda.filter(function (p) { return p.publicado !== false; });
+    var stockTotal = prodsTienda.reduce(function (acc, p) { return acc + (p.stockTotal || 0); }, 0);
+
+    var saludoEl = document.getElementById("dashboard-emp-saludo");
+    var badgeEl = document.getElementById("dashboard-emp-tienda-badge");
+    var metricaProds = document.getElementById("metrica-prods-activos");
+    var metricaStock = document.getElementById("metrica-stock-total");
+    var alertaStockEl = document.getElementById("texto-alerta-stock");
+    var subCatalogo = document.getElementById("subtitulo-gestion-catalogo");
+
+    if (saludoEl) saludoEl.textContent = "Hola, " + (tienda.nombre.split(" ").slice(-2).join(" ") || "Doña Rosa") + " 👋";
+    if (badgeEl) badgeEl.textContent = "Modo Emprendedora Activo · " + tienda.nombre;
+    if (subCatalogo) subCatalogo.textContent = tienda.nombre + " · " + tienda.sector;
+
+    if (metricaProds) metricaProds.textContent = prodsActivos.length + " activos";
+    if (metricaStock) metricaStock.textContent = stockTotal + " un.";
+
+    // Alerta de stock bajo (primer producto con stock <= 10)
+    var prodBajoStock = prodsTienda.find(function (p) { return p.stockTotal > 0 && p.stockTotal <= 10; });
+    if (alertaStockEl) {
+      if (prodBajoStock) {
+        alertaStockEl.textContent = prodBajoStock.nombre + ": Quedan " + prodBajoStock.stockTotal + " unidades disponibles en stock.";
+      } else {
+        alertaStockEl.textContent = "Inventario al día: Todos tus productos tienen stock disponible.";
+      }
+    }
+  }
+
+  function abrirModalGestionCatalogo() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para gestionar el catálogo.");
+      return;
+    }
+    renderizarGestionCatalogo();
+    abrirModal("modal-gestion-catalogo");
+  }
+
+  function renderizarGestionCatalogo() {
+    var cont = document.getElementById("lista-items-catalogo-gestion");
+    var conteo = document.getElementById("conteo-prods-catalogo-gestion");
+    if (!cont) return;
+
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
+
+    if (conteo) conteo.textContent = prodsTienda.length + " productos en catálogo";
+
+    if (prodsTienda.length === 0) {
+      cont.innerHTML = '<div style="text-align: center; padding: 30px 10px; color: var(--gris-texto); font-size: 13px;">No hay productos registrados aún.<br>Presiona "➕ Añadir Nuevo Producto" para comenzar.</div>';
+      return;
+    }
+
+    var html = "";
+    prodsTienda.forEach(function (prod) {
+      var publicado = prod.publicado !== false;
+      var stock = typeof prod.stockTotal === "number" ? prod.stockTotal : 0;
+      var icono = obtenerIconoProducto(prod.nombre);
+      var thumbHtml = prod.fotoUrl
+        ? '<img src="' + escaparHtml(prod.fotoUrl) + '" alt="" style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gris-borde); flex-shrink: 0;">'
+        : '<div style="width: 48px; height: 48px; border-radius: 8px; background: var(--gris-chip); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">' + icono + '</div>';
+
+      html += '<div class="item-catalogo-gestion" id="item-cat-' + prod.id + '">';
+      html += '  <div class="item-catalogo-gestion-info">';
+      html += '    ' + thumbHtml;
+      html += '    <div style="flex: 1;">';
+      html += '      <strong style="font-size: 13.5px; color: var(--negro-apple); display: block;">' + escaparHtml(prod.nombre) + '</strong>';
+      html += '      <span style="font-size: 11.5px; color: var(--gris-texto);">' + (prod.descripcion ? escaparHtml(prod.descripcion).slice(0, 50) + "..." : "Sin descripción") + '</span>';
+      html += '      <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">';
+      html += '        <strong style="font-size: 13px; color: var(--rojo-alerce);">' + formatearMoneda(prod.precio) + '</strong>';
+      html += '        <button type="button" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.editarPrecioProducto(\'' + prod.id + '\')">Editar precio</button>';
+      html += '      </div>';
+      html += '    </div>';
+      html += '  </div>';
+
+      // Controles: Publicado/Pausado + Stock + Eliminar
+      html += '  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">';
+      html += '    <button type="button" class="badge-estado-pub ' + (publicado ? 'activo' : 'pausado') + '" onclick="TramaWeb.togglePublicadoProducto(\'' + prod.id + '\')" title="Toca para cambiar estado">';
+      html +=        publicado ? '✅ En Vitrina' : '⏸️ Pausado';
+      html += '    </button>';
+
+      html += '    <div class="controles-cantidad" style="background: #fafafa; padding: 2px 6px; border-radius: 20px; border: 1px solid var(--gris-borde);">';
+      html += '      <span style="font-size: 10.5px; font-weight: 700; color: var(--gris-texto); margin-right: 4px;">Stock:</span>';
+      html += '      <button type="button" class="btn-qty" onclick="TramaWeb.modificarStockProducto(\'' + prod.id + '\', -1)">−</button>';
+      html += '      <span class="qty-numero" style="font-size: 12.5px;">' + stock + '</span>';
+      html += '      <button type="button" class="btn-qty" onclick="TramaWeb.modificarStockProducto(\'' + prod.id + '\', 1)">+</button>';
+      html += '    </div>';
+
+      html += '    <button type="button" class="btn-eliminar-item" style="font-size: 14px;" onclick="TramaWeb.eliminarProductoCatalogo(\'' + prod.id + '\')" title="Eliminar del catálogo">';
+      html += '      🗑️';
+      html += '    </button>';
+      html += '  </div>';
+
+      html += '</div>';
+    });
+
+    cont.innerHTML = html;
+  }
+
+  function modificarStockProducto(prodId, delta) {
+    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
+    if (!prod) return;
+    prod.stockTotal = Math.max(0, (prod.stockTotal || 0) + delta);
+    guardarProductosEnStorage();
+    renderizarGestionCatalogo();
+    actualizarDashboardEmprendedora();
+    renderizarPOS();
+    mostrarToast("Stock de " + prod.nombre + " actualizado a " + prod.stockTotal);
+  }
+
+  function togglePublicadoProducto(prodId) {
+    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
+    if (!prod) return;
+    prod.publicado = prod.publicado === false ? true : false;
+    guardarProductosEnStorage();
+    renderizarGestionCatalogo();
+    actualizarDashboardEmprendedora();
+    renderizarTiendasMarketplace();
+    renderizarPOS();
+    mostrarToast(prod.nombre + (prod.publicado ? " ahora está visible en vitrina" : " fue pausado (oculto)"));
+  }
+
+  function editarPrecioProducto(prodId) {
+    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
+    if (!prod) return;
+    var nuevo = prompt("Ingresa el nuevo precio para " + prod.nombre + ":", prod.precio);
+    if (nuevo === null) return;
+    var num = parseInt(nuevo, 10);
+    if (!isNaN(num) && num >= 0) {
+      prod.precio = num;
+      if (prod.variantes && prod.variantes[0]) {
+        prod.variantes[0].precio = num;
+      }
+      guardarProductosEnStorage();
+      renderizarGestionCatalogo();
+      actualizarDashboardEmprendedora();
+      renderizarTiendasMarketplace();
+      renderizarPOS();
+      mostrarToast("¡Precio actualizado a " + formatearMoneda(num) + "!");
+    }
+  }
+
+  function eliminarProductoCatalogo(prodId) {
+    var idx = PRODUCTOS.findIndex(function (p) { return p.id === prodId; });
+    if (idx === -1) return;
+    var nombre = PRODUCTOS[idx].nombre;
+    if (confirm("¿Segura que deseas eliminar '" + nombre + "' del catálogo?")) {
+      PRODUCTOS.splice(idx, 1);
+      guardarProductosEnStorage();
+      renderizarGestionCatalogo();
+      actualizarDashboardEmprendedora();
+      renderizarTiendasMarketplace();
+      renderizarPOS();
+      mostrarToast("Producto eliminado del catálogo");
+    }
+  }
+
+  function abrirModalEditarTienda() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora.");
+      return;
+    }
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; }) || TIENDAS[1];
+
+    var inpNom = document.getElementById("edit-tienda-nombre");
+    var inpRub = document.getElementById("edit-tienda-rubro");
+    var inpSec = document.getElementById("edit-tienda-sector");
+    var inpWsp = document.getElementById("edit-tienda-whatsapp");
+    var inpBio = document.getElementById("edit-tienda-bio");
+
+    var cStock = document.getElementById("check-cap-stock");
+    var cWsp = document.getElementById("check-cap-whatsapp");
+    var cPed = document.getElementById("check-cap-pedido");
+    var cFer = document.getElementById("check-cap-ferias");
+    var cForo = document.getElementById("check-cap-foro");
+    var cAge = document.getElementById("check-cap-agenda");
+
+    if (inpNom) inpNom.value = tienda.nombre;
+    if (inpRub) inpRub.value = tienda.rubro;
+    if (inpSec) inpSec.value = tienda.sector;
+    if (inpWsp) inpWsp.value = tienda.whatsapp;
+    if (inpBio) inpBio.value = tienda.bio;
+
+    var nec = tienda.necesidades || {};
+    if (cStock) cStock.checked = !!nec.tieneStock;
+    if (cWsp) cWsp.checked = !!nec.tieneVentaPorWhatsApp;
+    if (cPed) cPed.checked = !!nec.tieneProductosAPedido;
+    if (cFer) cFer.checked = !!nec.participaEnFerias;
+    if (cForo) cForo.checked = !!nec.tieneForoComunidad;
+    if (cAge) cAge.checked = !!nec.tieneAgendamiento;
+
+    abrirModal("modal-editar-tienda");
+  }
+
+  function guardarPerfilTienda() {
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; });
+    if (!tienda) return;
+
+    var inpNom = document.getElementById("edit-tienda-nombre");
+    var inpRub = document.getElementById("edit-tienda-rubro");
+    var inpSec = document.getElementById("edit-tienda-sector");
+    var inpWsp = document.getElementById("edit-tienda-whatsapp");
+    var inpBio = document.getElementById("edit-tienda-bio");
+
+    if (inpNom && inpNom.value.trim()) tienda.nombre = inpNom.value.trim();
+    if (inpRub && inpRub.value.trim()) tienda.rubro = inpRub.value.trim();
+    if (inpSec && inpSec.value.trim()) tienda.sector = inpSec.value.trim();
+    if (inpWsp && inpWsp.value.trim()) tienda.whatsapp = inpWsp.value.trim();
+    if (inpBio && inpBio.value.trim()) tienda.bio = inpBio.value.trim();
+
+    tienda.necesidades = {
+      tieneStock: document.getElementById("check-cap-stock") ? document.getElementById("check-cap-stock").checked : true,
+      tieneVentaPorWhatsApp: document.getElementById("check-cap-whatsapp") ? document.getElementById("check-cap-whatsapp").checked : true,
+      tieneProductosAPedido: document.getElementById("check-cap-pedido") ? document.getElementById("check-cap-pedido").checked : false,
+      participaEnFerias: document.getElementById("check-cap-ferias") ? document.getElementById("check-cap-ferias").checked : true,
+      tieneForoComunidad: document.getElementById("check-cap-foro") ? document.getElementById("check-cap-foro").checked : true,
+      tieneAgendamiento: document.getElementById("check-cap-agenda") ? document.getElementById("check-cap-agenda").checked : false
+    };
+
+    try {
+      localStorage.setItem("trama_tiendas_completo", JSON.stringify(TIENDAS));
+    } catch(e) {}
+
+    if (firebaseFirestore) {
+      try {
+        firebaseFirestore.collection("tiendas").doc(tienda.id).set(tienda, { merge: true });
+      } catch (e){}
+    }
+
+    renderizarTiendasMarketplace();
+    actualizarDashboardEmprendedora();
+    cerrarModal("modal-editar-tienda");
+    mostrarToast("¡Perfil de " + tienda.nombre + " guardado con éxito!");
+  }
+
+  var FERIAS_COMUNALES = [
+    {
+      id: "valle",
+      nombre: "Feria de Emprendedoras del Valle",
+      fecha: "Miércoles 7 de octubre de 2026 · 09:00 a 18:00 hrs",
+      lugar: "Plaza de Armas, Puerto Montt",
+      descripcion: "Gran muestra de productos artesanales, panadería, repostería y abarrotes típicos del sur.",
+      participantes: ["t_minimarket_rosa", "t_tejidos_austral", "t_reposteria_surena"]
+    },
+    {
+      id: "costumbrista",
+      nombre: "Muestra Costumbrista Alerce Histórico",
+      fecha: "Sábado 24 y domingo 25 de octubre · 11:00 a 20:00 hrs",
+      lugar: "Parque Fundadores, Alerce Histórico",
+      descripcion: "Encuentro vecinal con gastronomía típica, pan amasado caliente, cecinas artesanales y shows folclóricos.",
+      participantes: ["t_minimarket_rosa", "t_barberia_alerce"]
+    },
+    {
+      id: "norte",
+      nombre: "Feria Campesina y Artesanal Alerce Norte",
+      fecha: "Sábado 14 y domingo 15 de noviembre · 10:00 a 19:00 hrs",
+      lugar: "Sede Social y Multicancha Alerce Norte",
+      descripcion: "Feria de productos del campo, hortalizas frescas, tejidos a telar y servicios comunitarios.",
+      participantes: ["t_tejidos_austral"]
+    }
+  ];
+
+  function cargarFeriasDeStorage() {
+    try {
+      var guardadas = localStorage.getItem("trama_ferias_inscripciones");
+      if (guardadas) {
+        var map = JSON.parse(guardadas);
+        FERIAS_COMUNALES.forEach(function (f) {
+          if (map[f.id]) f.participantes = map[f.id];
+        });
+      }
+    } catch(e) {}
+  }
+  cargarFeriasDeStorage();
+
+  function abrirModalMisFerias() {
+    if (!esUsuarioEmprendedora()) {
+      abrirModalAuthEmprendedora();
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedora.");
+      return;
+    }
+    renderizarMisFerias();
+    abrirModal("modal-mis-ferias");
+  }
+
+  function renderizarMisFerias() {
+    var cont = document.getElementById("lista-ferias-gestion-cuerpo");
+    if (!cont) return;
+
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var html = "";
+
+    FERIAS_COMUNALES.forEach(function (feria) {
+      var estaInscrita = feria.participantes.indexOf(tiendaId) !== -1;
+
+      html += '<div class="tarjeta-feria-gestion ' + (estaInscrita ? 'inscrita' : '') + '">';
+      html += '  <div style="flex: 1; min-width: 240px;">';
+      html += '    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">';
+      html += '      <strong style="font-size: 14.5px; color: var(--negro-apple);">' + escaparHtml(feria.nombre) + '</strong>';
+      html += estaInscrita
+        ? '      <span style="background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">✅ Inscrita</span>'
+        : '      <span style="background: #f4f4f5; color: #71717a; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px;">Disponible</span>';
+      html += '    </div>';
+      html += '    <p style="font-size: 12.5px; color: var(--rojo-alerce); font-weight: 700; margin: 2px 0;">📅 ' + escaparHtml(feria.fecha) + '</p>';
+      html += '    <p style="font-size: 12px; color: var(--gris-texto); margin: 2px 0;">📍 ' + escaparHtml(feria.lugar) + '</p>';
+      html += '    <p style="font-size: 12px; color: var(--gris-texto); margin-top: 6px; line-height: 1.4;">' + escaparHtml(feria.descripcion) + '</p>';
+      html += '  </div>';
+
+      html += '  <div style="text-align: right;">';
+      if (estaInscrita) {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px; color: #dc2626; border-color: #fca5a5;" onclick="TramaWeb.toggleInscripcionFeria(\'' + feria.id + '\')">';
+        html += '      Retirar Inscripción';
+        html += '    </button>';
+      } else {
+        html += '    <button type="button" class="btn-accion-pill btn-negro" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.toggleInscripcionFeria(\'' + feria.id + '\')">';
+        html += '      Inscribir a Doña Rosa ➔';
+        html += '    </button>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    });
+
+    cont.innerHTML = html;
+  }
+
+  function toggleInscripcionFeria(feriaId) {
+    var feria = FERIAS_COMUNALES.find(function (f) { return f.id === feriaId; });
+    if (!feria) return;
+    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var idx = feria.participantes.indexOf(tiendaId);
+
+    if (idx !== -1) {
+      feria.participantes.splice(idx, 1);
+      mostrarToast("Inscripción retirada de " + feria.nombre);
+    } else {
+      feria.participantes.push(tiendaId);
+      mostrarToast("¡Inscrita con éxito en " + feria.nombre + "!");
+    }
+
+    try {
+      var map = {};
+      FERIAS_COMUNALES.forEach(function (f) { map[f.id] = f.participantes; });
+      localStorage.setItem("trama_ferias_inscripciones", JSON.stringify(map));
+    } catch(e) {}
+
+    renderizarMisFerias();
+
+    var proximaEl = document.getElementById("texto-proxima-feria");
+    if (proximaEl) {
+      var inscrita = FERIAS_COMUNALES.find(function (f) { return f.participantes.indexOf(tiendaId) !== -1; });
+      if (inscrita) {
+        proximaEl.textContent = "Próxima feria: " + inscrita.nombre + " · Estado: Inscrita (Confirmada)";
+      } else {
+        proximaEl.textContent = "Sin inscripción activa en ferias comunales.";
+      }
+    }
+  }
+
   // Exponer API global para callbacks en línea
   window.TramaWeb = {
     abrirVitrinaTienda: abrirVitrinaTienda,
@@ -3091,6 +3488,7 @@
     autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
     entrarModoDev: entrarModoDev,
+    entrarModoDonaRosa: entrarModoDonaRosa,
     // Módulo 9: Punto de Venta (POS) y Caja Rápida
     abrirModalPOS: abrirModalPOS,
     cambiarTiendaPOS: cambiarTiendaPOS,
@@ -3100,7 +3498,20 @@
     seleccionarMedioPagoPOS: seleccionarMedioPagoPOS,
     calcularVueltoPOS: calcularVueltoPOS,
     confirmarVentaPOS: confirmarVentaPOS,
-    cerrarSesionWeb: cerrarSesionWeb
+    cerrarSesionWeb: cerrarSesionWeb,
+    // Módulo 10: Funcionalidades Android Emprendedora
+    actualizarDashboardEmprendedora: actualizarDashboardEmprendedora,
+    abrirModalGestionCatalogo: abrirModalGestionCatalogo,
+    renderizarGestionCatalogo: renderizarGestionCatalogo,
+    modificarStockProducto: modificarStockProducto,
+    togglePublicadoProducto: togglePublicadoProducto,
+    editarPrecioProducto: editarPrecioProducto,
+    eliminarProductoCatalogo: eliminarProductoCatalogo,
+    abrirModalEditarTienda: abrirModalEditarTienda,
+    guardarPerfilTienda: guardarPerfilTienda,
+    abrirModalMisFerias: abrirModalMisFerias,
+    renderizarMisFerias: renderizarMisFerias,
+    toggleInscripcionFeria: toggleInscripcionFeria
   };
 
   // Ejecutar al cargar el DOM
