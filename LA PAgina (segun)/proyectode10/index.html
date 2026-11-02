@@ -81,6 +81,12 @@
           <span>Soy Emprendedora</span>
         </button>
 
+        <!-- Botón Catálogo y Stock (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill" id="btn-abrir-catalogo-nav" onclick="TramaWeb.abrirModalGestionCatalogo()" style="display: none; padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Gestionar catálogo y stock (CatalogoScreen)">
+          <span>📦</span>
+          <span>Mi Catálogo</span>
+        </button>
+
         <!-- Botón Punto de Venta / POS (Visible SOLO para Emprendedoras con sesión iniciada) -->
         <button type="button" class="btn-accion-pill" id="btn-abrir-pos-nav" onclick="TramaWeb.abrirModalPOS()" style="display: none; padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Caja rápida y registro de ventas (POS)">
           <span>🏷️</span>
@@ -180,39 +186,127 @@
       <!-- Banner de Invitación para Emprendedoras (Visible si NO hay sesión activa) -->
       <aside class="banner-invitacion-emprendedora" id="banner-invitacion-emprendedora" style="background: #fafafa; border: 1px dashed var(--gris-borde); border-radius: 16px; padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 24px;">🏪</span>
+          <span style="font-size: 26px;">🏪</span>
           <div>
             <strong style="font-size: 13.5px; color: var(--negro-apple); display: block;">¿Tienes un negocio o emprendimiento en Alerce?</strong>
-            <span style="font-size: 12px; color: var(--gris-texto);">Inicia sesión como emprendedora para publicar productos en tu vitrina, diseñar afiches y cobrar con Caja POS.</span>
+            <span style="font-size: 12px; color: var(--gris-texto);">Gestiona tu catálogo, cobra con Caja POS, diseña afiches comerciales e inscríbete en ferias comunales.</span>
           </div>
         </div>
-        <button type="button" class="btn-accion-pill btn-negro" style="height: 36px; font-size: 12px; padding: 0 16px;" onclick="TramaWeb.abrirModalAuthEmprendedora()">
-          Acceso Emprendedoras
-        </button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; font-weight: 800; padding: 0 16px; background: #c53030; border-color: #c53030; box-shadow: 0 2px 8px rgba(197, 48, 48, 0.25);" onclick="TramaWeb.entrarModoDonaRosa()">
+            🥖 Entrar como Doña Rosa
+          </button>
+          <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 12px; padding: 0 14px; background: #ffffff;" onclick="TramaWeb.abrirModalAuthEmprendedora()">
+            Acceso con otra cuenta
+          </button>
+        </div>
       </aside>
 
-      <!-- Banner de Herramientas para Emprendedoras (Visible SOLO cuando hay sesión iniciada como Emprendedora) -->
-      <aside class="banner-emprendedoras-cta" id="banner-emprendedoras-cta" style="display: none;">
-        <div class="banner-emprendedoras-info">
-          <div class="badge-emprendedora-pulsante">
-            <span class="punto-verde-latido"></span>
-            <span>Espacio de Emprendedoras de Alerce</span>
+      <!-- Panel de Control y Herramientas para Emprendedoras (Matching DashboardScreen.kt) -->
+      <aside class="banner-emprendedoras-cta" id="banner-emprendedoras-cta" style="display: none; flex-direction: column; gap: 16px;">
+        <!-- Cabecera del Panel con Saludo y Accesos Rápidos -->
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--gris-borde); padding-bottom: 12px;">
+          <div>
+            <div class="badge-emprendedora-pulsante">
+              <span class="punto-verde-latido"></span>
+              <span id="dashboard-emp-tienda-badge">Modo Emprendedora Activo · Minimarket Doña Rosa</span>
+            </div>
+            <h3 class="banner-emprendedoras-titulo" id="dashboard-emp-saludo">Hola, Doña Rosa 👋</h3>
+            <p class="banner-emprendedoras-desc" id="dashboard-emp-subtitulo">Panel comercial con todas las funciones de la app Android (Dashboard, Catálogo, POS, Ferias y Tienda).</p>
           </div>
-          <h3 class="banner-emprendedoras-titulo">¿Tienes algo para vender o promocionar hoy?</h3>
-          <p class="banner-emprendedoras-desc">Publica tus productos en segundos y diseña afiches comerciales de alto impacto con plantillas modernas para compartir en WhatsApp y ferias.</p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.abrirModalEditarTienda()" title="Configuración de la tienda (TiendaScreen)">
+              ⚙️ Mi Tienda
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.abrirQRTiendaActual()" title="Código QR de la tienda (TiendaQRScreen)">
+              📱 Mi Código QR
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px; border-color: #fca5a5; color: #dc2626;" onclick="TramaWeb.cerrarSesionWeb()" title="Cerrar sesión activa">
+              🚪 Salir
+            </button>
+          </div>
         </div>
-        <div class="banner-emprendedoras-botones">
-          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPublicarProducto()">
+
+        <!-- 4 Tarjetas de Métricas en Vivo (Matching DashboardScreen.kt) -->
+        <div class="dashboard-metricas-grid">
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #ecfdf5; color: #059669;">🏷️</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Ventas del Mes</span>
+              <strong class="metrica-valor" id="metrica-ventas-mes">$ 148.500</strong>
+              <span class="metrica-sub">Caja POS + Web</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #eff6ff; color: #2563eb;">📦</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Productos Publicados</span>
+              <strong class="metrica-valor" id="metrica-prods-activos">4 activos</strong>
+              <span class="metrica-sub">Visibles en vitrina</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #fff7ed; color: #ea580c;">📊</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Stock Total</span>
+              <strong class="metrica-valor" id="metrica-stock-total">58 un.</strong>
+              <span class="metrica-sub">Unidades disponibles</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #fdf2f8; color: #db2777;">👥</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Clientes / Vecinos</span>
+              <strong class="metrica-valor" id="metrica-seguidores">34 vecinos</strong>
+              <span class="metrica-sub">Alerce Histórico</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerta de Stock Bajo y Próxima Feria en Alerce -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; width: 100%;">
+          <div id="dashboard-alerta-stock" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">⚠️</span>
+              <span style="font-size: 12px; color: #92400e; font-weight: 600;" id="texto-alerta-stock">Miel de Ulmo: Quedan 8 unidades disponibles en stock.</span>
+            </div>
+            <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 10px; background: #ffffff;" onclick="TramaWeb.abrirModalGestionCatalogo()">Ajustar Stock</button>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🎪</span>
+              <span style="font-size: 12px; color: #166534; font-weight: 600;" id="texto-proxima-feria">Próxima feria: Feria de Emprendedoras del Valle · Estado: Inscrita</span>
+            </div>
+            <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 10px; background: #ffffff;" onclick="TramaWeb.abrirModalMisFerias()">Ver Ferias</button>
+          </div>
+        </div>
+
+        <!-- Barra de Herramientas de la Emprendedora -->
+        <div class="banner-emprendedoras-botones" style="width: 100%; border-top: 1px solid var(--gris-borde); padding-top: 12px;">
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPOS()" style="background: #18181b;" title="Punto de Venta POS (PosScreen.kt)">
+            <span style="font-size: 18px;">🏷️</span>
+            <span>Caja Rápida POS</span>
+          </button>
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalGestionCatalogo()" style="background: #27272a;" title="Gestión de Catálogo y Stock (CatalogoScreen.kt)">
+            <span style="font-size: 18px;">📦</span>
+            <span>Mi Catálogo y Stock</span>
+          </button>
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPublicarProducto()" title="Añadir Producto estilo Marketplace">
             <span style="font-size: 18px;">➕</span>
             <span>Añadir Producto</span>
           </button>
-          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEstudioFlyer()">
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEstudioFlyer()" title="Diseño interactivo de afiches publicitarios">
             <span style="font-size: 18px;">🎨</span>
             <span>Estudio de Afiches</span>
           </button>
-          <button type="button" class="btn-flyer-cta" style="background: #27272a; border-color: #3f3f46;" onclick="TramaWeb.abrirModalPOS()">
-            <span style="font-size: 18px;">🏷️</span>
-            <span>Caja Rápida POS</span>
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalMisFerias()" title="Mis Ferias Comunales (MisFeriasScreen.kt)">
+            <span style="font-size: 18px;">📅</span>
+            <span>Mis Ferias</span>
+          </button>
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEditarTienda()" title="Configuración de Tienda (TiendaScreen.kt)">
+            <span style="font-size: 18px;">⚙️</span>
+            <span>Mi Tienda</span>
           </button>
         </div>
       </aside>
@@ -670,7 +764,7 @@
           <div>
             <label for="fb-select-tienda" class="label-fb-market">Negocio</label>
             <select id="fb-select-tienda" class="input-fb-market" style="height: 44px; background: #ffffff;">
-              <option value="t_minimarket_rosa">Minimarket Doña Marta</option>
+              <option value="t_minimarket_rosa">Minimarket Doña Rosa</option>
               <option value="t_tejidos_austral">Tejidos & Lanares Austral</option>
               <option value="t_reposteria_surena">Repostería Casera Tradición Sureña</option>
               <option value="t_barberia_alerce">Barbería & Estilo Alerce</option>
@@ -971,6 +1065,127 @@
     </div>
   </div>
 
+  <!-- MODAL GESTIÓN DE CATÁLOGO Y STOCK (Matching CatalogoScreen.kt) -->
+  <div class="modal-overlay" id="modal-gestion-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-gestion-catalogo-titulo">
+    <div class="modal-panel-editorial" style="max-width: 680px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📦</span>
+          <div>
+            <h2 id="modal-gestion-catalogo-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Gestión de Catálogo y Stock</h2>
+            <p id="subtitulo-gestion-catalogo" style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Minimarket Doña Rosa · Alerce Histórico</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-gestion-catalogo')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--gris-chip); border-radius: 8px; padding: 10px 14px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 12px; color: var(--negro-apple); font-weight: 700;" id="conteo-prods-catalogo-gestion">4 productos en catálogo</span>
+          <button type="button" class="btn-accion-pill btn-negro" style="height: 32px; font-size: 11.5px;" onclick="TramaWeb.abrirModalPublicarProducto()">
+            ➕ Añadir Nuevo Producto
+          </button>
+        </div>
+
+        <div id="lista-items-catalogo-gestion" style="display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow-y: auto; padding-right: 2px;">
+          <!-- Items renderizados dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERFIL Y CONFIGURACIÓN DE TIENDA (Matching TiendaScreen.kt) -->
+  <div class="modal-overlay" id="modal-editar-tienda" role="dialog" aria-modal="true" aria-labelledby="modal-editar-tienda-titulo">
+    <div class="modal-panel-editorial" style="max-width: 580px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">⚙️</span>
+          <div>
+            <h2 id="modal-editar-tienda-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Perfil de Mi Tienda</h2>
+            <p style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Configura los datos y capacidades comerciales visibles en Alerce</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-editar-tienda')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <div>
+          <label class="label-fb-market">Nombre del Emprendimiento / Negocio</label>
+          <input type="text" id="edit-tienda-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Rosa">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label class="label-fb-market">Rubro o Giro Comercial</label>
+            <input type="text" id="edit-tienda-rubro" class="input-fb-market" placeholder="Ej: Minimarket y Abarrotes">
+          </div>
+          <div>
+            <label class="label-fb-market">Sector en Alerce / Puerto Montt</label>
+            <input type="text" id="edit-tienda-sector" class="input-fb-market" placeholder="Ej: Alerce Histórico">
+          </div>
+        </div>
+
+        <div>
+          <label class="label-fb-market">Teléfono WhatsApp para Pedidos</label>
+          <input type="tel" id="edit-tienda-whatsapp" class="input-fb-market" placeholder="+56991234567">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Descripción o Biografía del Negocio</label>
+          <textarea id="edit-tienda-bio" class="input-fb-market" style="height: 70px; resize: none;" placeholder="Cuéntale a los vecinos qué ofreces y tus horarios..."></textarea>
+        </div>
+
+        <div>
+          <label class="label-fb-market">Capacidades y Necesidades de tu Tienda</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; font-size: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-stock"> 📦 Control de Stock
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-whatsapp"> 💬 Pedidos por WhatsApp
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-pedido"> ✂️ Productos a Pedido
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-ferias"> 🎪 Participa en Ferias
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-foro"> 🗣️ Muro y Foro
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-agenda"> 📅 Agenda de Horas
+            </label>
+          </div>
+        </div>
+
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px;" onclick="TramaWeb.guardarPerfilTienda()">
+          💾 Guardar Cambios en Mi Tienda
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MIS FERIAS COMUNALES (Matching MisFeriasScreen.kt) -->
+  <div class="modal-overlay" id="modal-mis-ferias" role="dialog" aria-modal="true" aria-labelledby="modal-mis-ferias-titulo">
+    <div class="modal-panel-editorial" style="max-width: 620px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📅</span>
+          <div>
+            <h2 id="modal-mis-ferias-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Mis Ferias Comunales</h2>
+            <p style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Inscribe a Minimarket Doña Rosa en los eventos de Alerce y Puerto Montt</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-mis-ferias')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" id="lista-ferias-gestion-cuerpo" style="gap: 10px;">
+        <!-- Renderizado dinámico con JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL AUTENTICACION FIREBASE WEB -->
   <div class="modal-fondo" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo" style="display: none;">
     <div class="modal-contenedor modal-contenedor-fb" style="max-width: 440px;">
@@ -993,24 +1208,29 @@
           </button>
         </div>
 
-        <!-- Tarjeta de Credenciales de Prueba (Doña Marta) -->
-        <div id="auth-box-demo-marta" style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px; font-size: 12px;">
+        <!-- Tarjeta de Credenciales de Prueba (Doña Rosa) -->
+        <div id="auth-box-demo-marta" style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 12px; font-size: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong>🏪 Minimarket Doña Marta</strong>
-            <span style="background: var(--negro-apple); color: #fff; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700;">Tienda para Revisión</span>
+            <strong style="color: var(--negro-apple); font-size: 13px;">🏪 Minimarket Doña Rosa</strong>
+            <span style="background: var(--rojo-alerce); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;">Emprendedora Oficial</span>
           </div>
-          <div style="color: var(--gris-texto); font-size: 11px;">
-            Correo: <code>donamarta@alerce.app</code> &middot; Clave: <code>alerce123</code>
+          <div style="color: var(--gris-texto); font-size: 11.5px; margin: 4px 0 8px 0;">
+            Correo: <code>donarosa@alerce.app</code> &middot; Clave: <code>alerce123</code>
           </div>
-          <button type="button" class="btn-accion-pill" style="margin-top: 6px; width: 100%; height: 28px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--negro-apple);" onclick="TramaWeb.autocompletarCredenciales('donamarta@alerce.app', 'alerce123')">
-            Autocompletar credenciales de Doña Marta
-          </button>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn-accion-pill btn-negro" style="flex: 2; height: 32px; font-size: 11.5px; justify-content: center; background: #c53030; border-color: #c53030;" onclick="TramaWeb.entrarModoDonaRosa()">
+              🥖 Entrar como Doña Rosa
+            </button>
+            <button type="button" class="btn-accion-pill" style="flex: 1; height: 32px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.autocompletarCredenciales('donarosa@alerce.app', 'alerce123')">
+              Autocompletar
+            </button>
+          </div>
         </div>
 
         <!-- Formulario -->
         <div id="auth-campos-registro" style="display: none;">
           <label class="label-fb-market">Nombre o Nombre del Emprendimiento</label>
-          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Marta o Panaderia Los Lagos">
+          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Rosa o Panadería Los Lagos">
         </div>
 
         <div>
@@ -1043,7 +1263,7 @@
           </summary>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
             <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_minimarket_rosa')">
-              🥖 Doña Marta
+              🥖 Doña Rosa (Minimarket)
             </button>
             <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_barberia_alerce')">
               💈 Barberia
