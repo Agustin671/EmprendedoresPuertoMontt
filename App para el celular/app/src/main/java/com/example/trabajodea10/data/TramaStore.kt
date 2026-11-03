@@ -232,8 +232,8 @@ object TramaStore {
         )
     }
 
-    // Escala de texto del modo accesible (+A / -A). 0.90f = tamaño cómodo compacto editorial.
-    var escalaTexto by mutableStateOf(0.90f)
+    // Escala de texto del modo accesible (+A / -A). 1f = el mismo tamaño que eligió la persona en su celular.
+    var escalaTexto by mutableStateOf(1f)
         private set
 
     val emprendedoraActual: Emprendedora
@@ -278,7 +278,8 @@ object TramaStore {
         prefs = estado.prefs
         inscripcionesVisitante.clear()
         inscripcionesVisitante.addAll(estado.inscripcionesVisitante)
-        escalaTexto = estado.escalaTexto
+        // Nunca por debajo del tamaño de letra que eligió la persona en su celular.
+        escalaTexto = estado.escalaTexto.coerceAtLeast(1f)
     }
 
     private fun persistir() {
@@ -432,11 +433,12 @@ object TramaStore {
 
     fun productoPorId(id: String): Producto? = productos.firstOrNull { it.id == id }
 
-    fun productosDeTienda(tiendaId: String): List<Producto> {
-        val prods = productos.filter { it.tiendaId == tiendaId && it.publicado }
-        if (prods.isNotEmpty()) return prods
-        return productos.filter { it.publicado }.take(4)
-    }
+    /** Productos que pertenecen a la tienda con la sesión iniciada (no los de otras tiendas). */
+    fun productosDeMiTienda(): List<Producto> = productos.filter { it.tiendaId == tienda.id }
+
+    /** Productos visibles de una tienda. Ya no rellena con productos de otras tiendas. */
+    fun productosDeTienda(tiendaId: String): List<Producto> =
+        productos.filter { it.tiendaId == tiendaId && it.publicado }
 
     fun crearProductoBorrador(): String {
         val id = "p${System.currentTimeMillis()}"
@@ -444,6 +446,7 @@ object TramaStore {
             0,
             Producto(
                 id = id,
+                tiendaId = tienda.id,
                 nombre = "",
                 categoria = Categoria.TEXTIL,
                 precio = 0.0,
@@ -477,6 +480,25 @@ object TramaStore {
         if (indice >= 0) {
             val producto = productos[indice]
             productos[indice] = producto.copy(destacado = !producto.destacado)
+            persistir()
+        }
+    }
+
+    /** "Se acabó": deja en cero las unidades de todas las opciones del producto. */
+    fun marcarAgotado(id: String) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0) {
+            val producto = productos[indice]
+            productos[indice] = producto.copy(variantes = producto.variantes.map { it.copy(stock = 0) })
+            persistir()
+        }
+    }
+
+    /** Deshace "Se acabó" devolviendo las unidades que tenía cada opción. */
+    fun restaurarVariantes(id: String, variantes: List<Variante>) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0) {
+            productos[indice] = productos[indice].copy(variantes = variantes)
             persistir()
         }
     }
@@ -555,13 +577,13 @@ object TramaStore {
 
     fun ventasDelMes(): Double = ventas.totalDelMes()
 
-    fun productosPublicados(): Int = productos.count { it.publicado }
+    fun productosPublicados(): Int = productosDeMiTienda().count { it.publicado }
 
-    fun stockTotal(): Int = productos.sumOf { it.stockTotal }
+    fun stockTotal(): Int = productosDeMiTienda().sumOf { it.stockTotal }
 
     fun seguidores(): Int = emprendedoraActual.seguidores
 
-    fun alertasStock(): List<Producto> = productos.filter { it.agotado || it.stockBajo }
+    fun alertasStock(): List<Producto> = productosDeMiTienda().filter { it.agotado || it.stockBajo }
 
     fun feriasEnCurso(): List<Feria> = ferias.filter { it.estado == EstadoFeria.EN_CURSO }
 
@@ -720,7 +742,7 @@ object TramaStore {
     }
 
     fun reducirTexto() {
-        escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(0.85f)
+        escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(1f)
         persistir()
     }
 

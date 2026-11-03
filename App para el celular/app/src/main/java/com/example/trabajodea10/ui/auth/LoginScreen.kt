@@ -94,9 +94,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
 
     LaunchedEffect(Unit) {
         val biometricManager = BiometricManager.from(contexto)
-        puedeUsarBiometria = biometricManager.canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        ) == BiometricManager.BIOMETRIC_SUCCESS
+        puedeUsarBiometria = biometricManager.canAuthenticate(autenticadoresHuella()) ==
+            BiometricManager.BIOMETRIC_SUCCESS
     }
 
     Column(
@@ -424,13 +423,19 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                     if (pestanaModo == 0 && puedeUsarBiometria) {
                         OutlinedButton(
                             onClick = {
-                                activity?.let {
-                                    autenticarConHuella(
-                                        activity = it,
-                                        onExito = { nav.iniciarSesion(Rol.EMPRENDEDORA) },
-                                        onError = { err -> mensajeError = "Error de biometría: " + err },
-                                        onCancelar = {}
-                                    )
+                                if (activity == null) {
+                                    mensajeError = "La huella no está disponible en este momento. Ingresa con tu correo."
+                                } else {
+                                    try {
+                                        autenticarConHuella(
+                                            activity = activity,
+                                            onExito = { nav.iniciarSesion(Rol.EMPRENDEDORA) },
+                                            onError = { err -> mensajeError = "No se pudo leer la huella: " + err },
+                                            onCancelar = {}
+                                        )
+                                    } catch (e: Exception) {
+                                        mensajeError = "La huella no está disponible en este celular. Ingresa con tu correo."
+                                    }
                                 }
                             },
                             shape = RoundedCornerShape(14.dp),
@@ -612,6 +617,17 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     }
 }
 
+/**
+ * En Android 11+ se permite huella o el PIN del celular. En Android 9 y 10 esa
+ * combinación no está soportada (lanza un error), así que se usa solo huella.
+ */
+fun autenticadoresHuella(): Int =
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
+    } else {
+        BiometricManager.Authenticators.BIOMETRIC_WEAK
+    }
+
 fun autenticarConHuella(
     activity: FragmentActivity,
     onExito: () -> Unit,
@@ -623,7 +639,10 @@ fun autenticarConHuella(
         object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
-                onError(errString.toString())
+                val cancelado = errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                    errorCode == BiometricPrompt.ERROR_CANCELED
+                if (!cancelado) onError(errString.toString())
                 onCancelar()
             }
 
@@ -638,14 +657,16 @@ fun autenticarConHuella(
             }
         })
 
-    val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Verificación biométrica")
-        .setSubtitle("Ingresa con tu huella digital")
-        .setDescription("Usa tu huella para acceder de forma rápida y segura")
-        .setAllowedAuthenticators(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        )
-        .build()
+    val autenticadores = autenticadoresHuella()
+    val constructor = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("Ingresar con huella")
+        .setSubtitle("Pon tu dedo en el lector del celular")
+        .setAllowedAuthenticators(autenticadores)
+    // Sin el PIN del celular como alternativa, Android exige un botón para cancelar.
+    if ((autenticadores and BiometricManager.Authenticators.DEVICE_CREDENTIAL) == 0) {
+        constructor.setNegativeButtonText("Cancelar")
+    }
+    val promptInfo = constructor.build()
 
     biometricPrompt.authenticate(promptInfo)
 }

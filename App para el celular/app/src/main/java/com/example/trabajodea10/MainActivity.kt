@@ -6,7 +6,7 @@ import com.example.trabajodea10.TramaApp
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +29,9 @@ import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoAlerce
 import com.example.trabajodea10.ui.theme.TramaAppTheme
 import com.google.firebase.FirebaseApp
-class MainActivity : ComponentActivity() {
+// FragmentActivity (y no ComponentActivity) porque el aviso de huella de Android
+// (BiometricPrompt) solo funciona sobre una FragmentActivity.
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefs = getSharedPreferences("app_diagnostico", Context.MODE_PRIVATE)

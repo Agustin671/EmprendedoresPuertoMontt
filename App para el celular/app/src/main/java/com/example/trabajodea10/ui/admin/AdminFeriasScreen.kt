@@ -95,7 +95,7 @@ fun PantallaAdminFerias(
         if (visibles.isEmpty()) {
             Vacio(
                 titulo = "Sin ferias en esta vista",
-                mensaje = "Creá una nueva feria o cambiá el filtro para ver otros eventos.",
+                mensaje = "Crea una nueva feria o cambia el filtro para ver otros eventos.",
                 icono = { Icon(Icons.Filled.CalendarMonth, contentDescription = null, tint = TextoSecundario) }
             )
         } else {

@@ -111,7 +111,8 @@ data class Producto(
     val destacado: Boolean,
     val colorFoto: Long,
     val variantes: List<Variante>,
-    val fotoUrl: String? = null
+    val fotoUrl: String? = null,
+    val descripcion: String = ""
 ) {
     val stockTotal: Int get() = variantes.sumOf { it.stock }
     val agotado: Boolean get() = stockTotal == 0

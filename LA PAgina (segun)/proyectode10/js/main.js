@@ -1116,7 +1116,8 @@
   function abrirQRTiendaActual() {
     if (!estado.tiendaSeleccionada) return;
     var t = estado.tiendaSeleccionada;
-    var url = "https://trama.app/tienda/" + t.id;
+    // Enlace real a la vitrina que abre directo la ficha de esta tienda
+    var url = "https://agustin671.github.io/EmprendedoresPuertoMontt/?tienda=" + encodeURIComponent(t.id);
 
     var nombreEl = document.getElementById("qr-tienda-nombre");
     var urlEl = document.getElementById("qr-tienda-url");
@@ -3514,11 +3515,38 @@
     toggleInscripcionFeria: toggleInscripcionFeria
   };
 
+  // Si se llegó por el QR o el enlace de una tienda (?tienda=ID), abrir su ficha.
+  // Se reintenta unos segundos porque las tiendas de Firestore llegan después.
+  function abrirTiendaDesdeEnlace() {
+    var id = null;
+    try {
+      id = new URLSearchParams(window.location.search).get("tienda");
+    } catch (e) {
+      id = null;
+    }
+    if (!id) return;
+    var intentos = 0;
+    (function intentar() {
+      var existe = TIENDAS.some(function (t) { return t.id === id; });
+      if (existe) {
+        abrirVitrinaTienda(id);
+        return;
+      }
+      intentos++;
+      if (intentos < 12) setTimeout(intentar, 500);
+    })();
+  }
+
+  function arrancar() {
+    inicializar();
+    abrirTiendaDesdeEnlace();
+  }
+
   // Ejecutar al cargar el DOM
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inicializar);
+    document.addEventListener("DOMContentLoaded", arrancar);
   } else {
-    inicializar();
+    arrancar();
   }
 
 })();

@@ -2,10 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url='./LA%20PAgina%20(segun)/proyectode10/'">
+  <meta http-equiv="refresh" content="2; url='./LA%20PAgina%20(segun)/proyectode10/'">
   <title>ALERCE · Redireccionando a la Vitrina...</title>
   <script>
-    window.location.replace("./LA PAgina (segun)/proyectode10/");
+    // Conserva ?tienda=ID para que el QR de una tienda abra su ficha
+    window.location.replace("./LA PAgina (segun)/proyectode10/" + window.location.search);
   </script>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 40px; background: #fafafa; color: #111;">

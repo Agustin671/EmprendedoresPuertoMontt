@@ -77,7 +77,7 @@ import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
-import com.example.trabajodea10.ui.publico.URL_VITRINA
+import com.example.trabajodea10.ui.publico.urlTienda
 import com.example.trabajodea10.ui.publico.compartirPorWhatsApp
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
@@ -497,7 +497,7 @@ fun PantallaTienda(
                         compartirPorWhatsApp(
                             context,
                             "¡Mira mi tienda ${tiendaActualizada.nombre}! " +
-                                "Puedes ver mis productos y pedir en línea aquí: $URL_VITRINA"
+                                "Puedes ver mis productos y pedir en línea aquí: ${urlTienda(tiendaBase.id)}"
                         )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = VerdeOk),

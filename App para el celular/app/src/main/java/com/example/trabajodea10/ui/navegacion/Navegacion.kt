@@ -65,7 +65,7 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
     )
     Rol.EMPRENDEDORA -> listOf(
         ItemNavegacion(Ruta.EmpInicio, "Inicio", Icons.Filled.Home),
-        ItemNavegacion(Ruta.EmpCatalogo, "Catálogo", Icons.Filled.Inventory2),
+        ItemNavegacion(Ruta.EmpCatalogo, "Productos", Icons.Filled.Inventory2),
         ItemNavegacion(Ruta.EmpVenta, "Venta", Icons.Filled.ShoppingCart),
         ItemNavegacion(Ruta.EmpFerias, "Ferias", Icons.Filled.CalendarMonth),
         ItemNavegacion(Ruta.EmpTienda, "Tienda", Icons.Filled.Store)

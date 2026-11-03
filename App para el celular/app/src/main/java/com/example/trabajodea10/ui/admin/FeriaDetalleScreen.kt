@@ -266,7 +266,7 @@ private fun PestañaAsistencia(
         if (feria.participaciones.isEmpty()) {
             com.example.trabajodea10.ui.componentes.Vacio(
                 titulo = "Sin inscripciones",
-                mensaje = "Invitá a emprendedoras registradas para empezar el pase de asistencia.",
+                mensaje = "Invita a emprendedoras registradas para empezar el pase de asistencia.",
                 icono = { Icon(Icons.Filled.Send, contentDescription = null, tint = TextoSecundario) }
             )
         } else {
@@ -423,7 +423,7 @@ private fun HojaInvitaciones(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 BotonPrimario(
-                    texto = if (seleccion.isEmpty()) "Seleccioná emprendedoras" else "Enviar ${seleccion.size} invitaciones",
+                    texto = if (seleccion.isEmpty()) "Selecciona emprendedoras" else "Enviar ${seleccion.size} invitaciones",
                     enabled = seleccion.isNotEmpty(),
                     onClick = { onEnviar(seleccion.toList()) }
                 )

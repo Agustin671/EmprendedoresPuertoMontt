@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,7 +37,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,19 +69,23 @@ import com.example.trabajodea10.data.FotoProductoStore
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.Variante
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.BotonPrimario
 import com.example.trabajodea10.ui.componentes.BotonSecundario
+import com.example.trabajodea10.ui.componentes.BotonMicrofono
 import com.example.trabajodea10.ui.componentes.BotonTexto
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ChipFiltro
+import com.example.trabajodea10.ui.componentes.ContadorCantidad
 import com.example.trabajodea10.ui.componentes.FilaSwitch
 import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.componentes.Vacio
+import com.example.trabajodea10.ui.componentes.rememberDictadoPorVoz
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.GrisBorde
@@ -184,7 +191,9 @@ fun PantallaProductoDetalle(
         return
     }
 
-    val esNuevo = original.nombre.isBlank()
+    // Se calcula una sola vez: el guardado automático le pone nombre al borrador
+    // y no queremos que la pantalla cambie de "Nuevo" a "Editar" mientras escribe.
+    val esNuevo = remember(original.id) { original.nombre.isBlank() }
 
     var nombre by remember(original.id) { mutableStateOf(original.nombre) }
     var precio by remember(original.id) {
@@ -200,9 +209,65 @@ fun PantallaProductoDetalle(
     var tipoDisponibilidad by remember {
         mutableStateOf(if (original.variantes.any { it.stock > 0 }) "inmediato" else "pedido")
     }
-    var detalles by remember { mutableStateOf("") }
+    var detalles by remember(original.id) { mutableStateOf(original.descripcion) }
+    // "¿Cuántos tienes?" — antes se forzaba a 15 unidades al guardar.
+    var cantidad by remember(original.id) {
+        mutableStateOf(if (original.stockTotal > 0) original.stockTotal else 1)
+    }
+    val tieneVariasOpciones = original.variantes.size > 1
+    var confirmarEliminar by remember { mutableStateOf(false) }
     var fotoUri by remember(original.id) { mutableStateOf(original.fotoUrl) }
     val scope = rememberCoroutineScope()
+
+    // Dictado por voz para el nombre (reemplaza) y la descripción (agrega al final).
+    val dictarNombre = rememberDictadoPorVoz { texto ->
+        nombre = texto.replaceFirstChar { it.uppercase() }
+    }
+    val dictarDescripcion = rememberDictadoPorVoz { texto ->
+        detalles = if (detalles.isBlank()) texto.replaceFirstChar { it.uppercase() }
+        else detalles.trimEnd() + " " + texto
+    }
+
+    // Guardado automático de productos nuevos (RNF-USA-04): si sale o se cierra la app,
+    // lo escrito queda guardado como "Solo yo lo veo" y no se pierde.
+    if (esNuevo) {
+        LaunchedEffect(nombre, precio, detalles, categoria, fotoUri) {
+            delay(800)
+            if (nombre.isNotBlank()) {
+                val actual = TramaStore.productoPorId(original.id) ?: return@LaunchedEffect
+                TramaStore.guardarProducto(
+                    actual.copy(
+                        nombre = nombre.trim(),
+                        precio = precio.toDoubleOrNull() ?: actual.precio,
+                        categoria = categoria,
+                        descripcion = detalles.trim(),
+                        fotoUrl = fotoUri
+                    )
+                )
+            }
+        }
+    }
+
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("¿Borrar «${original.nombre}»?", fontWeight = FontWeight.Bold) },
+            text = { Text("Se quitará de tu tienda y no se puede recuperar. Si solo se acabó, mejor usa «Se acabó».") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmarEliminar = false
+                    TramaStore.eliminarProducto(original.id)
+                    avisar("Producto borrado")
+                    nav.volver()
+                }) { Text("Sí, borrar", color = RojoError, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarEliminar = false }) {
+                    Text("No, dejarlo", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
 
     val launcherGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -224,6 +289,7 @@ fun PantallaProductoDetalle(
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
             titulo = if (esNuevo) "Nuevo producto" else "Editar producto",
+            subtitulo = if (esNuevo && nombre.isNotBlank()) "Se guarda solo · por ahora solo tú lo ves" else null,
             onVolver = { nav.volver() }
         )
 
@@ -456,15 +522,16 @@ fun PantallaProductoDetalle(
             CampoTexto(
                 valor = nombre,
                 onValorChange = { nombre = it },
-                etiqueta = "Nombre del producto",
-                placeholder = "Ej: Pan amasado artesanal"
+                etiqueta = "¿Qué vendes?",
+                placeholder = "Ej: Pan amasado",
+                iconoFinal = { BotonMicrofono(onClick = dictarNombre) }
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 CampoTexto(
                     valor = precio,
                     onValorChange = { precio = it.filter { c -> c.isDigit() } },
-                    etiqueta = "Precio ($)",
+                    etiqueta = "Precio",
                     tipoTeclado = KeyboardType.Number,
                     modifier = Modifier.weight(1f),
                     placeholder = "2500"
@@ -494,7 +561,7 @@ fun PantallaProductoDetalle(
 
             // Disponibilidad
             Text(
-                text = "Disponibilidad",
+                text = "¿Lo tienes listo?",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.5.sp,
                 color = NegroApple
@@ -511,8 +578,8 @@ fun PantallaProductoDetalle(
                         .clickable { tipoDisponibilidad = "inmediato" }
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
-                        Text("Con stock", fontWeight = FontWeight.Bold, color = if (inmediato) Color.White else NegroApple, fontSize = 13.sp)
-                        Text("Entrega hoy", fontSize = 11.sp, color = if (inmediato) Color(0xFFCCCCCC) else GrisTexto)
+                        Text("Lo tengo listo", fontWeight = FontWeight.Bold, color = if (inmediato) Color.White else NegroApple, fontSize = 14.sp)
+                        Text("Se entrega al tiro", fontSize = 12.sp, color = if (inmediato) Color(0xFFCCCCCC) else GrisTexto)
                     }
                 }
 
@@ -526,15 +593,40 @@ fun PantallaProductoDetalle(
                         .clickable { tipoDisponibilidad = "pedido" }
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
-                        Text("A pedido", fontWeight = FontWeight.Bold, color = if (pedido) Color.White else NegroApple, fontSize = 13.sp)
-                        Text("Por encargo", fontSize = 11.sp, color = if (pedido) Color(0xFFCCCCCC) else GrisTexto)
+                        Text("Lo hago por encargo", fontWeight = FontWeight.Bold, color = if (pedido) Color.White else NegroApple, fontSize = 14.sp)
+                        Text("A pedido", fontSize = 12.sp, color = if (pedido) Color(0xFFCCCCCC) else GrisTexto)
+                    }
+                }
+            }
+
+            if (tipoDisponibilidad == "inmediato") {
+                if (tieneVariasOpciones) {
+                    Text(
+                        text = "Tiene ${original.variantes.size} opciones (sabores, tallas o colores) con ${original.stockTotal} unidades en total.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextoSecundario
+                    )
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "¿Cuántos tienes?",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = NegroApple,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ContadorCantidad(
+                            cantidad = cantidad,
+                            onCambio = { cantidad = it.coerceAtLeast(1) },
+                            maximo = 999
+                        )
                     }
                 }
             }
 
             // Categoría
             Text(
-                text = "Categoría",
+                text = "Tipo de producto",
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.5.sp,
                 color = NegroApple
@@ -558,21 +650,23 @@ fun PantallaProductoDetalle(
             CampoTexto(
                 valor = detalles,
                 onValorChange = { detalles = it },
-                etiqueta = "Descripción (opcional)",
-                placeholder = "Detalles para tus clientes o entrega"
+                etiqueta = "Cuéntale a tus clientas (opcional)",
+                placeholder = "Ej: de qué está hecho, tamaño, si se encarga en otro color",
+                esMultilinea = true,
+                iconoFinal = { BotonMicrofono(onClick = dictarDescripcion) }
             )
 
             Tarjeta {
                 Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                     FilaSwitch(
-                        titulo = "Publicado en tienda",
-                        descripcion = "Visible para clientes",
+                        titulo = "Mostrar en mi tienda",
+                        descripcion = if (publicado) "Lo ven todos" else "Apagado: solo tú lo ves",
                         checked = publicado,
                         onCheckedChange = { publicado = it }
                     )
                     FilaSwitch(
-                        titulo = "Destacado en portada",
-                        descripcion = "Aparece primero",
+                        titulo = "Mostrar primero",
+                        descripcion = "Aparece al inicio de tu tienda",
                         checked = destacado,
                         onCheckedChange = { destacado = it }
                     )
@@ -580,15 +674,24 @@ fun PantallaProductoDetalle(
             }
 
             BotonPrimario(
-                texto = if (esNuevo) "Publicar producto" else "Guardar cambios",
+                texto = if (publicado) "Guardar y mostrar en mi tienda" else "Guardar (solo yo lo veo)",
                 onClick = {
                     if (nombre.isBlank()) {
                         avisar("Escribe el nombre del producto")
                     } else if (precio.isBlank() || precio.toLongOrNull() == null || precio.toLong() <= 0) {
-                        avisar("Ingresa un precio válido")
+                        avisar("Escribe el precio, por ejemplo 2500")
                     } else {
-                        val stockFinal = if (tipoDisponibilidad == "inmediato") 15 else 0
-                        val variantesFinales = listOf(Variante("${original.id}v1", "Unidad", stockFinal))
+                        // Conserva las opciones (sabores/tallas) y las unidades reales del producto.
+                        val primera = original.variantes.firstOrNull()
+                        val variantesFinales = when {
+                            tipoDisponibilidad == "pedido" ->
+                                original.variantes.map { it.copy(stock = 0) }
+                                    .ifEmpty { listOf(Variante("${original.id}v1", "Unidad", 0)) }
+                            tieneVariasOpciones -> original.variantes
+                            else -> listOf(
+                                Variante(primera?.id ?: "${original.id}v1", primera?.nombre ?: "Unidad", cantidad)
+                            )
+                        }
                         val fotoAnterior = original.fotoUrl
 
                         TramaStore.guardarProducto(
@@ -599,20 +702,21 @@ fun PantallaProductoDetalle(
                                 publicado = publicado,
                                 destacado = destacado,
                                 variantes = variantesFinales,
-                                fotoUrl = fotoUri
+                                fotoUrl = fotoUri,
+                                descripcion = detalles.trim()
                             )
                         )
                         if (fotoAnterior != fotoUri) {
                             FotoProductoStore.eliminar(fotoAnterior)
                         }
-                        avisar("Producto guardado")
+                        avisar(if (publicado) "Guardado. Ya se ve en tu tienda" else "Guardado. Por ahora solo tú lo ves")
                         nav.volver()
                     }
                 }
             )
 
             BotonSecundario(
-                texto = "Agregar al carrito",
+                texto = "Agregar a la venta",
                 enabled = precio.isNotBlank(),
                 onClick = {
                     if (nombre.isBlank()) {
@@ -631,20 +735,16 @@ fun PantallaProductoDetalle(
                             fotoUrl = fotoUri
                         )
                     )
-                    avisar("Producto agregado al carrito")
+                    avisar("Agregado a la venta")
                 },
                 icono = { Icon(Icons.Filled.AddShoppingCart, contentDescription = null, tint = NegroApple) }
             )
 
             if (!esNuevo) {
                 BotonTexto(
-                    texto = "Eliminar producto",
+                    texto = "Borrar producto",
                     color = RojoError,
-                    onClick = {
-                        TramaStore.eliminarProducto(original.id)
-                        avisar("Producto eliminado")
-                        nav.volver()
-                    }
+                    onClick = { confirmarEliminar = true }
                 )
             }
 
