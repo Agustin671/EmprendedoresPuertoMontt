@@ -1142,7 +1142,7 @@
 
   function copiarEnlaceQR() {
     if (!estado.tiendaSeleccionada) return;
-    var url = "https://trama.app/tienda/" + estado.tiendaSeleccionada.id;
+    var url = "https://agustin671.github.io/EmprendedoresPuertoMontt/?tienda=" + encodeURIComponent(estado.tiendaSeleccionada.id);
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function () {
         mostrarToast("¡Enlace copiado al portapapeles!");
