@@ -86,7 +86,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.trabajodea10.data.FirebaseManager
+import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.ui.theme.BlancoPuro
 import com.example.trabajodea10.ui.theme.FondoLimpio
@@ -121,12 +121,12 @@ fun PantallaMarketplace(
     var tiendaAgendamiento by remember { mutableStateOf<Tienda?>(null) }
     var sembrando by remember { mutableStateOf(false) }
 
-    // Cargar tiendas desde Firestore en el primer render
+    // Cargar tiendas y productos publicados desde el servidor en el primer render
     LaunchedEffect(Unit) {
-        FirebaseManager.cargarTiendasDesdeFirestore()
+        SesionManager.cargarTiendas()
     }
 
-    val tiendasFiltradas = FirebaseManager.tiendas.filter { tienda ->
+    val tiendasFiltradas = SesionManager.tiendas.filter { tienda ->
         val coincideTexto = busqueda.isBlank() ||
                 tienda.nombre.contains(busqueda, ignoreCase = true) ||
                 tienda.rubro.contains(busqueda, ignoreCase = true) ||
@@ -174,8 +174,8 @@ fun PantallaMarketplace(
                                     .background(RojoAlerce, CircleShape)
                             )
                         }
-                        val saludoCabecera = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) {
-                            "Bienvenido(a), ${FirebaseManager.nombreUsuarioActual} · Vitrina de Alerce"
+                        val saludoCabecera = if (SesionManager.nombreUsuarioActual.isNotBlank()) {
+                            "Bienvenido(a), ${SesionManager.nombreUsuarioActual} · Vitrina de Alerce"
                         } else {
                             "Vitrina Comercial de Alerce · Puerto Montt"
                         }
@@ -193,7 +193,7 @@ fun PantallaMarketplace(
                         // Botón circular para refrescar (sin texto "Firestore")
                         Surface(
                             shape = CircleShape,
-                            color = if (FirebaseManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
+                            color = if (SesionManager.mensajeError != null) RojoAlerceContenedor else GrisChip,
                             border = BorderStroke(1.dp, GrisBorde),
                             modifier = Modifier
                                 .size(38.dp)
@@ -201,10 +201,12 @@ fun PantallaMarketplace(
                                 .clickable {
                                     coroutineScope.launch {
                                         sembrando = true
-                                        val exito = FirebaseManager.sembrarTiendasIniciales()
-                                        FirebaseManager.cargarTiendasDesdeFirestore()
+                                        SesionManager.cargarTiendas()
                                         sembrando = false
-                                        avisar?.invoke(if (exito) "¡Vitrina sincronizada!" else "Tiendas actualizadas")
+                                        avisar?.invoke(
+                                            if (SesionManager.mensajeError == null) "Vitrina actualizada"
+                                            else "Sin conexión: se muestran datos guardados"
+                                        )
                                     }
                                 }
                         ) {
@@ -215,7 +217,7 @@ fun PantallaMarketplace(
                                     Icon(
                                         imageVector = Icons.Filled.Refresh,
                                         contentDescription = "Actualizar tiendas",
-                                        tint = if (FirebaseManager.mensajeError != null) RojoAlerce else NegroApple,
+                                        tint = if (SesionManager.mensajeError != null) RojoAlerce else NegroApple,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -232,7 +234,6 @@ fun PantallaMarketplace(
                                     .size(38.dp)
                                     .clip(CircleShape)
                                     .clickable {
-                                        FirebaseManager.cerrarSesion()
                                         nav.cerrarSesion()
                                         avisar?.invoke("Sesión cerrada")
                                     }
@@ -300,7 +301,7 @@ fun PantallaMarketplace(
         }
 
         // Estado de carga o listado de tiendas
-        if (FirebaseManager.cargando && FirebaseManager.tiendas.isEmpty()) {
+        if (SesionManager.cargando && SesionManager.tiendas.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = NegroApple)
             }
@@ -324,17 +325,17 @@ fun PantallaMarketplace(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = if (FirebaseManager.mensajeError != null) Icons.Filled.Store else Icons.Filled.CloudDone,
+                                imageVector = if (SesionManager.mensajeError != null) Icons.Filled.Store else Icons.Filled.CloudDone,
                                 contentDescription = null,
-                                tint = if (FirebaseManager.mensajeError != null) RojoAlerce else VerdeOk,
+                                tint = if (SesionManager.mensajeError != null) RojoAlerce else VerdeOk,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (FirebaseManager.mensajeError != null)
-                                    "Modo Demostración Offline (datos típicos de Alerce)"
+                                text = if (SesionManager.mensajeError != null)
+                                    "Sin conexión · se muestran datos guardados en el celular"
                                 else
-                                    "Conectado a Firebase Cloud Firestore (${tiendasFiltradas.size} tiendas activas)",
+                                    "Conectado · ${tiendasFiltradas.size} tiendas en la vitrina",
                                 fontSize = 12.sp,
                                 color = NegroApple,
                                 fontWeight = FontWeight.Medium
@@ -1104,8 +1105,8 @@ private fun DialogoDetalleTienda(
                             Button(
                                 onClick = {
                                     if (nuevaPreguntaCliente.isNotBlank()) {
-                                        val nombreFirma = if (FirebaseManager.nombreUsuarioActual.isNotBlank())
-                                            "${FirebaseManager.nombreUsuarioActual} (Vecino)"
+                                        val nombreFirma = if (SesionManager.nombreUsuarioActual.isNotBlank())
+                                            "${SesionManager.nombreUsuarioActual} (Vecino)"
                                         else
                                             "Vecino de Alerce"
                                         TramaStore.agregarPublicacionForo(
@@ -1126,8 +1127,8 @@ private fun DialogoDetalleTienda(
                             ) {
                                 Icon(Icons.Filled.Send, contentDescription = null, tint = BlancoPuro, modifier = Modifier.size(13.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                val textoBotonPublicar = if (FirebaseManager.nombreUsuarioActual.isNotBlank())
-                                    "Publicar Consulta como ${FirebaseManager.nombreUsuarioActual}"
+                                val textoBotonPublicar = if (SesionManager.nombreUsuarioActual.isNotBlank())
+                                    "Publicar Consulta como ${SesionManager.nombreUsuarioActual}"
                                 else
                                     "Publicar Consulta en el Muro"
                                 Text(textoBotonPublicar, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = BlancoPuro)
@@ -1190,7 +1191,7 @@ fun DialogoAgendamientoTienda(
     var bloqueSeleccionado by remember { mutableStateOf<BloqueHorario?>(null) }
 
     var nombreCliente by remember {
-        mutableStateOf(FirebaseManager.nombreUsuarioActual)
+        mutableStateOf(SesionManager.nombreUsuarioActual)
     }
     var telefonoCliente by remember { mutableStateOf("+56 9 ") }
     var servicio by remember { mutableStateOf("Atención / Corte de Cabello") }

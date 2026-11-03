@@ -1,6 +1,7 @@
 package com.example.trabajodea10.data
 
 import android.content.Context
+import com.example.trabajodea10.data.remoto.Sincronizador
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -417,6 +418,8 @@ object TramaStore {
             )
         )
         persistir()
+        // RN-01: deja el correo autorizado en el servidor; al registrarse queda como emprendedora.
+        Sincronizador.autorizarEmprendedora(email.trim(), nombre.trim())
         return true
     }
 
@@ -464,6 +467,7 @@ object TramaStore {
         val indice = productos.indexOfFirst { it.id == producto.id }
         if (indice >= 0) productos[indice] = producto else productos.add(producto)
         persistir()
+        Sincronizador.productoCambiado(producto.id)
     }
 
     fun togglePublicado(id: String) {
@@ -472,6 +476,7 @@ object TramaStore {
             val producto = productos[indice]
             productos[indice] = producto.copy(publicado = !producto.publicado)
             persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -481,6 +486,7 @@ object TramaStore {
             val producto = productos[indice]
             productos[indice] = producto.copy(destacado = !producto.destacado)
             persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -491,6 +497,7 @@ object TramaStore {
             val producto = productos[indice]
             productos[indice] = producto.copy(variantes = producto.variantes.map { it.copy(stock = 0) })
             persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -500,6 +507,7 @@ object TramaStore {
         if (indice >= 0) {
             productos[indice] = productos[indice].copy(variantes = variantes)
             persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -507,6 +515,49 @@ object TramaStore {
         productos.filter { it.id == id }.forEach { FotoProductoStore.eliminar(it.fotoUrl) }
         productos.removeAll { it.id == id }
         persistir()
+        Sincronizador.productoEliminado(id)
+    }
+
+    // ---------- Datos que llegan del servidor (Supabase) ----------
+
+    /** Reemplaza los productos de una tienda por los del servidor, sin pisar los que faltan subir. */
+    fun reemplazarProductosDeTienda(tiendaId: String, remotos: List<Producto>, conservar: Set<String>) {
+        val locales = productos.filter { it.tiendaId == tiendaId && it.id in conservar }
+        val idsLocales = locales.map { it.id }.toSet()
+        productos.removeAll { it.tiendaId == tiendaId }
+        productos.addAll(remotos.filterNot { it.id in idsLocales })
+        productos.addAll(locales)
+        persistir()
+    }
+
+    /** Agrega o actualiza los productos publicados de la vitrina (excepto los de mi propia tienda). */
+    fun fusionarProductosPublicos(remotos: List<Producto>, excluirTienda: String?) {
+        val tiendasRemotas = remotos.map { it.tiendaId }.toSet()
+        // Quita lo viejo de esas tiendas (lo despublicado ya no viene del servidor)
+        productos.removeAll { it.tiendaId in tiendasRemotas && it.tiendaId != excluirTienda && it.publicado }
+        remotos.filter { it.tiendaId != excluirTienda }.forEach { remoto ->
+            val i = productos.indexOfFirst { it.id == remoto.id }
+            if (i >= 0) productos[i] = remoto else productos.add(remoto)
+        }
+        persistir()
+    }
+
+    fun reemplazarVentas(remotas: List<Venta>, conservar: Set<String>) {
+        val pendientes = ventas.filter { it.id in conservar }
+        val idsPendientes = pendientes.map { it.id }.toSet()
+        ventas.clear()
+        ventas.addAll((pendientes + remotas.filterNot { it.id in idsPendientes }).sortedByDescending { it.fecha })
+        persistir()
+    }
+
+    /** La foto ya se subió: se usa la URL pública y se borra la copia del celular. */
+    fun aplicarFotoRemota(id: String, rutaLocal: String, url: String) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0 && productos[indice].fotoUrl == rutaLocal) {
+            productos[indice] = productos[indice].copy(fotoUrl = url)
+            persistir()
+            FotoProductoStore.eliminar(rutaLocal)
+        }
     }
 
     // ---------- Ventas ----------
@@ -528,6 +579,8 @@ object TramaStore {
         ventas.add(0, venta)
         descontarStock(items)
         persistir()
+        Sincronizador.ventaRegistrada(venta.id)
+        items.map { it.productoId }.distinct().forEach { Sincronizador.productoCambiado(it) }
         return venta
     }
 

@@ -28,7 +28,6 @@ import com.example.trabajodea10.ui.theme.BlancoPuro
 import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoAlerce
 import com.example.trabajodea10.ui.theme.TramaAppTheme
-import com.google.firebase.FirebaseApp
 // FragmentActivity (y no ComponentActivity) porque el aviso de huella de Android
 // (BiometricPrompt) solo funciona sobre una FragmentActivity.
 class MainActivity : FragmentActivity() {
@@ -45,11 +44,6 @@ class MainActivity : FragmentActivity() {
             } catch (_: Throwable) {
             }
             defaultHandler?.uncaughtException(thread, throwable)
-        }
-        try {
-            FirebaseApp.initializeApp(this)
-        } catch (e: Throwable) {
-            Log.e("MainActivity", "Error inicializando FirebaseApp: ${e.message}")
         }
         enableEdgeToEdge()
         setContent {

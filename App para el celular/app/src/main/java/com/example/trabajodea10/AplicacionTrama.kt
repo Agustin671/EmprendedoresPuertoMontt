@@ -1,37 +1,22 @@
 package com.example.trabajodea10
 
 import android.app.Application
-import android.util.Log
 import com.example.trabajodea10.data.TramaStore
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
+import com.example.trabajodea10.data.remoto.ClienteSupabase
+import com.example.trabajodea10.data.remoto.Sincronizador
 
 /**
- * Punto de arranque de la aplicación. Se encarga de inicializar el almacenamiento
- * local y asegurar la conexión a Firebase (Auth, Firestore y Cloud Storage).
+ * Punto de arranque de la aplicación: prepara la sesión guardada de Supabase,
+ * la cola de cambios por subir y los datos guardados en el celular.
+ * (Las credenciales NO están en el código: vienen de supabase.properties.)
  */
 class AplicacionTrama : Application() {
     override fun onCreate() {
         super.onCreate()
+        ClienteSupabase.inicializar(this)
+        Sincronizador.inicializar(this)
         TramaStore.inicializar(this)
-
-        // Inicialización robusta de Firebase con credenciales del proyecto alercei7
-        try {
-            if (FirebaseApp.getApps(this).isEmpty()) {
-                val opciones = FirebaseOptions.Builder()
-                    .setApplicationId("1:60295127775:android:4e6ec2188b21076f01ff6a")
-                    .setApiKey("AIzaSyBmxcinIPVJB-AKgHQQ9iEp3p6-uRS58oI")
-                    .setProjectId("alercei7")
-                    .setStorageBucket("alercei7.firebasestorage.app")
-                    .setGcmSenderId("60295127775")
-                    .build()
-                FirebaseApp.initializeApp(this, opciones)
-                Log.i("AplicacionTrama", "Firebase inicializado con éxito para alercei7")
-            } else {
-                Log.i("AplicacionTrama", "Firebase ya se encontraba inicializado")
-            }
-        } catch (e: Exception) {
-            Log.e("AplicacionTrama", "Error al inicializar Firebase: ${e.message}")
-        }
+        // Si quedaron cambios sin subir (por ejemplo, sin señal en la feria), se intentan ahora.
+        Sincronizador.subirEnSegundoPlano()
     }
 }

@@ -50,6 +50,7 @@ import com.example.trabajodea10.data.Producto
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.Variante
 import com.example.trabajodea10.data.formatearMoneda
+import com.example.trabajodea10.data.remoto.Sincronizador
 import kotlinx.coroutines.delay
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.CampoBusqueda
@@ -110,7 +111,8 @@ fun PantallaCatalogo(
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
             titulo = "Mis productos",
-            subtitulo = "${TramaStore.productosPublicados()} a la vista de tus clientas · ${todos.size} en total",
+            subtitulo = "${TramaStore.productosPublicados()} a la vista de tus clientas · ${todos.size} en total" +
+                if (Sincronizador.pendientes > 0) " · ${Sincronizador.pendientes} cambios por subir (sin señal)" else "",
             acciones = {
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
                     Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
