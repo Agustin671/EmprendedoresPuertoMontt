@@ -3650,7 +3650,7 @@
       if (nombre && nombre !== "Visitante") {
         tag.textContent = nombre + " (" + rol + ")";
       } else {
-        tag.textContent = "Iniciar Sesión / Mi Cuenta";
+        tag.textContent = "Inicio de Sesión / Registro";
       }
     }
     if (saludo) {
@@ -4315,16 +4315,35 @@
     return estado.usuario && (estado.usuario.rol === "Administrador" || estado.usuario.rol === "ADMIN");
   }
 
-  function entrarModoAdmin() {
+    function entrarModoAdmin() {
     aplicarUsuarioLocal("Administración Alerce", "Administrador");
     estado.usuario = estado.usuario || {};
     estado.usuario.rol = "Administrador";
     estado.usuario.email = "admin@alerce.app";
     cerrarModal("modal-auth-web");
-    mostrarToast("👑 Bienvenido, Administrador de Plataforma.");
-    setTimeout(function() {
-      abrirModalAdmin();
-    }, 300);
+    cerrarModal("modal-registro-emprendedor");
+
+    // Desbloquear pestaña y sección en la página (sin modal emergente automático)
+    var navAdmin = document.getElementById("item-nav-admin");
+    if (navAdmin) navAdmin.style.display = "inline-block";
+    var secAdmin = document.getElementById("admin-dashboard");
+    if (secAdmin) secAdmin.style.display = "block";
+
+    actualizarKPIsAdmin();
+    renderizarAdminEmprendedoras();
+
+    // Activar pestaña visual en el menú y desplazarse suavemente
+    document.querySelectorAll(".menu-navegacion a").forEach(function (l) { l.classList.remove("activo"); });
+    var linkAdmin = document.getElementById("link-nav-admin");
+    if (linkAdmin) linkAdmin.classList.add("activo");
+
+    mostrarToast("👑 Bienvenido, Administrador. Pestaña de administración desbloqueada.");
+
+    if (secAdmin) {
+      setTimeout(function() {
+        if (secAdmin.scrollIntoView) secAdmin.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
   }
 
   function seleccionarTabAdmin(tab) {
@@ -5125,6 +5144,109 @@
 
 
   // Exponer API global para callbacks en línea
+  
+  // ============================================================
+  // MÓDULO 12: MODALES SEPARADOS EMPRENDEDOR / USUARIO NORMAL
+  // ============================================================
+
+  function abrirModalRegistroEmprendedor() {
+    cerrarModal("modal-auth-web");
+    abrirModal("modal-registro-emprendedor");
+  }
+
+  function abrirModalAuthNormal() {
+    cerrarModal("modal-registro-emprendedor");
+    seleccionarModoUsuario("LOGIN");
+    abrirModal("modal-auth-web");
+  }
+
+  function seleccionarModoUsuario(modo) {
+    var secLogin = document.getElementById("usuario-seccion-login");
+    var secReg = document.getElementById("usuario-seccion-registro");
+    var btnLogin = document.getElementById("btn-tab-usuario-login");
+    var btnReg = document.getElementById("btn-tab-usuario-registro");
+    var errLogin = document.getElementById("auth-aviso-error");
+    var errReg = document.getElementById("reg-usuario-aviso-error");
+    if (errLogin) errLogin.style.display = "none";
+    if (errReg) errReg.style.display = "none";
+
+    if (modo === "REGISTRO") {
+      if (secLogin) secLogin.style.display = "none";
+      if (secReg) secReg.style.display = "flex";
+      if (btnLogin) {
+        btnLogin.className = "btn-accion-pill";
+        btnLogin.style.background = "transparent";
+        btnLogin.style.border = "none";
+        btnLogin.style.color = "";
+      }
+      if (btnReg) {
+        btnReg.className = "btn-accion-pill btn-negro";
+        btnReg.style.background = "#2563eb";
+        btnReg.style.border = "none";
+        btnReg.style.color = "#ffffff";
+      }
+    } else {
+      if (secLogin) secLogin.style.display = "flex";
+      if (secReg) secReg.style.display = "none";
+      if (btnLogin) {
+        btnLogin.className = "btn-accion-pill btn-negro";
+        btnLogin.style.background = "";
+        btnLogin.style.border = "";
+        btnLogin.style.color = "";
+      }
+      if (btnReg) {
+        btnReg.className = "btn-accion-pill";
+        btnReg.style.background = "transparent";
+        btnReg.style.border = "none";
+        btnReg.style.color = "";
+      }
+    }
+  }
+
+  function registrarUsuarioNormalModal() {
+    var inpNom = document.getElementById("reg-usuario-nombre");
+    var inpMail = document.getElementById("reg-usuario-email");
+    var inpPass = document.getElementById("reg-usuario-password");
+    var errDiv = document.getElementById("reg-usuario-aviso-error");
+    var okDiv = document.getElementById("reg-usuario-aviso-exito");
+
+    var nombre = inpNom ? inpNom.value.trim() : "";
+    var email = inpMail ? inpMail.value.trim().toLowerCase() : "";
+    var pass = inpPass ? inpPass.value : "";
+
+    if (!nombre || !email || !pass) {
+      if (errDiv) { errDiv.textContent = "Por favor completa todos los campos obligatorios."; errDiv.style.display = "block"; }
+      return;
+    }
+    if (pass.length < 6) {
+      if (errDiv) { errDiv.textContent = "La contraseña debe tener al menos 6 caracteres."; errDiv.style.display = "block"; }
+      return;
+    }
+
+    if (supabaseClient && supabaseClient.auth) {
+      supabaseClient.auth.signUp({
+        email: email,
+        password: pass,
+        options: { data: { nombre: nombre, rol: "VISITANTE" } }
+      }).then(function(res) {
+        if (res.error) {
+          console.warn("Supabase signUp normal aviso:", res.error);
+        }
+      }).catch(function(e){ console.warn("Supabase aviso:", e); });
+    }
+
+    aplicarUsuarioLocal(nombre, "Comprador");
+    if (okDiv) {
+      okDiv.textContent = "¡Cuenta creada con éxito! Bienvenido(a) a la comunidad.";
+      okDiv.style.display = "block";
+    }
+    setTimeout(function() {
+      cerrarModal("modal-auth-web");
+      mostrarToast("🎉 ¡Bienvenido(a) " + nombre + "! Cuenta creada con éxito.");
+    }, 900);
+  }
+
+
   window.TramaWeb = {
     abrirVitrinaTienda: abrirVitrinaTienda,
     abrirQRTienda: abrirQRTienda,
@@ -5228,7 +5350,11 @@
     abrirFormCrearAdmin: abrirFormCrearAdmin,
     toggleEstadoAdmin: toggleEstadoAdmin,
     recuperarContrasenaWeb: recuperarContrasenaWeb,
-    iniciarSesionGoogleWeb: iniciarSesionGoogleWeb
+    iniciarSesionGoogleWeb: iniciarSesionGoogleWeb,
+    abrirModalRegistroEmprendedor: abrirModalRegistroEmprendedor,
+    abrirModalAuthNormal: abrirModalAuthNormal,
+    seleccionarModoUsuario: seleccionarModoUsuario,
+    registrarUsuarioNormalModal: registrarUsuarioNormalModal
   };
 
   // Si se llegó por el QR o el enlace de una tienda (?tienda=ID), abrir su ficha.
