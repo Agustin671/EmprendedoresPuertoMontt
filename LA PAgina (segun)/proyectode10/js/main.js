@@ -8,6 +8,32 @@
   "use strict";
 
   // ============================================================
+  // CONEXIÓN OFICIAL SUPABASE CLOUD (INSTANCIA ALERCE I7)
+  // Backend oficial para Programación Android 2026-2 & Web
+  // ============================================================
+  var SUPABASE_URL = "https://supabase-alerceis7.codepulse.cl";
+  var SUPABASE_ANON_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc5MzIwMDQ0MCwiZXhwIjo0OTQ4ODc0MDQwLCJyb2xlIjoiYW5vbiJ9.pA-zUw0JkxwxGKrRB3GfDPEtTE1K3eQGYBQp6v1HyUE";
+  var supabaseClient = null;
+
+  try {
+    if (typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log("✅ Supabase Client conectado exitosamente a instancia oficial Alerce i7:", SUPABASE_URL);
+    }
+  } catch (errSupa) {
+    console.warn("Aviso inicializando Supabase Client:", errSupa);
+  }
+
+  function normalizarColorHex(col, fallback) {
+    if (typeof col === "string" && col.charAt(0) === "#") return col;
+    if (typeof col === "number") {
+      var hex = (col >>> 0).toString(16).padStart(8, "0");
+      return "#" + hex.slice(2);
+    }
+    return fallback || "#1A202C";
+  }
+
+  // ============================================================
   // CONEXIÓN OFICIAL FIREBASE WEB (AUTH, FIRESTORE, STORAGE)
   // ============================================================
   var firebaseConfig = {
@@ -1629,6 +1655,34 @@
       }
     }
 
+    // Sincronizar con Supabase Cloud en tiempo real si está conectado
+    if (supabaseClient) {
+      try {
+        supabaseClient.from("productos").insert([{
+          id: nuevoProducto.id,
+          tienda_id: tiendaId,
+          nombre: nuevoProducto.nombre,
+          precio: Number(nuevoProducto.precio) || 0,
+          descripcion: nuevoProducto.descripcion || "",
+          categoria: "GENERAL",
+          publicado: true,
+          destacado: false,
+          foto_url: nuevoProducto.fotoUrl || null,
+          variantes: nuevoProducto.variantes || [{ id: "v_" + nuevoProducto.id, nombre: "Unidad", stock: nuevoProducto.stockTotal || 10 }]
+        }]).then(function (res) {
+          if (res.error) {
+            console.warn("Aviso guardando producto en Supabase (RLS):", res.error.message);
+          } else {
+            console.log("✅ Producto guardado exitosamente en Supabase Cloud");
+          }
+        }).catch(function (e) {
+          console.warn("Aviso Supabase producto:", e);
+        });
+      } catch (errSupP) {
+        console.warn("Excepción guardando producto en Supabase:", errSupP);
+      }
+    }
+
     // Agregar al listado en memoria
     PRODUCTOS.unshift(nuevoProducto);
 
@@ -2404,7 +2458,11 @@
     actualizarBadgesCarrito();
     renderizarTiendasMarketplace();
     renderizarAsociaciones();
+    configurarObservadorAuthSupabase();
     configurarObservadorAuthFirebase();
+    cargarTiendasDesdeSupabase();
+    cargarProductosDesdeSupabase();
+    cargarFeriasDesdeSupabase();
     cargarProductosDesdeFirestore();
     actualizarUIControlesSegunRol();
   }
@@ -2689,7 +2747,32 @@
 
     resumenTexto += "\n\n¡Gracias por apoyar a los emprendedores locales de Alerce!";
 
-    // Guardar en Firestore si está conectado
+    // Guardar en Supabase Cloud si está conectado
+    if (supabaseClient) {
+      try {
+        var payloadVentaSupa = {
+          id: "v_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+          tienda_id: estadoPOS.tiendaId || "t_minimarket_rosa",
+          fecha_local: new Date().toISOString(),
+          items: estadoPOS.ticket,
+          medio_pago: estadoPOS.medioPago,
+          total: total
+        };
+        supabaseClient.from("ventas").insert([payloadVentaSupa]).then(function (res) {
+          if (res.error) {
+            console.warn("Aviso registrando venta en Supabase (RLS):", res.error.message);
+          } else {
+            console.log("✅ Venta sincronizada exitosamente con Supabase Cloud.");
+          }
+        }).catch(function (e) {
+          console.warn("Excepción Supabase ventas:", e);
+        });
+      } catch (errSup) {
+        console.warn("Error enviando venta a Supabase:", errSup);
+      }
+    }
+
+    // Guardar en Firestore si está conectado (fallback)
     if (firebaseFirestore) {
       try {
         firebaseFirestore.collection("tiendas").doc(estadoPOS.tiendaId).collection("ventas").add({
@@ -2716,7 +2799,205 @@
     cerrarModal("modal-pos");
   }
 
-  // Sincronización en vivo con Cloud Firestore
+  // ============================================================
+  // SINCRONIZACIÓN EN VIVO CON SUPABASE CLOUD (INSTANCIA ALERCE I7)
+  // ============================================================
+
+  function cargarTiendasDesdeSupabase() {
+    if (!supabaseClient) return;
+    supabaseClient.from("tiendas").select("*").then(function (res) {
+      if (res.error) {
+        console.warn("Aviso consultando tiendas en Supabase:", res.error);
+        return;
+      }
+      var data = res.data;
+      if (!data || !data.length) return;
+
+      var tiendasActualizadas = data.map(function (t) {
+        var nec = t.necesidades;
+        if (typeof nec === "string") {
+          try { nec = JSON.parse(nec); } catch(e) { nec = {}; }
+        }
+        var nombreTienda = t.nombre;
+        if (t.id === "t_minimarket_rosa" && nombreTienda && nombreTienda.indexOf("Marta") !== -1) {
+          nombreTienda = "Minimarket Doña Rosa";
+        }
+        return {
+          id: t.id,
+          nombre: nombreTienda || t.nombre,
+          rubro: t.rubro || "Comercio Local",
+          sector: t.sector || "Alerce",
+          bio: t.bio || "",
+          whatsapp: t.whatsapp || "",
+          instagram: t.instagram || "",
+          colorPortada: normalizarColorHex(t.color_portada, "#1A202C"),
+          colorLogo: normalizarColorHex(t.color_logo, "#2B6CB0"),
+          necesidades: nec || {
+            tieneStock: true,
+            tieneAgendamiento: false,
+            tieneVentaPorWhatsApp: true,
+            tieneProductosAPedido: false,
+            participaEnFerias: false,
+            tieneForoComunidad: false
+          }
+        };
+      });
+
+      tiendasActualizadas.forEach(function (tNueva) {
+        var idx = TIENDAS.findIndex(function (t) { return t.id === tNueva.id; });
+        if (idx >= 0) {
+          TIENDAS[idx] = Object.assign({}, TIENDAS[idx], tNueva);
+        } else {
+          TIENDAS.push(tNueva);
+        }
+      });
+
+      renderizarTiendasMarketplace();
+      if (typeof actualizarDashboardEmprendedora === "function") {
+        actualizarDashboardEmprendedora();
+      }
+      console.log("✅ Tiendas sincronizadas desde Supabase Cloud (" + tiendasActualizadas.length + " tiendas)");
+    }).catch(function (err) {
+      console.warn("Error cargando tiendas desde Supabase:", err);
+    });
+  }
+
+  function cargarProductosDesdeSupabase() {
+    if (!supabaseClient) return;
+    supabaseClient.from("productos").select("*").then(function (res) {
+      if (res.error) {
+        console.warn("Aviso consultando productos en Supabase:", res.error);
+        return;
+      }
+      var data = res.data;
+      if (!data || !data.length) return;
+
+      data.forEach(function (p) {
+        var variantes = p.variantes;
+        if (typeof variantes === "string") {
+          try { variantes = JSON.parse(variantes); } catch(e) { variantes = []; }
+        }
+        if (!Array.isArray(variantes) || variantes.length === 0) {
+          variantes = [{ id: "v_1", nombre: "Estándar", stock: 10, precio: Number(p.precio) || 0 }];
+        }
+        var stockCalc = variantes.reduce(function (acc, v) { return acc + (Number(v.stock) || 0); }, 0);
+        if (stockCalc === 0 && p.publicado) stockCalc = 10;
+
+        var prodObj = {
+          id: p.id,
+          tiendaId: p.tienda_id,
+          nombre: p.nombre,
+          precio: Number(p.precio) || 0,
+          stockTotal: stockCalc,
+          descripcion: p.descripcion || "",
+          categoria: p.categoria || "GENERAL",
+          publicado: p.publicado !== false,
+          destacado: !!p.destacado,
+          colorFoto: normalizarColorHex(p.color_foto, "#4a5568"),
+          fotoUrl: p.foto_url || "",
+          variantes: variantes
+        };
+
+        var idx = PRODUCTOS.findIndex(function (item) { return item.id === p.id; });
+        if (idx >= 0) {
+          PRODUCTOS[idx] = Object.assign({}, PRODUCTOS[idx], prodObj);
+        } else {
+          PRODUCTOS.unshift(prodObj);
+        }
+      });
+
+      guardarProductosEnStorage();
+      renderizarTiendasMarketplace();
+      if (typeof renderizarProductosPOS === "function") {
+        renderizarProductosPOS();
+      }
+      if (typeof renderizarGestionCatalogo === "function") {
+        renderizarGestionCatalogo();
+      }
+      if (typeof actualizarDashboardEmprendedora === "function") {
+        actualizarDashboardEmprendedora();
+      }
+      console.log("✅ Productos sincronizados desde Supabase Cloud (" + data.length + " productos)");
+    }).catch(function (err) {
+      console.warn("Error cargando productos desde Supabase:", err);
+    });
+  }
+
+  function cargarFeriasDesdeSupabase() {
+    if (!supabaseClient) return;
+    supabaseClient.from("ferias").select("*").then(function (res) {
+      if (res.error || !res.data || !res.data.length) return;
+      res.data.forEach(function (f) {
+        var idx = FERIAS_COMUNALES.findIndex(function (item) { return item.id === f.id; });
+        var feriaObj = {
+          id: f.id,
+          nombre: f.nombre,
+          sector: f.sector || "Alerce",
+          ubicacion: f.direccion || f.sector || "Alerce",
+          fecha: f.fecha_inicio ? new Date(f.fecha_inicio).toLocaleDateString("es-CL") : "Próximamente",
+          dias: f.descripcion || "Sábados y Domingos",
+          horario: "10:00 - 18:00 hrs",
+          emprendedoresConfirmados: 12,
+          inscripcionAbierta: f.estado !== "CERRADA"
+        };
+        if (idx >= 0) {
+          FERIAS_COMUNALES[idx] = Object.assign({}, FERIAS_COMUNALES[idx], feriaObj);
+        } else {
+          FERIAS_COMUNALES.push(feriaObj);
+        }
+      });
+    }).catch(function (e) {
+      console.warn("Aviso ferias Supabase:", e);
+    });
+  }
+
+  function configurarObservadorAuthSupabase() {
+    if (!supabaseClient || !supabaseClient.auth) return;
+    try {
+      supabaseClient.auth.getSession().then(function (resp) {
+        var session = resp.data ? resp.data.session : null;
+        if (session && session.user) {
+          procesarUsuarioSupabase(session.user);
+        }
+      }).catch(function (e) { console.warn("Aviso sesión Supabase:", e); });
+
+      supabaseClient.auth.onAuthStateChange(function (event, session) {
+        if (session && session.user) {
+          procesarUsuarioSupabase(session.user);
+        } else if (event === "SIGNED_OUT") {
+          aplicarUsuarioLocal("Visitante", "Visitante");
+          estado.tiendaEmprendedoraId = null;
+          actualizarUIControlesSegunRol();
+        }
+      });
+    } catch (e) {
+      console.warn("Aviso listener Supabase Auth:", e);
+    }
+  }
+
+  function procesarUsuarioSupabase(user) {
+    if (!user) return;
+    var meta = user.user_metadata || {};
+    var email = user.email || "";
+    var emailLower = email.toLowerCase().trim();
+    var nombre = meta.nombre || user.displayName || email.split("@")[0] || "Usuario";
+    var rol = meta.rol || "Comprador";
+
+    if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app") {
+      entrarModoDonaRosa();
+      return;
+    }
+
+    if (meta.tienda_id) {
+      estado.tiendaEmprendedoraId = meta.tienda_id;
+      estadoPOS.tiendaId = meta.tienda_id;
+    }
+
+    aplicarUsuarioLocal(nombre, rol === "EMPRENDEDORA" ? "Emprendedora" : (rol === "ADMIN" ? "Administrador" : "Comprador"));
+    actualizarUIControlesSegunRol();
+  }
+
+  // Sincronización en vivo con Cloud Firestore (compatibilidad de respaldo)
   function cargarProductosDesdeFirestore() {
     if (!firebaseFirestore) return;
     try {
@@ -2805,14 +3086,94 @@
 
     if (estadoAuthWeb.modoRegistro) {
       if (camposReg) camposReg.style.display = "block";
-      if (titulo) titulo.textContent = "Crear Cuenta en Firebase";
-      if (btnSubmit) btnSubmit.textContent = "Registrarme en Firebase";
+      if (titulo) titulo.textContent = "Crear Cuenta en Supabase";
+      if (btnSubmit) btnSubmit.textContent = "Registrarme en Supabase";
       if (btnToggle) btnToggle.textContent = "¿Ya tienes cuenta? Inicia sesión aquí";
     } else {
       if (camposReg) camposReg.style.display = "none";
       if (titulo) titulo.textContent = "Iniciar Sesión";
       if (btnSubmit) btnSubmit.textContent = "Iniciar Sesión";
-      if (btnToggle) btnToggle.textContent = "¿No tienes cuenta? Regístrate en Firebase aquí";
+      if (btnToggle) btnToggle.textContent = "¿No tienes cuenta? Regístrate en Supabase aquí";
+    }
+  }
+
+  function intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit) {
+    if (!firebaseAuth) {
+      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrarme en Supabase" : "Iniciar Sesión";
+      }
+      cerrarModal("modal-auth-web");
+      mostrarToast("¡Bienvenido! Sesión iniciada.");
+      return;
+    }
+
+    if (estadoAuthWeb.modoRegistro) {
+      firebaseAuth.createUserWithEmailAndPassword(email, pass)
+        .then(function (cred) {
+          var user = cred.user;
+          return user.updateProfile({ displayName: nombre }).then(function () {
+            if (firebaseFirestore) {
+              firebaseFirestore.collection("usuarios").doc(user.uid).set({
+                uid: user.uid,
+                email: email,
+                nombre: nombre,
+                rol: estadoAuthWeb.rolSeleccionado,
+                fechaRegistro: Date.now()
+              }).catch(function (e) { console.warn("Aviso Firestore:", e); });
+            }
+            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.textContent = "Registrarme en Supabase";
+            }
+            cerrarModal("modal-auth-web");
+            mostrarToast("¡Cuenta creada exitosamente!");
+          });
+        })
+        .catch(function (err) {
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Registrarme en Supabase";
+          }
+          if (errorDiv) {
+            errorDiv.textContent = "Error: " + (err.message || err);
+            errorDiv.style.display = "block";
+          }
+        });
+    } else {
+      firebaseAuth.signInWithEmailAndPassword(email, pass)
+        .then(function (cred) {
+          var user = cred.user;
+          var nombreDetectado = user.displayName || email.split("@")[0];
+          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Iniciar Sesión";
+          }
+          cerrarModal("modal-auth-web");
+          mostrarToast("¡Sesión iniciada con éxito!");
+        })
+        .catch(function (err) {
+          var emailLower = email.toLowerCase().trim();
+          if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {
+            if (btnSubmit) {
+              btnSubmit.disabled = false;
+              btnSubmit.textContent = "Iniciar Sesión";
+            }
+            entrarModoDonaRosa();
+            return;
+          }
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Iniciar Sesión";
+          }
+          if (errorDiv) {
+            errorDiv.textContent = "Error: " + (err.message || "Credenciales incorrectas");
+            errorDiv.style.display = "block";
+          }
+        });
     }
   }
 
@@ -2848,69 +3209,63 @@
     if (exitoDiv) exitoDiv.style.display = "none";
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.textContent = "Conectando con Firebase...";
+      btnSubmit.textContent = "Conectando con Supabase Cloud...";
     }
 
-    if (!firebaseAuth) {
-      // Modo local si Firebase no está disponible
-      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
-      if (btnSubmit) {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = "Iniciar Sesión";
-      }
-      cerrarModal("modal-auth-web");
-      mostrarToast("¡Bienvenido! Sesión iniciada.");
-      return;
-    }
-
-    if (estadoAuthWeb.modoRegistro) {
-      firebaseAuth.createUserWithEmailAndPassword(email, pass)
-        .then(function (cred) {
-          var user = cred.user;
-          return user.updateProfile({ displayName: nombre }).then(function () {
-            // Guardar documento en Firestore
-            if (firebaseFirestore) {
-              firebaseFirestore.collection("usuarios").doc(user.uid).set({
-                uid: user.uid,
-                email: email,
-                nombre: nombre,
-                rol: estadoAuthWeb.rolSeleccionado,
-                fechaRegistro: Date.now()
-              }).catch(function(e){ console.warn("Aviso Firestore:", e); });
+    // 1. Intentar con Supabase Auth Oficial
+    if (supabaseClient && supabaseClient.auth) {
+      if (estadoAuthWeb.modoRegistro) {
+        supabaseClient.auth.signUp({
+          email: email,
+          password: pass,
+          options: {
+            data: {
+              nombre: nombre,
+              rol: estadoAuthWeb.rolSeleccionado
             }
-            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.textContent = "Registrarme en Firebase";
-            }
-            cerrarModal("modal-auth-web");
-            mostrarToast("¡Cuenta creada exitosamente en Firebase!");
-          });
-        })
-        .catch(function (err) {
+          }
+        }).then(function (res) {
           if (btnSubmit) {
             btnSubmit.disabled = false;
-            btnSubmit.textContent = "Registrarme en Firebase";
+            btnSubmit.textContent = "Registrarme en Supabase";
           }
-          if (errorDiv) {
-            errorDiv.textContent = "Error de Firebase: " + (err.message || err);
-            errorDiv.style.display = "block";
+          if (res.error) {
+            throw res.error;
           }
+          var user = res.data ? res.data.user : null;
+          if (user) {
+            procesarUsuarioSupabase(user);
+          } else {
+            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+          }
+          cerrarModal("modal-auth-web");
+          mostrarToast("¡Cuenta creada exitosamente en Supabase Cloud!");
+        }).catch(function (err) {
+          console.warn("Aviso Supabase SignUp, probando fallback:", err);
+          intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
         });
-    } else {
-      firebaseAuth.signInWithEmailAndPassword(email, pass)
-        .then(function (cred) {
-          var user = cred.user;
-          var nombreDetectado = user.displayName || email.split("@")[0];
-          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+        return;
+      } else {
+        supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: pass
+        }).then(function (res) {
           if (btnSubmit) {
             btnSubmit.disabled = false;
             btnSubmit.textContent = "Iniciar Sesión";
           }
+          if (res.error) {
+            throw res.error;
+          }
+          var user = res.data ? res.data.user : null;
+          if (user) {
+            procesarUsuarioSupabase(user);
+          } else {
+            aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+          }
           cerrarModal("modal-auth-web");
-          mostrarToast("¡Sesión iniciada con éxito en Firebase!");
-        })
-        .catch(function (err) {
+          mostrarToast("¡Sesión iniciada con éxito en Supabase Cloud!");
+        }).catch(function (err) {
           var emailLower = email.toLowerCase().trim();
           if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {
             if (btnSubmit) {
@@ -2920,17 +3275,14 @@
             entrarModoDonaRosa();
             return;
           }
-
-          if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Iniciar Sesión";
-          }
-          if (errorDiv) {
-            errorDiv.textContent = "Error: " + (err.message || "Credenciales incorrectas");
-            errorDiv.style.display = "block";
-          }
+          console.warn("Aviso Supabase SignIn, probando fallback:", err);
+          intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
         });
+        return;
+      }
     }
+
+    intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
   }
 
   function autocompletarCredenciales(email, pass) {
@@ -3038,9 +3390,13 @@
   }
 
   function cerrarSesionWeb() {
-    if (firebaseAuth) {
-      try { firebaseAuth.signOut(); } catch(e){}
+    if (supabaseClient && supabaseClient.auth) {
+      try { supabaseClient.auth.signOut(); } catch (e) {}
     }
+    if (firebaseAuth) {
+      try { firebaseAuth.signOut(); } catch (e) {}
+    }
+    estado.tiendaEmprendedoraId = null;
     aplicarUsuarioLocal("Visitante", "Visitante");
     mostrarToast("Sesión cerrada");
   }
@@ -3311,6 +3667,27 @@
       } catch (e){}
     }
 
+    if (supabaseClient) {
+      try {
+        supabaseClient.from("tiendas").update({
+          nombre: tienda.nombre,
+          rubro: tienda.rubro,
+          sector: tienda.sector,
+          whatsapp: tienda.whatsapp,
+          bio: tienda.bio,
+          necesidades: tienda.necesidades
+        }).eq("id", tienda.id).then(function (res) {
+          if (res.error) {
+            console.warn("Aviso Supabase al actualizar tienda (RLS):", res.error.message);
+          } else {
+            console.log("✅ Tienda actualizada en Supabase Cloud");
+          }
+        }).catch(function (e) { console.warn("Aviso Supabase tienda:", e); });
+      } catch (errSupT) {
+        console.warn("Excepción actualizando tienda en Supabase:", errSupT);
+      }
+    }
+
     renderizarTiendasMarketplace();
     actualizarDashboardEmprendedora();
     cerrarModal("modal-editar-tienda");
@@ -3488,6 +3865,8 @@
     toggleModoAuth: toggleModoAuth,
     autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
+    cargarTiendasDesdeSupabase: cargarTiendasDesdeSupabase,
+    cargarProductosDesdeSupabase: cargarProductosDesdeSupabase,
     entrarModoDev: entrarModoDev,
     entrarModoDonaRosa: entrarModoDonaRosa,
     // Módulo 9: Punto de Venta (POS) y Caja Rápida
