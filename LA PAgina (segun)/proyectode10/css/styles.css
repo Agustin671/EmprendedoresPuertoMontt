@@ -1,0 +1,1922 @@
+/* ============================================================
+   TRAMA ALERCE — Estética Editorial Minimalista (Farfetch & Apple)
+   Alineada 100% con la aplicación móvil Android
+   ============================================================ */
+
+/* Tipografía Especial para Afiches */
+
+@font-face {
+  font-family: 'Britti Sans';
+  src: url('../fonts/britti_bold.otf') format('opentype');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Paleta Oficial Farfetch / Apple de la App */
+  --negro-apple: #111111;
+  --negro-suave: #1c1c1e;
+  --blanco-puro: #ffffff;
+  --fondo-limpio: #fafafa;
+  --gris-chip: #f4f4f5;
+  --gris-borde: #e4e4e7;
+  --gris-texto: #71717a;
+  --gris-texto-claro: #a1a1aa;
+  
+  --rojo-alerce: #dc2626;
+  --rojo-contenedor: #fee2e2;
+  --verde-ok: #059669;
+  --verde-contenedor: #d1fae5;
+  --azul-agenda: #0369a1;
+  --azul-contenedor: #e0f2fe;
+  --morado-pedido: #6d28d9;
+  --morado-contenedor: #f5f3ff;
+  --rosado-foro: #9d174d;
+  --rosado-contenedor: #fce7f3;
+  --dorado-oficial: #b45309;
+  --dorado-contenedor: #fef3c7;
+
+  /* Tipografía y Escalas (Estilo Apple Pro: sobrio, limpio y estructurado) */
+  --tamano-base: 16px;
+  --radio-card: 8px;
+  --radio-pill: 6px;
+  --radio-badge: 4px;
+  --radio-avatar: 8px;
+  --radio-boton: 6px;
+  --sombra-sutil: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --sombra-elevada: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --fuente-sistema: 'Open Sans', 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Modos de accesibilidad de texto */
+body.tamano-grande {
+  --tamano-base: 18px;
+}
+body.tamano-muy-grande {
+  --tamano-base: 21px;
+}
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  font-family: var(--fuente-sistema);
+  font-size: var(--tamano-base);
+  background-color: var(--fondo-limpio);
+  color: var(--negro-apple);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Contenedor centralizado */
+.contenedor {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Enlaces sin subrayado por defecto */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Accesibilidad de foco */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--negro-apple);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -999px;
+  left: 20px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  z-index: 10000;
+}
+.skip-link:focus {
+  top: 15px;
+}
+
+/* ============================================================
+   CABECERA EDITORIAL MINIMALISTA (Apple / Farfetch Style)
+   ============================================================ */
+.encabezado {
+  background: var(--blanco-puro);
+  border-bottom: 1px solid var(--gris-borde);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.barra-superior-info {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 6px 0;
+}
+
+.barra-superior-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.punto-verde {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.controles-accesibilidad {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-acc-mini {
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.btn-acc-mini:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.15);
+}
+
+/* Fila principal del Header */
+.encabezado-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 20px;
+}
+
+.logo-marca {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-titulo-grupo {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.logo-alerce {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--negro-apple);
+  line-height: 1;
+}
+
+.punto-rojo {
+  width: 7px;
+  height: 7px;
+  background: var(--rojo-alerce);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.logo-subtitulo {
+  font-size: 12px;
+  color: var(--gris-texto);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Buscador Pill estilo Pinterest / Apple */
+.buscador-central {
+  flex: 1;
+  max-width: 480px;
+  position: relative;
+}
+
+.input-buscador-pill {
+  width: 100%;
+  padding: 10px 18px 10px 42px;
+  background: var(--gris-chip);
+  border: 1px solid transparent;
+  border-radius: var(--radio-pill);
+  font-size: 13.5px;
+  color: var(--negro-apple);
+  transition: all 0.2s ease;
+}
+
+.input-buscador-pill:focus {
+  background: var(--blanco-puro);
+  border-color: var(--negro-apple);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.icono-lupa {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--gris-texto);
+  pointer-events: none;
+}
+
+/* Acciones a la derecha en el header */
+.header-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Botón Carrito Farfetch */
+.btn-carrito-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.btn-carrito-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+
+.contador-carrito {
+  background: var(--rojo-alerce);
+  color: var(--blanco-puro);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 50px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Botón circular de usuario / logout */
+.btn-circular {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--negro-apple);
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+.btn-circular:hover {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+.tag-usuario {
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  padding: 6px 12px;
+  border-radius: var(--radio-pill);
+  color: var(--negro-apple);
+}
+
+/* Navegación por Pestañas Principales */
+.navegacion-principal {
+  background: var(--blanco-puro);
+  border-top: 1px solid #f0f0f2;
+}
+
+.menu-navegacion {
+  display: flex;
+  list-style: none;
+  gap: 24px;
+  padding: 10px 20px;
+  overflow-x: auto;
+}
+
+.enlace-seccion {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  padding-bottom: 4px;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.enlace-seccion:hover,
+.enlace-seccion.activo {
+  color: var(--negro-apple);
+}
+
+.enlace-seccion.activo::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--negro-apple);
+}
+
+/* ============================================================
+   BANNER DE SINCRONIZACIÓN Y BIENVENIDA
+   ============================================================ */
+.seccion-hero {
+  padding: 24px 0 16px 0;
+}
+
+.banner-conexion-app {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: 14px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--sombra-sutil);
+}
+
+.conexion-texto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--negro-apple);
+}
+
+.insignia-live {
+  background: var(--verde-contenedor);
+  color: var(--verde-ok);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--radio-pill);
+}
+
+/* ============================================================
+   PILLS DE FILTRADO POR RUBRO (Farfetch Style)
+   ============================================================ */
+.barra-categorias-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 0 20px 0;
+  scrollbar-width: none;
+}
+.barra-categorias-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.pill-categoria {
+  background: var(--gris-chip);
+  color: var(--negro-apple);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.pill-categoria:hover {
+  background: #e4e4e7;
+}
+
+.pill-categoria.activa {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+/* ============================================================
+   GRILLA DE TIENDAS Y TARJETAS EDITORIALES (Apple Style)
+   ============================================================ */
+.titulo-seccion-editorial {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--negro-apple);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.subtitulo-seccion {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin-bottom: 20px;
+}
+
+.grilla-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 22px;
+  margin-bottom: 40px;
+}
+
+/* Tarjeta Tienda (Apple Pro Style: sobria, limpia y cuadrada) */
+.tarjeta-tienda {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  overflow: hidden;
+  box-shadow: var(--sombra-sutil);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.tarjeta-tienda:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-elevada);
+  border-color: #d1d1d6;
+}
+
+/* Franja superior de color */
+.tarjeta-franja-color {
+  height: 38px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ffffff;
+  border-radius: 7px 7px 0 0;
+}
+
+.franja-rubro {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.franja-lado-derecho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.franja-sector-chip {
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radio-badge);
+}
+
+.btn-favorito-corazon {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radio-badge);
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.btn-favorito-corazon:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.btn-favorito-corazon.activo {
+  color: var(--rojo-alerce);
+  background: #ffffff;
+}
+
+/* Cuerpo de la tarjeta */
+.tarjeta-cuerpo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tarjeta-perfil-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.avatar-circulo {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radio-avatar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.tarjeta-titulos {
+  flex: 1;
+}
+
+.tarjeta-nombre {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--negro-apple);
+  line-height: 1.25;
+}
+
+.tarjeta-sub {
+  font-size: 12px;
+  color: var(--gris-texto);
+  margin-top: 2px;
+}
+
+.tarjeta-descripcion {
+  font-size: 12.5px;
+  color: #48484a;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  flex: 1;
+}
+
+/* Badges de capacidades / necesidades (Chips rectangulares técnicos sobrios) */
+.tarjeta-badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.badge-necesidad {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radio-badge);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.1px;
+}
+
+.badge-stock { background: var(--verde-contenedor); color: var(--verde-ok); }
+.badge-pedido { background: var(--morado-contenedor); color: var(--morado-pedido); }
+.badge-ferias { background: var(--verde-contenedor); color: var(--verde-ok); }
+.badge-foro { background: var(--rosado-contenedor); color: var(--rosado-foro); }
+.badge-agenda { background: var(--azul-contenedor); color: var(--azul-agenda); }
+
+.divisor-sutil {
+  border: none;
+  height: 1px;
+  background: var(--gris-borde);
+  margin-bottom: 14px;
+}
+
+/* Botones de acción de la tarjeta (Cuadrados, sobrios y profesionales estilo Apple) */
+.tarjeta-acciones-fila {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accion-pill {
+  flex: 1;
+  height: 38px;
+  border-radius: var(--radio-boton);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  border: 1px solid #d2d2d7;
+  color: #1d1d1f;
+  background: var(--blanco-puro);
+}
+
+.btn-accion-pill:hover {
+  background: var(--gris-chip);
+  border-color: #b0b0b8;
+}
+
+.btn-accion-pill.btn-negro {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border: 1px solid var(--negro-apple);
+  border-radius: var(--radio-boton);
+}
+.btn-accion-pill.btn-negro:hover {
+  background: #2c2c2e;
+  border-color: #2c2c2e;
+}
+
+.btn-accion-pill.btn-agenda {
+  background: #f0f7ff;
+  border: 1px solid #cce3ff;
+  color: #0066cc;
+  border-radius: var(--radio-boton);
+}
+.btn-accion-pill.btn-agenda:hover {
+  background: #e0effe;
+}
+
+.btn-qr-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radio-boton);
+  border: 1px solid #d2d2d7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #1d1d1f;
+  background: var(--gris-chip);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.btn-qr-icon:hover {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border-color: var(--negro-apple);
+}
+
+/* ============================================================
+   VENTANAS MODALES ESTILO APPLE SHEET (Backdrop Blur)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.abierto {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-panel-editorial {
+  background: var(--blanco-puro);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.25s ease;
+}
+
+.modal-overlay.abierto .modal-panel-editorial {
+  transform: translateY(0) scale(1);
+}
+
+/* Header del Modal */
+.modal-cabecera {
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gris-borde);
+  position: sticky;
+  top: 0;
+  background: var(--blanco-puro);
+  z-index: 10;
+}
+
+.modal-perfil-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-cerrar-x {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--negro-apple);
+  font-weight: 700;
+  transition: background 0.2s;
+}
+.btn-cerrar-x:hover {
+  background: #e4e4e7;
+}
+
+.modal-cuerpo {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Tabs del Modal: Catálogo vs Muro y Foro */
+.tabs-segmentadas {
+  display: flex;
+  background: var(--gris-chip);
+  border-radius: var(--radio-pill);
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab-segmento {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: var(--radio-pill);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--negro-apple);
+  transition: all 0.2s ease;
+}
+
+.tab-segmento.activo {
+  background: var(--blanco-puro);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.tab-segmento.activo-foro {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+}
+
+/* Tarjetas de Producto en Modal */
+.lista-productos-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.producto-fila-card {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.producto-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.prod-nombre {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--negro-apple);
+}
+
+.prod-precio {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--rojo-alerce);
+}
+
+.prod-variantes-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-variante {
+  background: var(--gris-chip);
+  color: var(--gris-texto);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.producto-botones-fila {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-anadir-carrito {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radio-pill);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+.btn-anadir-carrito:hover {
+  opacity: 0.9;
+}
+
+.btn-whatsapp-prod {
+  border: 1px solid var(--negro-apple);
+  color: var(--negro-apple);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radio-pill);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.btn-whatsapp-prod:hover {
+  background: var(--gris-chip);
+}
+
+/* ============================================================
+   MURO Y FORO COMUNITARIO (EN VIVO - Live Forum)
+   ============================================================ */
+.cabecera-foro-vivo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lista-mensajes-foro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mensaje-muro-card {
+  border-radius: var(--radio-card);
+  padding: 12px;
+  border: 1px solid var(--gris-borde);
+  background: var(--gris-chip);
+}
+
+.mensaje-muro-card.oficial {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.muro-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.autor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.autor-avatar-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radio-badge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-oficial-dorado {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--radio-badge);
+}
+
+.muro-texto {
+  font-size: 13px;
+  color: var(--negro-apple);
+  line-height: 1.45;
+}
+
+.muro-fecha {
+  font-size: 10.5px;
+  color: var(--gris-texto);
+}
+
+/* Respuestas anidadas */
+.respuestas-anidadas {
+  margin-top: 8px;
+  padding-left: 14px;
+  border-left: 2px solid var(--rojo-alerce);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.respuesta-card {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radio-boton);
+  padding: 8px 10px;
+}
+
+.respuesta-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rojo-alerce);
+  margin-bottom: 2px;
+}
+
+/* Formulario para publicar en el muro */
+.caja-publicar-muro {
+  background: #f9fafb;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.textarea-muro {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radio-boton);
+  border: 1px solid var(--gris-borde);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 56px;
+}
+.textarea-muro:focus {
+  border-color: var(--negro-apple);
+  outline: none;
+}
+
+/* ============================================================
+   CARRITO DE COMPRAS FLOTANTE & MODAL
+   ============================================================ */
+.btn-carrito-flotante {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  padding: 12px 20px;
+  border-radius: var(--radio-pill);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  z-index: 999;
+  transition: transform 0.2s ease;
+}
+.btn-carrito-flotante:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.item-carrito-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gris-borde);
+  gap: 12px;
+}
+
+.item-carrito-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--gris-borde);
+  flex-shrink: 0;
+}
+
+.item-carrito-img-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.item-carrito-grupo-tienda {
+  margin-bottom: 16px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.item-carrito-grupo-tienda-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gris-borde);
+  margin-bottom: 8px;
+}
+
+.btn-eliminar-item {
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  color: var(--gris-texto);
+}
+
+.btn-eliminar-item:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.item-carrito-info {
+  flex: 1;
+}
+
+.item-carrito-titulo {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--negro-apple);
+}
+
+.item-carrito-tienda {
+  font-size: 11.5px;
+  color: var(--gris-texto);
+}
+
+.item-carrito-precio {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--rojo-alerce);
+}
+
+.controles-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-qty {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+.btn-qty:hover {
+  background: var(--negro-apple);
+  color: #fff;
+}
+
+.qty-numero {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 18px;
+  text-align: center;
+}
+
+.selector-pago-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.pill-pago {
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  padding: 7px 14px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--negro-apple);
+  transition: all 0.2s;
+}
+
+.pill-pago.activo {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border-color: var(--negro-apple);
+}
+
+/* Toast Notificación Flotante Estilo iOS / Apple */
+#toast-alerta {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  background: #111827;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  border-radius: 9999px;
+  padding: 10px 18px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  max-width: 90vw;
+  font-size: 13px;
+  font-weight: 600;
+  animation: toastFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastFadeIn {
+  from { opacity: 0; transform: translate(-50%, 15px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.btn-toast-ver-carrito {
+  background: #ffffff;
+  color: #111827;
+  border: none;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.btn-toast-ver-carrito:hover {
+  background: #f3f4f6;
+  transform: scale(1.04);
+}
+
+/* ============================================================
+   MODAL QR CODE (Matching TiendaQRScreen.kt)
+   ============================================================ */
+.modal-qr-contenido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.qr-contenedor {
+  padding: 16px;
+  background: var(--blanco-puro);
+  border-radius: var(--radio-card);
+  border: 1px solid var(--gris-borde);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  margin-bottom: 20px;
+}
+
+.qr-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--negro-apple);
+  margin-bottom: 6px;
+}
+
+.qr-instruccion {
+  font-size: 13px;
+  color: var(--gris-texto);
+  max-width: 320px;
+  margin-bottom: 14px;
+}
+
+.qr-url-pill {
+  background: var(--gris-chip);
+  padding: 8px 16px;
+  border-radius: var(--radio-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--negro-apple);
+  margin-bottom: 18px;
+  word-break: break-all;
+}
+
+/* ============================================================
+   SECCIÓN PRÓXIMAS FERIAS
+   ============================================================ */
+.seccion-ferias {
+  padding: 30px 0;
+  border-top: 1px solid var(--gris-borde);
+}
+
+.tarjeta-feria-editorial {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-card);
+  overflow: hidden;
+  box-shadow: var(--sombra-sutil);
+  display: flex;
+  flex-direction: column;
+}
+
+.tarjeta-feria-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.tarjeta-feria-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+/* ============================================================
+   PIE DE PÁGINA
+   ============================================================ */
+.pie-pagina {
+  background: var(--blanco-puro);
+  border-top: 1px solid var(--gris-borde);
+  padding: 36px 0;
+  margin-top: 40px;
+  font-size: 12.5px;
+  color: var(--gris-texto);
+}
+
+.pie-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* ============================================================
+   MODO ALTO CONTRASTE (WCAG AAA)
+   ============================================================ */
+body.alto-contraste {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.alto-contraste .encabezado,
+body.alto-contraste .tarjeta-tienda,
+body.alto-contraste .modal-panel-editorial,
+body.alto-contraste .banner-conexion-app,
+body.alto-contraste .tarjeta-feria-editorial,
+body.alto-contraste .pie-pagina {
+  background: #000000;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+body.alto-contraste .logo-alerce,
+body.alto-contraste .tarjeta-nombre,
+body.alto-contraste .prod-nombre {
+  color: #ffffff;
+}
+
+body.alto-contraste .pill-categoria {
+  background: #000000;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+body.alto-contraste .pill-categoria.activa {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* ============================================================
+   ESPACIO DE EMPRENDEDORAS: BANNER CTA & FACEBOOK MARKETPLACE
+   ============================================================ */
+.banner-emprendedoras-cta {
+  background: linear-gradient(135deg, #ffffff 0%, #fbfbfe 100%);
+  border: 1px solid var(--gris-borde);
+  border-left: 4px solid var(--rojo-alerce);
+  border-radius: var(--radio-card);
+  padding: 20px 24px;
+  margin: 16px 0 28px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.badge-emprendedora-pulsante {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--rojo-alerce);
+  margin-bottom: 6px;
+}
+
+.punto-verde-latido {
+  width: 7px;
+  height: 7px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  animation: pulso 2s infinite;
+}
+
+@keyframes pulso {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.banner-emprendedoras-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--negro-apple);
+  margin-bottom: 4px;
+}
+
+.banner-emprendedoras-desc {
+  font-size: 13px;
+  color: var(--gris-texto);
+  max-width: 620px;
+  line-height: 1.45;
+}
+
+.banner-emprendedoras-botones {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.btn-publicar-cta {
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radio-boton);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.btn-publicar-cta:hover {
+  background: var(--rojo-alerce);
+  transform: translateY(-1px);
+}
+
+.btn-flyer-cta {
+  background: #ffffff;
+  color: var(--negro-apple);
+  border: 1px solid var(--gris-borde);
+  height: 44px;
+  padding: 0 18px;
+  border-radius: var(--radio-boton);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.btn-flyer-cta:hover {
+  background: var(--gris-chip);
+  border-color: #b0b0b8;
+  transform: translateY(-1px);
+}
+
+/* Formulario Facebook Marketplace */
+.label-fb-market {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--negro-apple);
+  margin-bottom: 6px;
+}
+
+.label-sub-input {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  margin-bottom: 4px;
+}
+
+.input-fb-market {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radio-boton);
+  border: 1px solid var(--gris-borde);
+  font-family: inherit;
+  font-size: 13.5px;
+  background: #ffffff;
+  color: var(--negro-apple);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-fb-market:focus {
+  border-color: var(--negro-apple);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+  outline: none;
+}
+
+.fb-caja-foto-preview {
+  border: 2px dashed var(--gris-borde);
+  border-radius: var(--radio-card);
+  padding: 20px;
+  background: #fafafa;
+  text-align: center;
+  transition: border-color 0.2s ease;
+}
+.fb-caja-foto-preview:hover {
+  border-color: #a1a1aa;
+}
+
+.fb-placeholder-foto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.fb-galeria-rapida {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin-top: 6px;
+}
+.fb-galeria-rapida::-webkit-scrollbar {
+  height: 4px;
+}
+.fb-galeria-rapida::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 4px;
+}
+
+.chip-foto-sugerida {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--gris-chip);
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-boton);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chip-foto-sugerida:hover,
+.chip-foto-sugerida.activo {
+  background: var(--negro-apple);
+  color: #ffffff;
+  border-color: var(--negro-apple);
+}
+
+.fb-selector-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fb-chip-cat {
+  padding: 8px 14px;
+  border-radius: var(--radio-boton);
+  border: 1px solid var(--gris-borde);
+  background: #ffffff;
+  color: var(--negro-apple);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.fb-chip-cat:hover {
+  background: var(--gris-chip);
+}
+.fb-chip-cat.activo {
+  background: var(--negro-apple);
+  color: #ffffff;
+  border-color: var(--negro-apple);
+}
+
+.btn-publicar-gigante {
+  width: 100%;
+  height: 48px;
+  background: var(--negro-apple);
+  color: var(--blanco-puro);
+  border-radius: var(--radio-boton);
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  margin-top: 6px;
+}
+.btn-publicar-gigante:hover {
+  background: #27272a;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   ESTUDIO DE FLYERS Y EDICIÓN (Burger King, McDonald's, etc.)
+   ============================================================ */
+.estudio-grid-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.estudio-canvas-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.canvas-marco-contenedor {
+  background: #e4e4e7;
+  border-radius: var(--radio-card);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.canvas-flyer {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  display: block;
+}
+
+.estudio-acciones-descarga {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.estudio-controles-col {
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.estudio-controles-col::-webkit-scrollbar {
+  width: 5px;
+}
+.estudio-controles-col::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 4px;
+}
+
+.grid-plantillas-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.btn-plantilla-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radio-boton);
+  border: 1px solid var(--gris-borde);
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-plantilla-selector:hover {
+  background: #f9fafb;
+  border-color: #a1a1aa;
+}
+.btn-plantilla-selector.activa {
+  border-color: var(--negro-apple);
+  background: #fafafa;
+  box-shadow: 0 0 0 2px var(--negro-apple);
+}
+
+.btn-plantilla-selector strong {
+  display: block;
+  font-size: 13px;
+  color: var(--negro-apple);
+}
+
+.btn-plantilla-selector small {
+  display: block;
+  font-size: 11px;
+  color: var(--gris-texto);
+}
+
+.plantilla-emoji {
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  background: var(--gris-chip);
+  border-radius: var(--radio-boton);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Selector de Color de Afiches */
+.fb-selector-colores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.btn-color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid var(--gris-borde);
+  border-radius: var(--radio-boton);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--negro-apple);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-color-chip:hover {
+  border-color: #a1a1aa;
+  background: #f9fafb;
+}
+.btn-color-chip.activo {
+  border-color: var(--negro-apple);
+  background: var(--negro-apple);
+  color: #ffffff;
+}
+
+.color-circulo {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .banner-emprendedoras-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .banner-emprendedoras-botones {
+    flex-direction: column;
+  }
+  .estudio-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .canvas-flyer {
+    max-width: 100%;
+  }
+  .estudio-controles-col {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .encabezado-fila {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .buscador-central {
+    max-width: 100%;
+  }
+  .header-acciones {
+    justify-content: space-between;
+  }
+  .grilla-tarjetas {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   PANEL DASHBOARD DE EMPRENDEDORA (Matching DashboardScreen.kt)
+   ============================================================ */
+.dashboard-metricas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.tarjeta-metrica-editorial {
+  background: var(--blanco-puro);
+  border: 1px solid var(--gris-borde);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.tarjeta-metrica-editorial:hover {
+  border-color: var(--negro-apple);
+  transform: translateY(-1px);
+}
+
+.metrica-icono-circulo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.metrica-datos {
+  display: flex;
+  flex-direction: column;
+}
+
+.metrica-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gris-texto);
+}
+
+.metrica-valor {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--negro-apple);
+  line-height: 1.2;
+}
+
+.metrica-sub {
+  font-size: 11px;
+  color: var(--gris-texto-claro);
+  margin-top: 2px;
+}
+
+/* ============================================================
+   GESTIÓN DE CATÁLOGO Y STOCK (Matching CatalogoScreen.kt)
+   ============================================================ */
+.item-catalogo-gestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+  transition: border-color 0.15s ease;
+}
+
+.item-catalogo-gestion:hover {
+  border-color: #cbd5e1;
+}
+
+.item-catalogo-gestion-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.badge-estado-pub {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity 0.15s;
+}
+
+.badge-estado-pub.activo {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-estado-pub.pausado {
+  background: #f4f4f5;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+}
+
+/* ============================================================
+   MIS FERIAS COMUNALES (Matching MisFeriasScreen.kt)
+   ============================================================ */
+.tarjeta-feria-gestion {
+  background: #ffffff;
+  border: 1px solid var(--gris-borde);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.tarjeta-feria-gestion.inscrita {
+  border-left: 4px solid var(--verde-ok);
+  background: #fcfdfc;
+}

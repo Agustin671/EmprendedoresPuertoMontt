@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  TRAMA ALERCE — Vitrina Pública Web (Farfetch & Apple Style)
+  Sincronizada con la aplicación móvil Android
+  Incluye: Carrito de Compras, Código QR, Muro y Foro en Vivo,
+  Vitrina Editorial, Agendamiento de Citas y Accesibilidad.
+  ============================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ALERCE · Vitrina y Marketplace de Emprendedores de Puerto Montt</title>
+  <!-- Tipografías Sans-Serif y fuentes populares de flyers (Bebas Neue, Montserrat, Playfair, Open Sans, Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Salto de accesibilidad para lectores de pantalla -->
+  <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
+  <!-- ============================================================
+       CABECERA EDITORIAL (FARFETCH / APPLE STYLE)
+       ============================================================ -->
+  <header class="encabezado">
+    
+    <!-- Barra superior de sincronización y accesibilidad -->
+    <div class="barra-superior-info">
+      <div class="contenedor barra-superior-flex">
+        <div class="info-status">
+          <span class="punto-verde"></span>
+          <span>Sincronizado con Firebase Firestore & App Android · Alerce, Puerto Montt</span>
+        </div>
+        <div class="controles-accesibilidad">
+          <span>Accesibilidad:</span>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-normal" title="Tamaño normal">A</button>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-grande" title="Tamaño grande">A+</button>
+          <button type="button" class="btn-acc-mini" id="btn-tamano-muy-grande" title="Tamaño muy grande">A++</button>
+          <span>|</span>
+          <button type="button" class="btn-acc-mini" id="btn-alto-contraste" aria-pressed="false">Alto Contraste</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila principal de la cabecera -->
+    <div class="contenedor encabezado-fila">
+      <div class="logo-marca">
+        <a href="#vitrina" class="logo-titulo-grupo" aria-label="Alerce Trama Inicio">
+          <span class="logo-alerce">ALERCE</span>
+          <span class="punto-rojo"></span>
+        </a>
+        <span class="logo-subtitulo" id="saludo-usuario-cabecera">Vitrina Comercial de Alerce · Puerto Montt</span>
+      </div>
+
+      <!-- Buscador tipo Apple / Pinterest -->
+      <div class="buscador-central" role="search">
+        <span class="icono-lupa" aria-hidden="true">🔍</span>
+        <input type="search"
+               id="campo-busqueda-principal"
+               class="input-buscador-pill"
+               placeholder="Buscar barberías, panaderías, artesanía, repostería..."
+               autocomplete="off"
+               aria-label="Buscar en la vitrina">
+      </div>
+
+      <!-- Acciones de cabecera: Carrito, POS, Descarga y Usuario -->
+      <div class="header-acciones">
+        <!-- Descarga directa APK Android -->
+        <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" id="btn-descarga-apk-header" style="text-decoration: none; background: var(--gris-chip); border: 1px solid var(--gris-borde); color: var(--negro-apple); font-weight: 700; height: 36px; padding: 0 11px; gap: 5px;" title="Descargar APK oficial para Android (30 MB)">
+          <span>📱</span>
+          <span>App Android</span>
+        </a>
+
+        <!-- Botón de Invitación para Emprendedoras (Visible si NO hay sesión activa) -->
+        <button type="button" class="btn-accion-pill" id="btn-header-acceso-emp" onclick="TramaWeb.abrirModalAuthEmprendedora()" style="padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Acceso para Emprendedoras de Alerce">
+          <span>🏪</span>
+          <span>Soy Emprendedora</span>
+        </button>
+
+        <!-- Botón Catálogo y Stock (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill" id="btn-abrir-catalogo-nav" onclick="TramaWeb.abrirModalGestionCatalogo()" style="display: none; padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Gestionar catálogo y stock (CatalogoScreen)">
+          <span>📦</span>
+          <span>Mi Catálogo</span>
+        </button>
+
+        <!-- Botón Punto de Venta / POS (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill" id="btn-abrir-pos-nav" onclick="TramaWeb.abrirModalPOS()" style="display: none; padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Caja rápida y registro de ventas (POS)">
+          <span>🏷️</span>
+          <span>Caja POS</span>
+        </button>
+
+        <!-- Botón de Añadir Producto (Visible SOLO para Emprendedoras con sesión iniciada) -->
+        <button type="button" class="btn-accion-pill btn-negro" id="btn-abrir-publicar-nav" onclick="TramaWeb.abrirModalPublicarProducto()" style="display: none; padding: 0 12px; font-weight: 700; height: 36px;" title="Publicar producto estilo Facebook Marketplace">
+          <span>➕</span>
+          <span>Añadir Producto</span>
+        </button>
+
+        <!-- Botón de Carrito con Contador Dinámico -->
+        <button type="button" class="btn-carrito-pill" id="btn-abrir-carrito" aria-label="Abrir carrito de compras">
+          <span>🛒</span>
+          <span>Carrito</span>
+          <span class="contador-carrito" id="contador-carrito-badge">0</span>
+        </button>
+
+        <!-- Indicador de Usuario y Cierre de Sesión -->
+        <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuth()" style="cursor: pointer;" title="Iniciar sesión o cambiar cuenta">Iniciar Sesión / Mi Cuenta</span>
+        
+        <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión" style="display: none;">
+          🚪
+        </button>
+      </div>
+    </div>
+
+    <!-- Pestañas de navegación de secciones -->
+    <nav class="navegacion-principal" aria-label="Navegación principal">
+      <ul class="contenedor menu-navegacion">
+        <li><a href="#vitrina" class="enlace-seccion activo" data-nav="vitrina">Vitrina y Tiendas</a></li>
+        <li><a href="#ferias" class="enlace-seccion" data-nav="ferias">Próximas Ferias</a></li>
+        <li><a href="#directorio" class="enlace-seccion" data-nav="directorio">Directorio y Asociaciones</a></li>
+        <li><a href="#ayuda" class="enlace-seccion" data-nav="ayuda">Ayuda y Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ============================================================
+       CONTENIDO PRINCIPAL
+       ============================================================ -->
+  <main id="contenido-principal" class="contenedor">
+
+    <!-- Mensaje de confirmación flotante -->
+    <div id="toast-alerta" class="banner-conexion-app" style="display:none; margin-top: 14px; background: #ecfdf5; border-color: #a7f3d0;" role="status">
+      <div class="conexion-texto">
+        <span style="font-size: 18px;">✅</span>
+        <span id="toast-texto">¡Operación realizada con éxito!</span>
+      </div>
+      <button type="button" class="btn-cerrar-x" onclick="document.getElementById('toast-alerta').style.display='none'">✕</button>
+    </div>
+
+    <!-- ============================================================
+         SECCIÓN 1: VITRINA Y MARKETPLACE DE TIENDAS
+         ============================================================ -->
+    <section id="vitrina" class="seccion-hero" aria-labelledby="titulo-vitrina">
+      
+      <!-- Banner de estado del backend Supabase -->
+      <div class="banner-conexion-app" id="banner-estado-conexion" style="margin-bottom: 16px; background: #f0fdf4; border-color: #bbf7d0;">
+        <div class="conexion-texto">
+          <span class="punto-verde-latido" style="margin-right: 2px;"></span>
+          <strong style="color: #166534; font-size: 12.5px;">Backend Supabase Conectado</strong>
+          <span style="color: #86efac;">·</span>
+          <span style="font-size: 12px; color: #15803d;">Instancia oficial Alerce i7 (<code>supabase-alerceis7.codepulse.cl</code>)</span>
+        </div>
+        <span class="insignia-live" style="background: #dcfce7; color: #166534;">EN VIVO</span>
+      </div>
+
+      <!-- Filtros horizontales por rubro (Pills Farfetch) -->
+      <nav class="barra-categorias-pills" id="barra-categorias-pills" aria-label="Filtro por categorías">
+        <button type="button" class="pill-categoria activa" data-categoria="Todos">Todos</button>
+        <button type="button" class="pill-categoria" data-categoria="Servicios y Peluquería">Servicios y Peluquería</button>
+        <button type="button" class="pill-categoria" data-categoria="Abarrotes y Alimentos">Abarrotes y Alimentos</button>
+        <button type="button" class="pill-categoria" data-categoria="Artesanía y Textil">Artesanía y Textil</button>
+        <button type="button" class="pill-categoria" data-categoria="Pastelería y Gastronomía">Pastelería y Gastronomía</button>
+      </nav>
+
+      <!-- Banner Descarga de la Aplicación Móvil Android -->
+      <div class="banner-app-android" style="background: linear-gradient(135deg, #111111 0%, #1e1e24 100%); color: #fff; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border: 1px solid #27272a;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 44px; height: 44px; background: #27272a; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📱</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">App Oficial para Celulares Android</h3>
+              <span style="background: #22c55e; color: #052e16; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 20px;">v1.0.0 Oficial</span>
+            </div>
+            <p style="margin: 3px 0 0 0; font-size: 12px; color: #a1a1aa;">Incluye Punto de Venta (POS), lector de QR, soporte biométrico y sincronización en vivo con Supabase Cloud (Alerce i7).</p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" style="background: var(--rojo-alerce); color: #fff; border: none; font-weight: 800; height: 40px; padding: 0 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);">
+            <span>📥</span>
+            <span>Descargar APK (30.2 MB)</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Banner de Invitación para Emprendedoras (Visible si NO hay sesión activa) -->
+      <aside class="banner-invitacion-emprendedora" id="banner-invitacion-emprendedora" style="background: #fafafa; border: 1px dashed var(--gris-borde); border-radius: 16px; padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 26px;">🏪</span>
+          <div>
+            <strong style="font-size: 13.5px; color: var(--negro-apple); display: block;">¿Tienes un negocio o emprendimiento en Alerce?</strong>
+            <span style="font-size: 12px; color: var(--gris-texto);">Gestiona tu catálogo, cobra con Caja POS, diseña afiches comerciales e inscríbete en ferias comunales.</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; font-weight: 800; padding: 0 16px; background: #c53030; border-color: #c53030; box-shadow: 0 2px 8px rgba(197, 48, 48, 0.25);" onclick="TramaWeb.entrarModoDonaRosa()">
+            🥖 Entrar como Doña Rosa
+          </button>
+          <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 12px; padding: 0 14px; background: #ffffff;" onclick="TramaWeb.abrirModalAuthEmprendedora()">
+            Acceso con otra cuenta
+          </button>
+        </div>
+      </aside>
+
+      <!-- Panel de Control y Herramientas para Emprendedoras (Matching DashboardScreen.kt) -->
+      <aside class="banner-emprendedoras-cta" id="banner-emprendedoras-cta" style="display: none; flex-direction: column; gap: 16px;">
+        <!-- Cabecera del Panel con Saludo y Accesos Rápidos -->
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--gris-borde); padding-bottom: 12px;">
+          <div>
+            <div class="badge-emprendedora-pulsante">
+              <span class="punto-verde-latido"></span>
+              <span id="dashboard-emp-tienda-badge">Modo Emprendedora Activo · Minimarket Doña Rosa</span>
+            </div>
+            <h3 class="banner-emprendedoras-titulo" id="dashboard-emp-saludo">Hola, Doña Rosa 👋</h3>
+            <p class="banner-emprendedoras-desc" id="dashboard-emp-subtitulo">Panel comercial con todas las funciones de la app Android (Dashboard, Catálogo, POS, Ferias y Tienda).</p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.abrirModalEditarTienda()" title="Configuración de la tienda (TiendaScreen)">
+              ⚙️ Mi Tienda
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.abrirQRTiendaActual()" title="Código QR de la tienda (TiendaQRScreen)">
+              📱 Mi Código QR
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 34px; font-size: 11.5px; border-color: #fca5a5; color: #dc2626;" onclick="TramaWeb.cerrarSesionWeb()" title="Cerrar sesión activa">
+              🚪 Salir
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Tarjetas de Métricas en Vivo (Matching DashboardScreen.kt) -->
+        <div class="dashboard-metricas-grid">
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #ecfdf5; color: #059669;">🏷️</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Ventas del Mes</span>
+              <strong class="metrica-valor" id="metrica-ventas-mes">$ 148.500</strong>
+              <span class="metrica-sub">Caja POS + Web</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #eff6ff; color: #2563eb;">📦</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Productos Publicados</span>
+              <strong class="metrica-valor" id="metrica-prods-activos">4 activos</strong>
+              <span class="metrica-sub">Visibles en vitrina</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #fff7ed; color: #ea580c;">📊</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Stock Total</span>
+              <strong class="metrica-valor" id="metrica-stock-total">58 un.</strong>
+              <span class="metrica-sub">Unidades disponibles</span>
+            </div>
+          </div>
+          <div class="tarjeta-metrica-editorial">
+            <div class="metrica-icono-circulo" style="background: #fdf2f8; color: #db2777;">👥</div>
+            <div class="metrica-datos">
+              <span class="metrica-label">Clientes / Vecinos</span>
+              <strong class="metrica-valor" id="metrica-seguidores">34 vecinos</strong>
+              <span class="metrica-sub">Alerce Histórico</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerta de Stock Bajo y Próxima Feria en Alerce -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; width: 100%;">
+          <div id="dashboard-alerta-stock" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">⚠️</span>
+              <span style="font-size: 12px; color: #92400e; font-weight: 600;" id="texto-alerta-stock">Miel de Ulmo: Quedan 8 unidades disponibles en stock.</span>
+            </div>
+            <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 10px; background: #ffffff;" onclick="TramaWeb.abrirModalGestionCatalogo()">Ajustar Stock</button>
+          </div>
+
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 18px;">🎪</span>
+              <span style="font-size: 12px; color: #166534; font-weight: 600;" id="texto-proxima-feria">Próxima feria: Feria de Emprendedoras del Valle · Estado: Inscrita</span>
+            </div>
+            <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 10px; background: #ffffff;" onclick="TramaWeb.abrirModalMisFerias()">Ver Ferias</button>
+          </div>
+        </div>
+
+        <!-- Barra de Herramientas de la Emprendedora -->
+        <div class="banner-emprendedoras-botones" style="width: 100%; border-top: 1px solid var(--gris-borde); padding-top: 12px;">
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPOS()" style="background: #18181b;" title="Punto de Venta POS (PosScreen.kt)">
+            <span style="font-size: 18px;">🏷️</span>
+            <span>Caja Rápida POS</span>
+          </button>
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalGestionCatalogo()" style="background: #27272a;" title="Gestión de Catálogo y Stock (CatalogoScreen.kt)">
+            <span style="font-size: 18px;">📦</span>
+            <span>Mi Catálogo y Stock</span>
+          </button>
+          <button type="button" class="btn-publicar-cta" onclick="TramaWeb.abrirModalPublicarProducto()" title="Añadir Producto estilo Marketplace">
+            <span style="font-size: 18px;">➕</span>
+            <span>Añadir Producto</span>
+          </button>
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEstudioFlyer()" title="Diseño interactivo de afiches publicitarios">
+            <span style="font-size: 18px;">🎨</span>
+            <span>Estudio de Afiches</span>
+          </button>
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalMisFerias()" title="Mis Ferias Comunales (MisFeriasScreen.kt)">
+            <span style="font-size: 18px;">📅</span>
+            <span>Mis Ferias</span>
+          </button>
+          <button type="button" class="btn-flyer-cta" onclick="TramaWeb.abrirModalEditarTienda()" title="Configuración de Tienda (TiendaScreen.kt)">
+            <span style="font-size: 18px;">⚙️</span>
+            <span>Mi Tienda</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Encabezado de la lista -->
+      <h2 id="titulo-vitrina" class="titulo-seccion-editorial">
+        <span>Tiendas y Emprendimientos de Alerce</span>
+      </h2>
+      <p class="subtitulo-seccion" id="subtitulo-conteo-tiendas">Explora las vitrinas, haz consultas en el muro comunitario o pide directo por WhatsApp y Carrito.</p>
+
+      <!-- Grilla de Tarjetas de Tiendas (Renderizado dinámico con JS) -->
+      <div class="grilla-tarjetas" id="grilla-tiendas-marketplace" role="region" aria-live="polite">
+        <!-- Renderizado dinámico desde main.js -->
+      </div>
+      <p id="aviso-sin-tiendas" class="subtitulo-seccion" style="display:none; text-align:center; padding: 40px 0;">No encontramos tiendas que coincidan con la búsqueda.</p>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 2: PRÓXIMAS FERIAS
+         ============================================================ -->
+    <section id="ferias" class="seccion-ferias" aria-labelledby="titulo-ferias">
+      <h2 id="titulo-ferias" class="titulo-seccion-editorial">
+        <span>📅 Próximas Ferias Comunales</span>
+      </h2>
+      <p class="subtitulo-seccion">Encuentros presenciales en Puerto Montt y alrededores. Revisa lugares, mapas y participantes.</p>
+
+      <div class="grilla-tarjetas" id="grilla-ferias-container">
+        <!-- FERIA 1 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-valle/640/360" alt="Feria de Emprendedoras del Valle">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-stock" style="align-self: flex-start;">En curso</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Feria de Emprendedoras del Valle</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Miércoles 7 de octubre</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Plaza de Armas, Puerto Montt</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('valle')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Plaza+de+Armas+Puerto+Montt" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- FERIA 2 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-rio/640/360" alt="Artesanías del Río – Primavera">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-agenda" style="align-self: flex-start;">Próxima feria</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Artesanías del Río – Primavera</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Domingo 8 y lunes 9 de nov</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Costanera, Puerto Varas</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('rio')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Costanera+Puerto+Varas" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- FERIA 3 -->
+        <article class="tarjeta-feria-editorial">
+          <img class="tarjeta-feria-img" src="https://picsum.photos/seed/feria-diseno/640/360" alt="Mercado de Diseño Independiente">
+          <div class="tarjeta-feria-body">
+            <span class="badge-necesidad badge-pedido" style="align-self: flex-start;">Próxima feria</span>
+            <h3 style="font-size: 16px; font-weight: 800;">Mercado de Diseño Independiente</h3>
+            <p style="font-size: 13px; color: var(--gris-texto);"><strong>Sábado 5 y domingo 6 de dic</strong> · 9 a 18 hs</p>
+            <p style="font-size: 12.5px; color: var(--gris-texto);">Centro Cultural, Puerto Montt</p>
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+              <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirFichaFeria('diseno')">Ver Ficha y Mapa</button>
+              <a href="https://maps.google.com/?q=Centro+Cultural+Puerto+Montt" target="_blank" rel="noopener" class="btn-accion-pill">Cómo llegar</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 3: DIRECTORIO DE ASOCIACIONES
+         ============================================================ -->
+    <section id="directorio" class="seccion-ferias" aria-labelledby="titulo-directorio">
+      <h2 id="titulo-directorio" class="titulo-seccion-editorial">
+        <span>🤝 Asociaciones y Redes de Emprendimiento</span>
+      </h2>
+      <p class="subtitulo-seccion">Agrupaciones de Puerto Montt que colaboran y fomentan el comercio local.</p>
+
+      <div class="grilla-tarjetas" id="grilla-asociaciones-container">
+        <!-- Renderizado dinámico de asociaciones -->
+      </div>
+    </section>
+
+    <!-- ============================================================
+         SECCIÓN 4: CONTACTO Y AYUDA
+         ============================================================ -->
+    <section id="ayuda" class="seccion-ferias" aria-labelledby="titulo-ayuda">
+      <h2 id="titulo-ayuda" class="titulo-seccion-editorial">
+        <span>📞 Asistencia y Mesa de Ayuda</span>
+      </h2>
+      <p class="subtitulo-seccion">¿Tienes dudas para comprar, contactar a una tienda o saber los horarios de ferias? Te asistimos con gusto.</p>
+
+      <div class="tarjeta-tienda" style="padding: 24px; max-width: 600px;">
+        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px;">Mesa Telefónica Alerce Emprende</h3>
+        <p style="font-size: 13.5px; color: var(--gris-texto); margin-bottom: 16px;">
+          Llámanos directamente sin costo. Atención de lunes a viernes de 09:00 a 18:00 hrs.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="tel:+56961230000" class="btn-accion-pill btn-negro" style="max-width: 260px; height: 44px; font-size: 13px;">
+            Llamar al +56 9 6123 0000
+          </a>
+          <a href="https://wa.me/56961230000?text=Hola,%20necesito%20ayuda%20con%20la%20vitrina%20de%20Alerce" target="_blank" rel="noopener" class="btn-accion-pill" style="max-width: 220px; height: 44px; font-size: 13px;">
+            WhatsApp Soporte
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       BOTÓN FLOTANTE DEL CARRITO DE COMPRAS (Bottom Right)
+       ============================================================ -->
+  <button type="button" class="btn-carrito-flotante" id="btn-flotante-carrito" aria-label="Abrir carrito flotante">
+    <span>🛒</span>
+    <span>Ver Carrito</span>
+    <span class="contador-carrito" id="contador-carrito-flotante">0</span>
+    <span id="total-carrito-flotante" style="font-weight: 800;">$ 0</span>
+  </button>
+
+  <!-- ============================================================
+       PIE DE PÁGINA EDITORIAL
+       ============================================================ -->
+  <footer class="pie-pagina">
+    <div class="contenedor pie-fila">
+      <div>
+        <div class="logo-titulo-grupo" style="margin-bottom: 4px;">
+          <span class="logo-alerce" style="font-size: 18px;">ALERCE</span>
+          <span class="punto-rojo"></span>
+        </div>
+        <p>Plataforma oficial de vinculación con el medio para ferias y emprendimientos de Puerto Montt.</p>
+      </div>
+      <div>
+        <p>© 2026 Trama Alerce · Sistema adaptado con Carrito, Código QR y Muro en Vivo.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       VENTANAS MODALES INTERACTIVAS
+       ============================================================ -->
+
+  <!-- 1. MODAL DETALLE DE TIENDA / VITRINA Y FORO -->
+  <div class="modal-overlay" id="modal-tienda-vitrina" role="dialog" aria-modal="true" aria-labelledby="modal-tienda-titulo">
+    <div class="modal-panel-editorial">
+      <div class="modal-cabecera">
+        <div class="modal-perfil-info">
+          <div class="avatar-circulo" id="modal-tienda-avatar" style="background: #111;">T</div>
+          <div>
+            <h2 id="modal-tienda-titulo" style="font-size: 18px; font-weight: 900; line-height: 1.2;">Tienda</h2>
+            <p id="modal-tienda-rubro-sector" style="font-size: 12px; color: var(--gris-texto);">Rubro · Sector</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-tienda-vitrina')" aria-label="Cerrar modal">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <!-- Bio de la tienda -->
+        <p id="modal-tienda-bio" style="font-size: 13px; color: var(--gris-texto); line-height: 1.5;"></p>
+
+        <!-- Bloque destacado de agendamiento si aplica -->
+        <div id="modal-tienda-banner-agenda" style="display: none; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 12px 16px; cursor: pointer;" onclick="TramaWeb.abrirAgendamientoActual()">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">📅</span>
+              <div>
+                <strong style="font-size: 13.5px; color: var(--azul-agenda);">Agendar Cita de Atención</strong>
+                <p style="font-size: 11.5px; color: var(--gris-texto);">Turnos en las próximas 2 semanas</p>
+              </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 800; color: var(--azul-agenda);">Agendar ➔</span>
+          </div>
+        </div>
+
+        <hr class="divisor-sutil">
+
+        <!-- Selector de Pestañas: Catálogo vs Muro y Foro -->
+        <div class="tabs-segmentadas" role="tablist">
+          <button type="button" class="tab-segmento activo" id="tab-modal-catalogo" role="tab" onclick="TramaWeb.cambiarTabModal(0)">
+            Catálogo (<span id="conteo-tab-catalogo">0</span>)
+          </button>
+          <button type="button" class="tab-segmento" id="tab-modal-foro" role="tab" onclick="TramaWeb.cambiarTabModal(1)">
+            Muro y Foro (<span id="conteo-tab-foro">0</span>)
+          </button>
+        </div>
+
+        <!-- CONTENIDO PESTAÑA 0: CATÁLOGO -->
+        <div id="contenido-tab-catalogo">
+          <div class="lista-productos-modal" id="lista-productos-tienda-modal">
+            <!-- Productos cargados con JS -->
+          </div>
+        </div>
+
+        <!-- CONTENIDO PESTAÑA 1: MURO Y FORO EN VIVO -->
+        <div id="contenido-tab-foro" style="display: none;">
+          <div class="cabecera-foro-vivo" style="margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: var(--rojo-alerce);">💬</span>
+              <strong style="font-size: 14px;">Muro Comunitario & Consultas</strong>
+            </div>
+            <span class="insignia-live" style="background: var(--rosado-contenedor); color: var(--rosado-foro);">EN VIVO</span>
+          </div>
+
+          <!-- Lista de mensajes del muro -->
+          <div class="lista-mensajes-foro" id="lista-mensajes-muro-tienda">
+            <!-- Mensajes y respuestas -->
+          </div>
+
+          <hr class="divisor-sutil" style="margin: 16px 0;">
+
+          <!-- Caja para publicar consulta en el muro -->
+          <div class="caja-publicar-muro">
+            <strong style="font-size: 12px; color: var(--negro-apple);" id="label-pregunta-muro">Pregúntale a la tienda en el Muro:</strong>
+            <textarea id="input-pregunta-muro" class="textarea-muro" placeholder="Ej: ¿Vecina, tiene stock disponible hoy o atiende por la tarde?"></textarea>
+            <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; align-self: flex-start; padding: 0 20px;" onclick="TramaWeb.publicarPreguntaEnMuro()">
+              Publicar Consulta en el Muro
+            </button>
+          </div>
+        </div>
+
+        <!-- Acciones inferiores del modal -->
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <a id="btn-modal-tienda-whatsapp" href="#" target="_blank" rel="noopener" class="btn-accion-pill btn-negro" style="flex: 2; height: 44px;">
+            Contactar por WhatsApp
+          </a>
+          <button type="button" class="btn-accion-pill" id="btn-modal-tienda-qr" style="flex: 1; height: 44px;" onclick="TramaWeb.abrirQRTiendaActual()">
+            Compartir QR
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL CARRITO DE COMPRAS (COMPONENTE DEL COMPAÑERO ACTUALIZADO) -->
+  <div class="modal-overlay" id="modal-carrito" role="dialog" aria-modal="true" aria-labelledby="modal-carrito-titulo">
+    <div class="modal-panel-editorial" style="max-width: 540px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 20px;">🛒</span>
+          <h2 id="modal-carrito-titulo" style="font-size: 18px; font-weight: 900;">Carrito de Compras</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-carrito')" aria-label="Cerrar carrito">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <div id="carrito-vacio-aviso" style="text-align: center; padding: 36px 12px; display: none;">
+          <span style="font-size: 46px;">🧺</span>
+          <p style="font-size: 15px; font-weight: 700; color: var(--negro-apple); margin: 12px 0 4px 0;">Tu carrito está vacío</p>
+          <p style="font-size: 12.5px; color: var(--gris-texto); margin-bottom: 16px;">Explora las vitrinas de los emprendedores de Alerce y añade productos a tu compra.</p>
+          <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.cerrarModal('modal-carrito'); location.hash = '#vitrina';" style="padding: 0 20px; height: 38px;">
+            Explorar Vitrina y Tiendas
+          </button>
+        </div>
+
+        <!-- Lista de items en el carrito -->
+        <div id="lista-items-carrito">
+          <!-- Items dinámicos -->
+        </div>
+
+        <div id="carrito-resumen-seccion">
+          <hr class="divisor-sutil">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 13px; color: var(--gris-texto);">Subtotal productos:</span>
+            <span id="carrito-subtotal-texto" style="font-size: 14px; font-weight: 700;">$ 0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 13px; color: var(--gris-texto);">Entrega:</span>
+            <span style="font-size: 12px; font-weight: 600; color: var(--verde-ok);">Coordinar con la tienda</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 10px 14px; background: var(--gris-chip); border-radius: 8px;">
+            <strong style="font-size: 15px;">Total a pagar:</strong>
+            <strong id="carrito-total-texto" style="font-size: 18px; color: var(--rojo-alerce);">$ 0</strong>
+          </div>
+
+          <!-- Selector de Medio de Pago -->
+          <div>
+            <strong style="font-size: 12.5px; color: var(--negro-apple);">Elige medio de pago:</strong>
+            <div class="selector-pago-pills" id="selector-medio-pago">
+              <button type="button" class="pill-pago activo" data-pago="Efectivo" onclick="TramaWeb.seleccionarMedioPago('Efectivo')">Efectivo</button>
+              <button type="button" class="pill-pago" data-pago="Debito" onclick="TramaWeb.seleccionarMedioPago('Debito')">Débito</button>
+              <button type="button" class="pill-pago" data-pago="Transferencia" onclick="TramaWeb.seleccionarMedioPago('Transferencia')">Transferencia</button>
+              <button type="button" class="pill-pago" data-pago="QR" onclick="TramaWeb.seleccionarMedioPago('QR')">📱 Pago QR</button>
+            </div>
+          </div>
+
+          <!-- Caja de Cálculo de Vuelto si se selecciona Efectivo (Matching PantallaPagoVenta.kt) -->
+          <div id="caja-efectivo-pago" style="display: none; background: #fafafa; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 12px 14px; margin: 12px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--negro-apple);">¿Con cuánto pagas? (Opcional):</span>
+              <input type="number" id="inp-efectivo-pago" placeholder="Ej: 10000" style="width: 120px; padding: 6px 10px; font-size: 13px; font-weight: 700; border: 1px solid var(--gris-borde); border-radius: 6px; text-align: right;" oninput="TramaWeb.calcularVueltoEfectivo(this.value)">
+            </div>
+            <div id="caja-resultado-vuelto" style="display: none; margin-top: 8px; font-size: 12px; color: var(--gris-texto); justify-content: space-between; align-items: center;">
+              <span>Tu vuelto estimado:</span>
+              <strong id="texto-monto-vuelto" style="color: var(--verde-ok); font-size: 13.5px;">$ 0</strong>
+            </div>
+          </div>
+
+          <!-- Caja de Código QR si se selecciona Pago QR -->
+          <div id="caja-qr-pago" style="display: none; background: #fafafa; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 14px; text-align: center; margin: 12px 0;">
+            <p style="font-size: 12px; font-weight: 700; color: var(--negro-apple); margin-bottom: 10px;">Escanea para pagar con tu aplicación de banco / billetera digital:</p>
+            <div id="qr-pago-container" style="display: flex; justify-content: center; margin-bottom: 8px;"></div>
+            <p style="font-size: 11px; color: var(--gris-texto);">Código generado para la orden de compra de Alerce Trama</p>
+          </div>
+
+          <!-- Botón de checkout por WhatsApp -->
+          <button type="button" class="btn-accion-pill btn-negro" style="width: 100%; height: 46px; font-size: 13.5px;" onclick="TramaWeb.finalizarPedidoWhatsApp()">
+            Confirmar Pedido por WhatsApp
+          </button>
+
+          <button type="button" style="display: block; width: 100%; text-align: center; font-size: 11.5px; color: var(--gris-texto); margin-top: 10px; cursor: pointer; background: none; border: none;" onclick="TramaWeb.vaciarCarrito()">
+            Vaciar Carrito
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MODAL CÓDIGO QR DE LA TIENDA (Matching TiendaQRScreen.kt) -->
+  <div class="modal-overlay" id="modal-qr-tienda" role="dialog" aria-modal="true" aria-labelledby="modal-qr-titulo">
+    <div class="modal-panel-editorial" style="max-width: 440px;">
+      <div class="modal-cabecera">
+        <h2 id="modal-qr-titulo" style="font-size: 16px; font-weight: 800;">Código QR de tu tienda</h2>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-qr-tienda')" aria-label="Cerrar QR">✕</button>
+      </div>
+
+      <div class="modal-cuerpo modal-qr-contenido">
+        <div id="canvas-qr-tienda" class="qr-contenedor"></div>
+        <h3 class="qr-titulo" id="qr-tienda-nombre">Tienda</h3>
+        <p class="qr-instruccion">Escanea este código QR para compartir tu tienda y visitarla directamente desde el celular.</p>
+        <span class="qr-url-pill" id="qr-tienda-url">https://trama.app/tienda/</span>
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 40px; padding: 0 24px;" onclick="TramaWeb.copiarEnlaceQR()">
+          Copiar enlace
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL AGENDAMIENTO DE CITAS (Próximas 2 Semanas) -->
+  <div class="modal-overlay" id="modal-agendamiento" role="dialog" aria-modal="true" aria-labelledby="modal-agenda-titulo">
+    <div class="modal-panel-editorial" style="max-width: 520px;">
+      <div class="modal-cabecera">
+        <div>
+          <h2 id="modal-agenda-titulo" style="font-size: 17px; font-weight: 800;">Agendar Cita de Atención</h2>
+          <p id="agenda-subtitulo" style="font-size: 12px; color: var(--gris-texto);">Turnos disponibles en las próximas 2 semanas</p>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-agendamiento')" aria-label="Cerrar agendamiento">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <!-- Selector de Días (Próximos 14 días) -->
+        <label style="font-size: 12px; font-weight: 700;">Selecciona una fecha:</label>
+        <div class="barra-categorias-pills" id="barra-fechas-agenda" style="padding: 4px 0 10px 0;">
+          <!-- 14 días inyectados con JS -->
+        </div>
+
+        <!-- Selector de Horarios -->
+        <label style="font-size: 12px; font-weight: 700;">Selecciona horario disponible:</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;" id="contenedor-horarios-agenda">
+          <button type="button" class="pill-pago activo" data-hora="10:00" onclick="TramaWeb.seleccionarHora('10:00')">10:00 hrs</button>
+          <button type="button" class="pill-pago" data-hora="11:30" onclick="TramaWeb.seleccionarHora('11:30')">11:30 hrs</button>
+          <button type="button" class="pill-pago" data-hora="15:00" onclick="TramaWeb.seleccionarHora('15:00')">15:00 hrs</button>
+          <button type="button" class="pill-pago" data-hora="16:30" onclick="TramaWeb.seleccionarHora('16:30')">16:30 hrs</button>
+          <button type="button" class="pill-pago" data-hora="18:00" onclick="TramaWeb.seleccionarHora('18:00')">18:00 hrs</button>
+        </div>
+
+        <!-- Datos del cliente -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <input type="text" id="agenda-nombre-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Tu nombre completo (ej. Marta Gómez)" value="">
+          <input type="tel" id="agenda-telefono-cliente" class="input-buscador-pill" style="border: 1px solid var(--gris-borde);" placeholder="Teléfono de contacto (+56 9 ...)" value="+56 9 8765 4321">
+        </div>
+
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; margin-top: 10px;" onclick="TramaWeb.confirmarReservaCita()">
+          Confirmar Reserva de Hora
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MODAL FICHA DE FERIA -->
+  <div class="modal-overlay" id="modal-feria" role="dialog" aria-modal="true" aria-labelledby="modal-feria-titulo">
+    <div class="modal-panel-editorial">
+      <div class="modal-cabecera">
+        <h2 id="modal-feria-titulo" style="font-size: 17px; font-weight: 800;">Ficha de la Feria</h2>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-feria')" aria-label="Cerrar ficha">✕</button>
+      </div>
+      <div class="modal-cuerpo" id="modal-feria-cuerpo">
+        <!-- Contenido dinámico de la feria -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL PUBLICAR PRODUCTO -->
+  <div class="modal-overlay" id="modal-publicar-producto" role="dialog" aria-modal="true" aria-labelledby="modal-publicar-titulo">
+    <div class="modal-panel-editorial" style="max-width: 620px;">
+      <div class="modal-cabecera">
+        <div>
+          <h2 id="modal-publicar-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Añadir Producto</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-publicar-producto')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 14px;">
+
+        <!-- FOTO -->
+        <div>
+          <label class="label-fb-market">Foto</label>
+          <div class="fb-caja-foto-preview" id="fb-caja-foto-preview">
+            <div id="fb-placeholder-foto" class="fb-placeholder-foto">
+              <span style="font-size: 32px;">📷</span>
+              <p style="font-size: 13px; font-weight: 700; color: var(--negro-apple); margin: 4px 0;">Foto del producto o afiche</p>
+              <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;">
+                <label for="inp-subir-foto-producto" class="btn-accion-pill" style="cursor: pointer; background: #ffffff;">
+                  📁 Subir Foto
+                </label>
+                <input type="file" id="inp-subir-foto-producto" accept="image/*" style="display: none;" onchange="TramaWeb.onFotoProductoSubida(event)">
+                <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">
+                  🎨 Crear Afiche
+                </button>
+              </div>
+            </div>
+            <img id="fb-img-preview" src="" alt="Vista previa" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 8px;">
+          </div>
+          <div id="fb-opciones-foto-activa" style="display: none; margin-top: 8px; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--verde-ok); font-weight: 700;">✓ Foto lista</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">Editar en Diseñador ➔</button>
+              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px; color: var(--rojo-alerce);" onclick="TramaWeb.quitarFotoProducto()">Cambiar Foto</button>
+            </div>
+          </div>
+
+          <div class="fb-galeria-rapida" id="fb-galeria-rapida" style="margin-top: 8px;"></div>
+        </div>
+
+        <!-- NOMBRE -->
+        <div>
+          <label for="fb-inp-titulo" class="label-fb-market">Nombre del producto</label>
+          <input type="text" id="fb-inp-titulo" class="input-fb-market" placeholder="Ej: Pan amasado artesanal" maxlength="90">
+        </div>
+
+        <!-- PRECIO Y NEGOCIO -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label for="fb-inp-precio" class="label-fb-market">Precio ($ CLP)</label>
+            <input type="number" id="fb-inp-precio" class="input-fb-market" placeholder="2500" min="0" step="100">
+          </div>
+          <div>
+            <label for="fb-select-tienda" class="label-fb-market">Negocio</label>
+            <select id="fb-select-tienda" class="input-fb-market" style="height: 44px; background: #ffffff;">
+              <option value="t_minimarket_rosa">Minimarket Doña Rosa</option>
+              <option value="t_tejidos_austral">Tejidos & Lanares Austral</option>
+              <option value="t_reposteria_surena">Repostería Casera Tradición Sureña</option>
+              <option value="t_barberia_alerce">Barbería & Estilo Alerce</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CATEGORÍA -->
+        <div>
+          <label class="label-fb-market">Categoría</label>
+          <div class="fb-selector-chips" id="fb-selector-categoria">
+            <button type="button" class="fb-chip-cat activo" data-cat="Abarrotes y Alimentos" onclick="TramaWeb.seleccionarCategoriaFB('Abarrotes y Alimentos')">🍞 Alimentos</button>
+            <button type="button" class="fb-chip-cat" data-cat="Artesanía y Textil" onclick="TramaWeb.seleccionarCategoriaFB('Artesanía y Textil')">🧶 Artesanía</button>
+            <button type="button" class="fb-chip-cat" data-cat="Pastelería y Gastronomía" onclick="TramaWeb.seleccionarCategoriaFB('Pastelería y Gastronomía')">🍰 Pastelería</button>
+            <button type="button" class="fb-chip-cat" data-cat="Servicios y Peluquería" onclick="TramaWeb.seleccionarCategoriaFB('Servicios y Peluquería')">💈 Servicios</button>
+          </div>
+        </div>
+
+        <!-- DISPONIBILIDAD -->
+        <div>
+          <label class="label-fb-market">Disponibilidad</label>
+          <div class="fb-selector-chips" id="fb-selector-stock">
+            <button type="button" class="fb-chip-cat activo" data-stock="inmediato" onclick="TramaWeb.seleccionarStockFB('inmediato')">📦 Con Stock (Entrega hoy)</button>
+            <button type="button" class="fb-chip-cat" data-stock="pedido" onclick="TramaWeb.seleccionarStockFB('pedido')">✂️ A Pedido (Por encargo)</button>
+          </div>
+        </div>
+
+        <!-- DETALLES -->
+        <div>
+          <label for="fb-inp-desc" class="label-fb-market">Descripción (opcional)</label>
+          <textarea id="fb-inp-desc" class="input-fb-market" style="min-height: 52px; font-family: inherit; font-size: 13px;" placeholder="Detalles de entrega o elaboración"></textarea>
+        </div>
+
+        <!-- BOTÓN PUBLICAR -->
+        <button type="button" class="btn-publicar-gigante" onclick="TramaWeb.confirmarPublicacionFB()">
+          <span>Publicar Producto</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL DISEÑADOR DE AFICHES (ESTILOS 1 A 5 - LETRAS DETRÁS, PRODUCTO AL FRENTE) -->
+  <div class="modal-overlay" id="modal-estudio-flyer" role="dialog" aria-modal="true" aria-labelledby="modal-flyer-titulo">
+    <div class="modal-panel-editorial" style="max-width: 900px;">
+      <div class="modal-cabecera">
+        <div>
+          <h2 id="modal-flyer-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Diseñador de Afiches</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-estudio-flyer')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo">
+        <div class="estudio-grid-layout">
+          
+          <!-- Columna Izquierda: Vista Previa Canvas -->
+          <div class="estudio-canvas-col">
+            <div class="canvas-marco-contenedor">
+              <canvas id="canvas-flyer" width="700" height="700" class="canvas-flyer"></canvas>
+            </div>
+            
+            <div class="estudio-acciones-descarga">
+              <button type="button" class="btn-accion-pill btn-negro" style="height: 42px; font-size: 13px;" onclick="TramaWeb.descargarFlyerImagen('jpg')">
+                <span>📥 Descargar Imagen</span>
+              </button>
+              <button type="button" class="btn-accion-pill" style="height: 42px; font-size: 13px; border-color: var(--negro-apple);" onclick="TramaWeb.aplicarFlyerComoFotoProducto()">
+                <span>✅ Usar en Producto</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Controles -->
+          <div class="estudio-controles-col">
+            
+            <!-- 1. Selector de Estilos -->
+            <div>
+              <label class="label-fb-market">Estilo del afiche</label>
+              <div class="grid-plantillas-botones">
+                <button type="button" class="btn-plantilla-selector activa" data-plantilla="estilo1" onclick="TramaWeb.cambiarPlantillaFlyer('estilo1')">
+                  <span class="plantilla-emoji">⚡</span>
+                  <div>
+                    <strong>Estilo 1</strong>
+                    <small>Split Urbano · Letras verticales detrás</small>
+                  </div>
+                </button>
+
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo2" onclick="TramaWeb.cambiarPlantillaFlyer('estilo2')">
+                  <span class="plantilla-emoji">🔥</span>
+                  <div>
+                    <strong>Estilo 2</strong>
+                    <small>Tipografía Outline · Letras gigantes detrás</small>
+                  </div>
+                </button>
+
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo3" onclick="TramaWeb.cambiarPlantillaFlyer('estilo3')">
+                  <span class="plantilla-emoji">✨</span>
+                  <div>
+                    <strong>Estilo 3</strong>
+                    <small>Splash Pop · Explosión y sol detrás</small>
+                  </div>
+                </button>
+
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo4" onclick="TramaWeb.cambiarPlantillaFlyer('estilo4')">
+                  <span class="plantilla-emoji">🏷️</span>
+                  <div>
+                    <strong>Estilo 4</strong>
+                    <small>Minimal Editorial · Marco fino y sobrio</small>
+                  </div>
+                </button>
+
+                <button type="button" class="btn-plantilla-selector" data-plantilla="estilo5" onclick="TramaWeb.cambiarPlantillaFlyer('estilo5')">
+                  <span class="plantilla-emoji">🌲</span>
+                  <div>
+                    <strong>Estilo 5</strong>
+                    <small>Tradición · Bosque nativo y sello artesanal</small>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Subir Foto -->
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="label-fb-market" style="margin-bottom: 0;">Foto del producto</label>
+                <label for="inp-foto-flyer" class="btn-accion-pill" style="cursor: pointer; background: var(--negro-apple); color: #fff; padding: 4px 12px; font-size: 11.5px; height: 30px;">
+                  📁 Subir Foto
+                </label>
+                <input type="file" id="inp-foto-flyer" accept="image/*" style="display: none;" onchange="TramaWeb.onFotoFlyerSubida(event)">
+              </div>
+              <div class="fb-galeria-rapida" id="flyer-galeria-fotos"></div>
+            </div>
+
+            <!-- 3. Textos -->
+            <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <label class="label-fb-market">Texto</label>
+              
+              <div>
+                <span class="label-sub-input">Nombre</span>
+                <input type="text" id="flyer-inp-titulo" class="input-fb-market" value="Producto Artesanal" oninput="TramaWeb.actualizarLienzoFlyer()">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <span class="label-sub-input">Precio ($)</span>
+                  <input type="text" id="flyer-inp-precio" class="input-fb-market" value="2500" oninput="TramaWeb.actualizarLienzoFlyer()">
+                </div>
+                <div>
+                  <span class="label-sub-input">Texto distintivo</span>
+                  <input type="text" id="flyer-inp-sello" class="input-fb-market" value="EDICIÓN LIMITADA" oninput="TramaWeb.actualizarLienzoFlyer()">
+                </div>
+              </div>
+
+              <div>
+                <span class="label-sub-input">WhatsApp / Contacto</span>
+                <input type="text" id="flyer-inp-mensaje" class="input-fb-market" value="+56 9 9123 4567" oninput="TramaWeb.actualizarLienzoFlyer()">
+              </div>
+            </div>
+
+            <!-- 4. Color de la plantilla -->
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label class="label-fb-market" style="margin-bottom: 0;">Color de la plantilla</label>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 11px; color: var(--gris-texto);">Personalizado:</span>
+                  <input type="color" id="flyer-color-custom" value="#DC2626" style="width: 26px; height: 26px; padding: 0; border: 1px solid var(--gris-borde); border-radius: 4px; cursor: pointer; background: transparent;" onchange="TramaWeb.cambiarColorFlyer(this.value)" title="Elegir color personalizado">
+                </div>
+              </div>
+              <div class="fb-selector-colores" id="flyer-selector-color">
+                <button type="button" class="btn-color-chip activo" data-color="original" onclick="TramaWeb.cambiarColorFlyer('original')">
+                  <span class="color-circulo" style="background: linear-gradient(135deg, #111, #888, #fff);"></span> Original
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#18181B" onclick="TramaWeb.cambiarColorFlyer('#18181B')">
+                  <span class="color-circulo" style="background: #18181B;"></span> Carbón
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#DC2626" onclick="TramaWeb.cambiarColorFlyer('#DC2626')">
+                  <span class="color-circulo" style="background: #DC2626;"></span> Carmín
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#F59E0B" onclick="TramaWeb.cambiarColorFlyer('#F59E0B')">
+                  <span class="color-circulo" style="background: #F59E0B;"></span> Ámbar
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#1D4ED8" onclick="TramaWeb.cambiarColorFlyer('#1D4ED8')">
+                  <span class="color-circulo" style="background: #1D4ED8;"></span> Cobalto
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#047857" onclick="TramaWeb.cambiarColorFlyer('#047857')">
+                  <span class="color-circulo" style="background: #047857;"></span> Bosque
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#7C3AED" onclick="TramaWeb.cambiarColorFlyer('#7C3AED')">
+                  <span class="color-circulo" style="background: #7C3AED;"></span> Violeta
+                </button>
+                <button type="button" class="btn-color-chip" data-color="#DB2777" onclick="TramaWeb.cambiarColorFlyer('#DB2777')">
+                  <span class="color-circulo" style="background: #DB2777;"></span> Fucsia
+                </button>
+              </div>
+            </div>
+
+            <!-- 5. Tipografía -->
+            <div style="margin-top: 14px;">
+              <label class="label-fb-market">Tipografía</label>
+              <div class="fb-selector-chips" id="flyer-selector-fuente">
+                <button type="button" class="fb-chip-cat activo" data-fuente="Britti Sans" onclick="TramaWeb.cambiarFuenteFlyer('Britti Sans')" style="font-family: 'Britti Sans', sans-serif;">Britti Sans</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Montserrat" onclick="TramaWeb.cambiarFuenteFlyer('Montserrat')" style="font-family: 'Montserrat', sans-serif;">Sans Serif</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Playfair Display" onclick="TramaWeb.cambiarFuenteFlyer('Playfair Display')" style="font-family: 'Playfair Display', serif;">Editorial</button>
+                <button type="button" class="fb-chip-cat" data-fuente="Bebas Neue" onclick="TramaWeb.cambiarFuenteFlyer('Bebas Neue')" style="font-family: 'Bebas Neue', sans-serif;">Bebas</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- 8. MODAL PUNTO DE VENTA (POS) / REGISTRO DE VENTAS EN VIVO -->
+  <div class="modal-overlay" id="modal-pos" role="dialog" aria-modal="true" aria-labelledby="modal-pos-titulo">
+    <div class="modal-panel-editorial" style="max-width: 860px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">🏷️</span>
+          <div>
+            <h2 id="modal-pos-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple); margin: 0;">Punto de Venta (POS) · Caja Rápida</h2>
+            <p id="pos-tienda-subtitulo" style="font-size: 12px; color: var(--gris-texto); margin: 2px 0 0 0;">Cobra a clientes en ferias o local con cálculo de vuelto automático</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-pos')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="padding: 16px;">
+        <!-- Selector de Tienda activa en POS -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f4f4f5; padding: 8px 12px; border-radius: 8px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 12px; font-weight: 700;">Emprendimiento activo:</span>
+          <select id="pos-select-tienda" class="input-fb-market" style="width: auto; height: 32px; font-size: 12px; padding: 2px 8px;" onchange="TramaWeb.cambiarTiendaPOS(this.value)">
+            <!-- Opciones dinámicas -->
+          </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+          <!-- Columna Izquierda: Catálogo para agregar con 1 clic -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong style="font-size: 13px;">Toca un producto para sumar al ticket:</strong>
+              <span id="pos-conteo-disponibles" style="font-size: 11px; color: var(--gris-texto);"></span>
+            </div>
+            <div id="pos-grid-productos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+              <!-- Productos renderizados dinámicamente -->
+            </div>
+          </div>
+
+          <!-- Columna Derecha: Ticket actual y Cálculo de Vuelto -->
+          <div style="background: #fafafa; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 14px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong style="font-size: 14px;">🧾 Ticket de Venta</strong>
+              <button type="button" style="background: none; border: none; font-size: 11px; color: #dc2626; font-weight: 700; cursor: pointer;" onclick="TramaWeb.vaciarTicketPOS()">Vaciar</button>
+            </div>
+
+            <!-- Lista de items del ticket -->
+            <div id="pos-lista-items" style="flex: 1; min-height: 120px; max-height: 180px; overflow-y: auto; margin-bottom: 12px; font-size: 12px;">
+              <!-- Items en el ticket -->
+            </div>
+
+            <!-- Totales y Medio de Pago -->
+            <div style="border-top: 1px dashed var(--gris-borde); padding-top: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 900; color: var(--negro-apple); margin-bottom: 10px;">
+                <span>Total a cobrar:</span>
+                <span id="pos-total-cobrar">$ 0</span>
+              </div>
+
+              <!-- Selector medio de pago -->
+              <div style="margin-bottom: 8px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--gris-texto); display: block; margin-bottom: 4px;">Medio de Pago:</label>
+                <div style="display: flex; gap: 4px;">
+                  <button type="button" class="btn-accion-pill btn-negro" id="btn-pos-pago-efectivo" style="flex: 1; height: 30px; font-size: 11px; justify-content: center;" onclick="TramaWeb.seleccionarMedioPagoPOS('Efectivo')">💵 Efectivo</button>
+                  <button type="button" class="btn-accion-pill" id="btn-pos-pago-transferencia" style="flex: 1; height: 30px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.seleccionarMedioPagoPOS('Transferencia')">📱 Transf.</button>
+                  <button type="button" class="btn-accion-pill" id="btn-pos-pago-tarjeta" style="flex: 1; height: 30px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.seleccionarMedioPagoPOS('Tarjeta')">💳 Tarjeta</button>
+                </div>
+              </div>
+
+              <!-- Calculadora de efectivo si es Efectivo -->
+              <div id="pos-caja-calculo-vuelto" style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 8px; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  <span style="font-size: 11px; font-weight: 700;">Cliente paga con:</span>
+                  <input type="number" id="pos-inp-paga-con" class="input-fb-market" style="width: 110px; height: 28px; font-size: 12px; text-align: right;" placeholder="$" oninput="TramaWeb.calcularVueltoPOS()">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; font-size: 12px; font-weight: 800; color: #16a34a;">
+                  <span>Vuelto a entregar:</span>
+                  <span id="pos-valor-vuelto">$ 0</span>
+                </div>
+              </div>
+
+              <!-- Botón Confirmar Venta -->
+              <button type="button" class="btn-accion-pill btn-negro" style="width: 100%; height: 42px; font-size: 13.5px; font-weight: 800; justify-content: center;" onclick="TramaWeb.confirmarVentaPOS()">
+                <span>✅ Registrar Venta y Comprobante</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GESTIÓN DE CATÁLOGO Y STOCK (Matching CatalogoScreen.kt) -->
+  <div class="modal-overlay" id="modal-gestion-catalogo" role="dialog" aria-modal="true" aria-labelledby="modal-gestion-catalogo-titulo">
+    <div class="modal-panel-editorial" style="max-width: 680px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📦</span>
+          <div>
+            <h2 id="modal-gestion-catalogo-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Gestión de Catálogo y Stock</h2>
+            <p id="subtitulo-gestion-catalogo" style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Minimarket Doña Rosa · Alerce Histórico</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-gestion-catalogo')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--gris-chip); border-radius: 8px; padding: 10px 14px; flex-wrap: wrap; gap: 8px;">
+          <span style="font-size: 12px; color: var(--negro-apple); font-weight: 700;" id="conteo-prods-catalogo-gestion">4 productos en catálogo</span>
+          <button type="button" class="btn-accion-pill btn-negro" style="height: 32px; font-size: 11.5px;" onclick="TramaWeb.abrirModalPublicarProducto()">
+            ➕ Añadir Nuevo Producto
+          </button>
+        </div>
+
+        <div id="lista-items-catalogo-gestion" style="display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow-y: auto; padding-right: 2px;">
+          <!-- Items renderizados dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERFIL Y CONFIGURACIÓN DE TIENDA (Matching TiendaScreen.kt) -->
+  <div class="modal-overlay" id="modal-editar-tienda" role="dialog" aria-modal="true" aria-labelledby="modal-editar-tienda-titulo">
+    <div class="modal-panel-editorial" style="max-width: 580px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">⚙️</span>
+          <div>
+            <h2 id="modal-editar-tienda-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Perfil de Mi Tienda</h2>
+            <p style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Configura los datos y capacidades comerciales visibles en Alerce</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-editar-tienda')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <div>
+          <label class="label-fb-market">Nombre del Emprendimiento / Negocio</label>
+          <input type="text" id="edit-tienda-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Rosa">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label class="label-fb-market">Rubro o Giro Comercial</label>
+            <input type="text" id="edit-tienda-rubro" class="input-fb-market" placeholder="Ej: Minimarket y Abarrotes">
+          </div>
+          <div>
+            <label class="label-fb-market">Sector en Alerce / Puerto Montt</label>
+            <input type="text" id="edit-tienda-sector" class="input-fb-market" placeholder="Ej: Alerce Histórico">
+          </div>
+        </div>
+
+        <div>
+          <label class="label-fb-market">Teléfono WhatsApp para Pedidos</label>
+          <input type="tel" id="edit-tienda-whatsapp" class="input-fb-market" placeholder="+56991234567">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Descripción o Biografía del Negocio</label>
+          <textarea id="edit-tienda-bio" class="input-fb-market" style="height: 70px; resize: none;" placeholder="Cuéntale a los vecinos qué ofreces y tus horarios..."></textarea>
+        </div>
+
+        <div>
+          <label class="label-fb-market">Capacidades y Necesidades de tu Tienda</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; font-size: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-stock"> 📦 Control de Stock
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-whatsapp"> 💬 Pedidos por WhatsApp
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-pedido"> ✂️ Productos a Pedido
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-ferias"> 🎪 Participa en Ferias
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-foro"> 🗣️ Muro y Foro
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="check-cap-agenda"> 📅 Agenda de Horas
+            </label>
+          </div>
+        </div>
+
+        <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px;" onclick="TramaWeb.guardarPerfilTienda()">
+          💾 Guardar Cambios en Mi Tienda
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MIS FERIAS COMUNALES (Matching MisFeriasScreen.kt) -->
+  <div class="modal-overlay" id="modal-mis-ferias" role="dialog" aria-modal="true" aria-labelledby="modal-mis-ferias-titulo">
+    <div class="modal-panel-editorial" style="max-width: 620px;">
+      <div class="modal-cabecera">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 22px;">📅</span>
+          <div>
+            <h2 id="modal-mis-ferias-titulo" style="font-size: 17px; font-weight: 900; margin: 0;">Mis Ferias Comunales</h2>
+            <p style="font-size: 11.5px; color: var(--gris-texto); margin: 2px 0 0 0;">Inscribe a Minimarket Doña Rosa en los eventos de Alerce y Puerto Montt</p>
+          </div>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-mis-ferias')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" id="lista-ferias-gestion-cuerpo" style="gap: 10px;">
+        <!-- Renderizado dinámico con JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AUTENTICACION FIREBASE WEB -->
+  <div class="modal-fondo" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo" style="display: none;">
+    <div class="modal-contenedor modal-contenedor-fb" style="max-width: 440px;">
+      <div class="modal-cabecera">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 1px;">Conexión Oficial Supabase Cloud</span>
+          <h2 id="modal-auth-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">Iniciar Sesion</h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-auth-web')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <!-- Selector de Modo Emprendedora / Comprador -->
+        <div style="display: flex; background: var(--gris-chip); border-radius: 8px; padding: 4px; gap: 4px;">
+          <button type="button" id="btn-tab-auth-emprendedora" class="btn-accion-pill btn-negro" style="flex: 1; height: 34px; font-size: 12px; justify-content: center;" onclick="TramaWeb.cambiarRolAuth('EMPRENDEDORA')">
+            🏪 Emprendedora
+          </button>
+          <button type="button" id="btn-tab-auth-comprador" class="btn-accion-pill" style="flex: 1; height: 34px; font-size: 12px; justify-content: center; background: transparent; border: none;" onclick="TramaWeb.cambiarRolAuth('VISITANTE')">
+            🛍️ Comprador
+          </button>
+        </div>
+
+        <!-- Tarjeta de Credenciales de Prueba (Doña Rosa) -->
+        <div id="auth-box-demo-marta" style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 12px; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--negro-apple); font-size: 13px;">🏪 Minimarket Doña Rosa</strong>
+            <span style="background: var(--rojo-alerce); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700;">Emprendedora Oficial</span>
+          </div>
+          <div style="color: var(--gris-texto); font-size: 11.5px; margin: 4px 0 8px 0;">
+            Correo: <code>donarosa@alerce.app</code> &middot; Clave: <code>alerce123</code>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn-accion-pill btn-negro" style="flex: 2; height: 32px; font-size: 11.5px; justify-content: center; background: #c53030; border-color: #c53030;" onclick="TramaWeb.entrarModoDonaRosa()">
+              🥖 Entrar como Doña Rosa
+            </button>
+            <button type="button" class="btn-accion-pill" style="flex: 1; height: 32px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.autocompletarCredenciales('donarosa@alerce.app', 'alerce123')">
+              Autocompletar
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulario -->
+        <div id="auth-campos-registro" style="display: none;">
+          <label class="label-fb-market">Nombre o Nombre del Emprendimiento</label>
+          <input type="text" id="auth-inp-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Rosa o Panadería Los Lagos">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Correo electronico</label>
+          <input type="email" id="auth-inp-email" class="input-fb-market" placeholder="tu-correo@gmail.com">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Contraseña</label>
+          <input type="password" id="auth-inp-password" class="input-fb-market" placeholder="Minimo 6 caracteres">
+        </div>
+
+        <div id="auth-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
+        <div id="auth-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+
+        <button type="button" id="btn-submit-auth" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 14px; font-weight: 800;" onclick="TramaWeb.ejecutarAuthFirebase()">
+          Iniciar Sesion
+        </button>
+
+        <div style="text-align: center;">
+          <button type="button" id="btn-toggle-modo-auth" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.toggleModoAuth()">
+            ¿No tienes cuenta? Regístrate en Supabase aquí
+          </button>
+        </div>
+
+        <!-- Seccion Desarrollador: Tiendas de prueba -->
+        <details style="margin-top: 6px; border-top: 1px solid var(--gris-borde); padding-top: 10px;">
+          <summary style="font-size: 11.5px; font-weight: 700; color: var(--gris-texto); cursor: pointer;">
+            ⚙️ Tiendas de Prueba (Modo Desarrollador)
+          </summary>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_minimarket_rosa')">
+              🥖 Doña Rosa (Minimarket)
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_barberia_alerce')">
+              💈 Barberia
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_tejidos_austral')">
+              🧶 Tejidos
+            </button>
+            <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; justify-content: center;" onclick="TramaWeb.entrarModoDev('t_reposteria_surena')">
+              🍰 Reposteria
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Supabase SDK Oficial (Backend Instancia Alerce i7) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Scripts Firebase SDK Oficial (Fallback de compatibilidad) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
+
+  <!-- Scripts -->
+  <script src="js/qrcode.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

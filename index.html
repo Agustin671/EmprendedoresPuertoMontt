@@ -145,13 +145,15 @@
          ============================================================ -->
     <section id="vitrina" class="seccion-hero" aria-labelledby="titulo-vitrina">
       
-      <!-- Banner de estado de la vitrina -->
-      <div class="banner-conexion-app" style="margin-bottom: 16px;">
+      <!-- Banner de estado del backend Supabase -->
+      <div class="banner-conexion-app" id="banner-estado-conexion" style="margin-bottom: 16px; background: #f0fdf4; border-color: #bbf7d0;">
         <div class="conexion-texto">
-          <span style="font-size: 16px;">🏪</span>
-          <span>Vitrina Comunitaria de Alerce · Catálogo en vivo y muro vecinal interactivo</span>
+          <span class="punto-verde-latido" style="margin-right: 2px;"></span>
+          <strong style="color: #166534; font-size: 12.5px;">Backend Supabase Conectado</strong>
+          <span style="color: #86efac;">·</span>
+          <span style="font-size: 12px; color: #15803d;">Instancia oficial Alerce i7 (<code>supabase-alerceis7.codepulse.cl</code>)</span>
         </div>
-        <span class="insignia-live">EN LÍNEA</span>
+        <span class="insignia-live" style="background: #dcfce7; color: #166534;">EN VIVO</span>
       </div>
 
       <!-- Filtros horizontales por rubro (Pills Farfetch) -->
@@ -172,7 +174,7 @@
               <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">App Oficial para Celulares Android</h3>
               <span style="background: #22c55e; color: #052e16; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 20px;">v1.0.0 Oficial</span>
             </div>
-            <p style="margin: 3px 0 0 0; font-size: 12px; color: #a1a1aa;">Incluye Punto de Venta (POS), lector de QR, soporte biométrico y sincronización en vivo con Firebase.</p>
+            <p style="margin: 3px 0 0 0; font-size: 12px; color: #a1a1aa;">Incluye Punto de Venta (POS), lector de QR, soporte biométrico y sincronización en vivo con Supabase Cloud (Alerce i7).</p>
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -1191,7 +1193,7 @@
     <div class="modal-contenedor modal-contenedor-fb" style="max-width: 440px;">
       <div class="modal-cabecera">
         <div>
-          <span style="font-size: 11px; font-weight: 700; color: var(--rojo-alerce); text-transform: uppercase; letter-spacing: 1px;">Conexion Oficial Firebase</span>
+          <span style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 1px;">Conexión Oficial Supabase Cloud</span>
           <h2 id="modal-auth-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">Iniciar Sesion</h2>
         </div>
         <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-auth-web')" aria-label="Cerrar">✕</button>
@@ -1252,7 +1254,7 @@
 
         <div style="text-align: center;">
           <button type="button" id="btn-toggle-modo-auth" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.toggleModoAuth()">
-            ¿No tienes cuenta? Registrate en Firebase aqui
+            ¿No tienes cuenta? Regístrate en Supabase aquí
           </button>
         </div>
 
@@ -1280,7 +1282,10 @@
     </div>
   </div>
 
-  <!-- Scripts Firebase SDK Oficial -->
+  <!-- Script Supabase SDK Oficial (Backend Instancia Alerce i7) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Scripts Firebase SDK Oficial (Fallback de compatibilidad) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
