@@ -3126,6 +3126,10 @@
     }
   }
 
+  window.alternarPestanaAuth = alternarPestanaAuth;
+  window.seleccionarModoAuth = seleccionarModoAuth;
+  window.registrarEmprendedorModal = registrarEmprendedorModal;
+
   function seleccionarModoAuth(modo) {
     var btnTabLogin = document.getElementById("btn-tab-auth-modo-login");
     var btnTabReg = document.getElementById("btn-tab-auth-modo-registro");
@@ -3203,7 +3207,7 @@
       }
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento en Supabase";
+        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento";
       }
     }
 
@@ -3220,7 +3224,7 @@
     if (exitoDiv) exitoDiv.style.display = "none";
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.textContent = "Registrando en Supabase Cloud...";
+      btnSubmit.textContent = "Registrando tu emprendimiento...";
     }
 
     var slug = "t_" + nombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 24) + "_" + Math.floor(Math.random() * 1000);
@@ -3265,7 +3269,7 @@
 
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento en Supabase";
+        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento";
       }
       mostrarToast("¡Bienvenido/a! Emprendimiento " + nombre + " registrado exitosamente.");
     }
@@ -3327,7 +3331,7 @@
       aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
       if (btnSubmit) {
         btnSubmit.disabled = false;
-        btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrarme en Supabase" : "Iniciar Sesión";
+        btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrar mi Emprendimiento" : "Iniciar Sesión";
       }
       cerrarModal("modal-auth-web");
       mostrarToast("¡Bienvenido! Sesión iniciada.");
@@ -3434,7 +3438,7 @@
     if (exitoDiv) exitoDiv.style.display = "none";
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.textContent = "Conectando con Supabase Cloud...";
+      btnSubmit.textContent = "Iniciando sesión...";
     }
 
     // 1. Intentar con Supabase Auth Oficial
@@ -3464,7 +3468,7 @@
             aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
           }
           cerrarModal("modal-auth-web");
-          mostrarToast("¡Cuenta creada exitosamente en Supabase Cloud!");
+          mostrarToast("¡Cuenta creada exitosamente!");
         }).catch(function (err) {
           console.warn("Aviso Supabase SignUp, probando fallback:", err);
           intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
@@ -3489,7 +3493,7 @@
             aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
           }
           cerrarModal("modal-auth-web");
-          mostrarToast("¡Sesión iniciada con éxito en Supabase Cloud!");
+          mostrarToast("¡Sesión iniciada con éxito!");
         }).catch(function (err) {
           var emailLower = email.toLowerCase().trim();
           if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {

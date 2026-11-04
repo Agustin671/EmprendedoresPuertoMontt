@@ -145,38 +145,7 @@
          ============================================================ -->
     <section id="vitrina" class="seccion-hero" aria-labelledby="titulo-vitrina">
       
-      <!-- Banner de estado del backend Supabase -->
-      <div class="banner-conexion-app" id="banner-estado-conexion" style="margin-bottom: 16px; background: #f0fdf4; border-color: #bbf7d0;">
-        <div class="conexion-texto">
-          <span class="punto-verde-latido" style="margin-right: 2px;"></span>
-          <strong style="color: #166534; font-size: 12.5px;">Backend Supabase Conectado</strong>
-          <span style="color: #86efac;">·</span>
-          <span style="font-size: 12px; color: #15803d;">Instancia oficial Alerce i7 (<code>supabase-alerceis7.codepulse.cl</code>)</span>
-        </div>
-        <span class="insignia-live" style="background: #dcfce7; color: #166534;">EN VIVO</span>
-      </div>
-
-      <!-- Filtros horizontales por rubro (Pills Farfetch) -->
-      <nav class="barra-categorias-pills" id="barra-categorias-pills" aria-label="Filtro por categorías">
-        <button type="button" class="pill-categoria activa" data-categoria="Todos">Todos</button>
-        <button type="button" class="pill-categoria" data-categoria="Servicios y Peluquería">Servicios y Peluquería</button>
-        <button type="button" class="pill-categoria" data-categoria="Abarrotes y Alimentos">Abarrotes y Alimentos</button>
-        <button type="button" class="pill-categoria" data-categoria="Artesanía y Textil">Artesanía y Textil</button>
-        <button type="button" class="pill-categoria" data-categoria="Pastelería y Gastronomía">Pastelería y Gastronomía</button>
-      </nav>
-
-      <!-- Banner Descarga de la Aplicación Móvil Android -->
-      <div class="banner-app-android" style="background: linear-gradient(135deg, #111111 0%, #1e1e24 100%); color: #fff; border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border: 1px solid #27272a;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 44px; height: 44px; background: #27272a; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📱</div>
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">App Oficial para Celulares Android</h3>
-              <span style="background: #22c55e; color: #052e16; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 20px;">v1.2 Oficial (Supabase)</span>
-            </div>
-            <p style="margin: 3px 0 0 0; font-size: 12px; color: #a1a1aa;">Incluye Punto de Venta (POS), lector de QR, soporte biométrico y sincronización en vivo con Supabase Cloud (Alerce i7).</p>
-          </div>
-        </div>
+      
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" style="background: var(--rojo-alerce); color: #fff; border: none; font-weight: 800; height: 40px; padding: 0 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);">
             <span>📥</span>
@@ -1188,12 +1157,82 @@
     </div>
   </div>
 
+    <script>
+    function alternarPestanaAuth(modo) {
+      var secLogin = document.getElementById("auth-seccion-login");
+      var secReg = document.getElementById("auth-seccion-registro");
+      var btnLogin = document.getElementById("btn-tab-auth-modo-login");
+      var btnReg = document.getElementById("btn-tab-auth-modo-registro");
+      var titulo = document.getElementById("modal-auth-titulo");
+      var errLogin = document.getElementById("auth-aviso-error");
+      var errReg = document.getElementById("reg-emp-aviso-error");
+      if (errLogin) errLogin.style.display = "none";
+      if (errReg) errReg.style.display = "none";
+
+      if (modo === "REGISTRO") {
+        if (secLogin) secLogin.style.display = "none";
+        if (secReg) secReg.style.display = "flex";
+        if (btnLogin) {
+          btnLogin.className = "btn-accion-pill";
+          btnLogin.style.background = "transparent";
+          btnLogin.style.border = "none";
+          btnLogin.style.color = "";
+        }
+        if (btnReg) {
+          btnReg.className = "btn-accion-pill btn-negro";
+          btnReg.style.background = "#059669";
+          btnReg.style.border = "none";
+          btnReg.style.color = "#ffffff";
+        }
+        if (titulo) titulo.textContent = "Registrar Emprendedor/a";
+      } else {
+        if (secLogin) secLogin.style.display = "flex";
+        if (secReg) secReg.style.display = "none";
+        if (btnLogin) {
+          btnLogin.className = "btn-accion-pill btn-negro";
+          btnLogin.style.background = "";
+          btnLogin.style.border = "";
+          btnLogin.style.color = "";
+        }
+        if (btnReg) {
+          btnReg.className = "btn-accion-pill";
+          btnReg.style.background = "transparent";
+          btnReg.style.border = "none";
+          btnReg.style.color = "";
+        }
+        if (titulo) titulo.textContent = "Acceso Emprendedor/a";
+      }
+
+      if (window.TramaWeb && typeof window.TramaWeb.seleccionarModoAuth === "function") {
+        try { window.TramaWeb.seleccionarModoAuth(modo); } catch(e){}
+      }
+    }
+    window.alternarPestanaAuth = alternarPestanaAuth;
+    window.seleccionarModoAuth = alternarPestanaAuth;
+
+    function vincularClicksAuth() {
+      var bReg = document.getElementById("btn-tab-auth-modo-registro");
+      var bLog = document.getElementById("btn-tab-auth-modo-login");
+      var linkReg = document.getElementById("btn-link-ir-registro");
+      var linkLog = document.getElementById("btn-link-ir-login");
+      if (bReg) bReg.onclick = function(e) { if(e) e.preventDefault(); alternarPestanaAuth("REGISTRO"); };
+      if (bLog) bLog.onclick = function(e) { if(e) e.preventDefault(); alternarPestanaAuth("LOGIN"); };
+      if (linkReg) linkReg.onclick = function(e) { if(e) e.preventDefault(); alternarPestanaAuth("REGISTRO"); };
+      if (linkLog) linkLog.onclick = function(e) { if(e) e.preventDefault(); alternarPestanaAuth("LOGIN"); };
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", vincularClicksAuth);
+    } else {
+      vincularClicksAuth();
+    }
+  </script>
+
   <!-- MODAL AUTENTICACION Y REGISTRO SUPABASE WEB -->
   <div class="modal-overlay" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo">
     <div class="modal-panel-editorial" style="max-width: 480px; width: 92%;">
       <div class="modal-cabecera">
         <div>
-          <span style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 1px;">Conexión Oficial Supabase Cloud</span>
+          <span style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 1px;">Red de Emprendedores de Alerce</span>
           <h2 id="modal-auth-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">Acceso Emprendedor/a</h2>
         </div>
         <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-auth-web')" aria-label="Cerrar">✕</button>
@@ -1202,10 +1241,10 @@
       <div class="modal-cuerpo" style="gap: 14px; max-height: calc(85vh - 70px); overflow-y: auto;">
         <!-- Selector de Pestañas Principales: Iniciar Sesión vs Registrar Emprendedor/a -->
         <div style="display: flex; background: var(--gris-chip); border-radius: 8px; padding: 4px; gap: 4px;">
-          <button type="button" id="btn-tab-auth-modo-login" class="btn-accion-pill btn-negro" style="flex: 1; height: 34px; font-size: 12px; justify-content: center;" onclick="TramaWeb.seleccionarModoAuth('LOGIN')">
+          <button type="button" id="btn-tab-auth-modo-login" class="btn-accion-pill btn-negro" style="flex: 1; height: 34px; font-size: 12px; justify-content: center;" onclick="alternarPestanaAuth('LOGIN')">
             🔑 Iniciar Sesión
           </button>
-          <button type="button" id="btn-tab-auth-modo-registro" class="btn-accion-pill" style="flex: 1; height: 34px; font-size: 12px; justify-content: center; background: transparent; border: none;" onclick="TramaWeb.seleccionarModoAuth('REGISTRO')">
+          <button type="button" id="btn-tab-auth-modo-registro" class="btn-accion-pill" style="flex: 1; height: 34px; font-size: 12px; justify-content: center; background: transparent; border: none;" onclick="alternarPestanaAuth('REGISTRO')">
             📝 Registrar Emprendedor/a
           </button>
         </div>
@@ -1255,11 +1294,11 @@
           <div id="auth-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
 
           <button type="button" id="btn-submit-auth" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 14px; font-weight: 800;" onclick="TramaWeb.ejecutarAuthFirebase()">
-            Iniciar Sesión en Supabase
+            Iniciar Sesión
           </button>
 
           <div style="text-align: center; margin-top: 2px;">
-            <button type="button" style="background: none; border: none; font-size: 12.5px; color: #059669; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.seleccionarModoAuth('REGISTRO')">
+            <button type="button" id="btn-link-ir-registro" style="background: none; border: none; font-size: 12.5px; color: #059669; font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="alternarPestanaAuth('REGISTRO')">
               ¿No tienes cuenta? Registra tu emprendimiento aquí →
             </button>
           </div>
@@ -1339,12 +1378,12 @@
           <div id="reg-emp-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
           <div id="reg-emp-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
 
-          <button type="button" id="btn-submit-reg-emp" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px; font-weight: 800; background: #059669; border-color: #059669;" onclick="TramaWeb.registrarEmprendedorModal()">
-            🚀 Registrar mi Emprendimiento en Supabase
+          <button type="button" id="btn-submit-reg-emp" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px; font-weight: 800; background: #059669; border-color: #059669;" onclick="if(window.TramaWeb && window.TramaWeb.registrarEmprendedorModal){window.TramaWeb.registrarEmprendedorModal();}else if(window.registrarEmprendedorModal){window.registrarEmprendedorModal();}">
+            🚀 Registrar mi Emprendimiento
           </button>
 
           <div style="text-align: center; margin-top: 2px;">
-            <button type="button" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.seleccionarModoAuth('LOGIN')">
+            <button type="button" id="btn-link-ir-login" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="alternarPestanaAuth('LOGIN')">
               ¿Ya tienes cuenta registrada? Inicia sesión aquí →
             </button>
           </div>
@@ -1364,6 +1403,6 @@
 
   <!-- Scripts -->
   <script src="js/qrcode.min.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/main.js?v=20261103_5"></script>
 </body>
 </html>
