@@ -24,14 +24,19 @@
     console.warn("Aviso inicializando Supabase Client:", errSupa);
   }
 
-  function normalizarColorHex(col, fallback) {
-    if (typeof col === "string" && col.charAt(0) === "#") return col;
-    if (typeof col === "number") {
-      var hex = (col >>> 0).toString(16).padStart(8, "0");
-      return "#" + hex.slice(2);
-    }
+  // Conversión exacta de color ARGB (Android) a Hex (Web) y viceversa (AGENTS.md)
+  var aHex = function (n, fallback) {
+    if (typeof n === "string" && n.charAt(0) === "#") return n;
+    if (typeof n === "number") return "#" + (Number(n) & 0xFFFFFF).toString(16).padStart(6, "0").toUpperCase();
     return fallback || "#1A202C";
-  }
+  };
+  var aArgb = function (hex, fallback) {
+    if (typeof hex === "number") return hex;
+    var str = String(hex || fallback || "#1A202C").replace("#", "");
+    var parsed = parseInt(str, 16);
+    return isNaN(parsed) ? 0xFF1A202C : 0xFF000000 + parsed;
+  };
+  var normalizarColorHex = aHex;
 
   // ============================================================
   // CONEXIÓN OFICIAL FIREBASE WEB (AUTH, FIRESTORE, STORAGE)
@@ -2747,17 +2752,44 @@
 
     resumenTexto += "\n\n¡Gracias por apoyar a los emprendedores locales de Alerce!";
 
-    // Guardar en Supabase Cloud si está conectado
+    // Guardar en Supabase Cloud si está conectado (Paridad exacta con Android VentaRepositorio)
     if (supabaseClient) {
       try {
+        var medioPagoAndroid = "EFECTIVO";
+        var mp = (estadoPOS.medioPago || "").toUpperCase();
+        if (mp.indexOf("DEB") !== -1 || mp.indexOf("TARJ") !== -1) medioPagoAndroid = "DEBITO";
+        else if (mp.indexOf("TRANS") !== -1) medioPagoAndroid = "TRANSFERENCIA";
+        else if (mp.indexOf("QR") !== -1) medioPagoAndroid = "QR";
+
+        var ahora = new Date();
+        var yyyy = ahora.getFullYear();
+        var mm = String(ahora.getMonth() + 1).padStart(2, '0');
+        var dd = String(ahora.getDate()).padStart(2, '0');
+        var hh = String(ahora.getHours()).padStart(2, '0');
+        var min = String(ahora.getMinutes()).padStart(2, '0');
+        var fechaLocal = yyyy + "-" + mm + "-" + dd + " " + hh + ":" + min;
+
+        var itemsNormalizados = estadoPOS.ticket.map(function (it) {
+          return {
+            productoId: it.productoId || it.id || "",
+            varianteId: it.varianteId || (it.productoId ? it.productoId + "v1" : "v1"),
+            nombre: it.nombre || "",
+            detalle: it.detalle || "",
+            precio: Number(it.precio) || 0,
+            cantidad: Number(it.cantidad) || 1,
+            fotoUrl: it.fotoUrl || null
+          };
+        });
+
         var payloadVentaSupa = {
           id: "v_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
           tienda_id: estadoPOS.tiendaId || "t_minimarket_rosa",
-          fecha_local: new Date().toISOString(),
-          items: estadoPOS.ticket,
-          medio_pago: estadoPOS.medioPago,
+          fecha_local: fechaLocal,
+          items: itemsNormalizados,
+          medio_pago: medioPagoAndroid,
           total: total
         };
+
         supabaseClient.from("ventas").insert([payloadVentaSupa]).then(function (res) {
           if (res.error) {
             console.warn("Aviso registrando venta en Supabase (RLS):", res.error.message);
@@ -2771,6 +2803,21 @@
         console.warn("Error enviando venta a Supabase:", errSup);
       }
     }
+
+    // Descontar stock local tras completar la venta
+    estadoPOS.ticket.forEach(function (it) {
+      var prod = PRODUCTOS.find(function (p) { return p.id === it.productoId; });
+      if (prod) {
+        prod.stockTotal = Math.max(0, (prod.stockTotal || 0) - it.cantidad);
+        if (prod.variantes && prod.variantes[0]) {
+          prod.variantes[0].stock = Math.max(0, (prod.variantes[0].stock || 0) - it.cantidad);
+        }
+      }
+    });
+    guardarProductosEnStorage();
+    if (typeof renderizarProductosPOS === "function") renderizarProductosPOS();
+    if (typeof renderizarGestionCatalogo === "function") renderizarGestionCatalogo();
+    if (typeof actualizarDashboardEmprendedora === "function") actualizarDashboardEmprendedora();
 
     // Guardar en Firestore si está conectado (fallback)
     if (firebaseFirestore) {
