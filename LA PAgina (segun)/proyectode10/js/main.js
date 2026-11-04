@@ -3285,6 +3285,12 @@
       }
       try {
         localStorage.setItem("trama_tiendas_completo", JSON.stringify(TIENDAS));
+      try {
+        var cList = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
+        cList = cList.filter(function(x){ return x.id !== nuevaTienda.id; });
+        cList.unshift(nuevaTienda);
+        localStorage.setItem("trama_tiendas_custom", JSON.stringify(cList));
+      } catch(e) {}
       } catch(e) {}
 
       estado.tiendaEmprendedoraId = nuevaTienda.id;
@@ -3705,35 +3711,189 @@
   // DashboardScreen, CatalogoScreen, MisFeriasScreen, TiendaScreen
   // ============================================================
 
-  function actualizarDashboardEmprendedora() {
-    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
-    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; }) || TIENDAS[1];
+  
+  // ============================================================
+  // RESOLUCIÓN DINÁMICA DE TIENDA POR USUARIO (CERO FUGA DE DOÑA ROSA)
+  // ============================================================
+
+  function obtenerTiendaUsuarioActivo() {
+    var user = estado.usuario || {};
+    var email = (user.email || "").toLowerCase().trim();
+    var nombre = (user.nombre || "").trim();
+
+    // 1. Si tenemos tiendaId explícito en estado, buscarla en TIENDAS
+    if (estado.tiendaEmprendedoraId) {
+      var t = TIENDAS.find(function (it) { return it.id === estado.tiendaEmprendedoraId; });
+      if (t) return t;
+    }
+
+    // 2. Si el email coincide con alguna cuenta conocida en ESTADO_ADMIN
+    if (typeof ESTADO_ADMIN !== "undefined" && ESTADO_ADMIN.cuentasEmprendedoras) {
+      var c = ESTADO_ADMIN.cuentasEmprendedoras.find(function (cta) {
+        return cta.email && cta.email.toLowerCase() === email;
+      });
+      if (c && c.tiendaId) {
+        estado.tiendaEmprendedoraId = c.tiendaId;
+        var tC = TIENDAS.find(function (it) { return it.id === c.tiendaId; });
+        if (tC) return tC;
+      }
+    }
+
+    // 3. Buscar por email de prueba directo
+    if (email === "barberia@alerce.app") {
+      estado.tiendaEmprendedoraId = "t_barberia_alerce";
+      return TIENDAS.find(function (t) { return t.id === "t_barberia_alerce"; }) || TIENDAS[0];
+    }
+    if (email === "tejidos@alerce.app") {
+      estado.tiendaEmprendedoraId = "t_tejidos_austral";
+      return TIENDAS.find(function (t) { return t.id === "t_tejidos_austral"; }) || TIENDAS[2] || TIENDAS[0];
+    }
+    if (email === "reposteria@alerce.app") {
+      estado.tiendaEmprendedoraId = "t_reposteria_surena";
+      return TIENDAS.find(function (t) { return t.id === "t_reposteria_surena"; }) || TIENDAS[3] || TIENDAS[0];
+    }
+    if (email === "donarosa@alerce.app" || email === "donamarta@alerce.app" || nombre === "Minimarket Doña Rosa" || nombre === "Doña Rosa") {
+      estado.tiendaEmprendedoraId = "t_minimarket_rosa";
+      return TIENDAS.find(function (t) { return t.id === "t_minimarket_rosa"; }) || TIENDAS[1];
+    }
+
+    // 4. Buscar en TIENDAS alguna tienda cuyo nombre coincida con el nombre del usuario
+    if (nombre && nombre !== "Visitante" && nombre !== "Usuario" && nombre !== "Comprador") {
+      var tNombre = TIENDAS.find(function (it) {
+        return it.nombre && it.nombre.toLowerCase().trim() === nombre.toLowerCase().trim();
+      });
+      if (tNombre) {
+        estado.tiendaEmprendedoraId = tNombre.id;
+        return tNombre;
+      }
+    }
+
+    // 5. Buscar en tiendas guardadas en localStorage
+    try {
+      var customTiendas = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
+      if (customTiendas && customTiendas.length) {
+        var tLocal = customTiendas.find(function (it) {
+          return (it.ownerEmail && it.ownerEmail === email) ||
+                 (it.nombre && it.nombre.toLowerCase() === nombre.toLowerCase());
+        });
+        if (tLocal) {
+          estado.tiendaEmprendedoraId = tLocal.id;
+          if (!TIENDAS.some(function(x){ return x.id === tLocal.id; })) {
+            TIENDAS.unshift(tLocal);
+          }
+          return tLocal;
+        }
+      }
+    } catch(e) {}
+
+    // 6. Si el usuario está registrado con su propio nombre (ej: "Punto 3D"), crearle su tienda propia
+    // ¡Nunca jamás asignarle Doña Rosa a otra persona!
+    if (nombre && nombre !== "Visitante" && nombre !== "Usuario" && nombre !== "Comprador") {
+      var slug = "t_" + nombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 24);
+      var tiendaPropia = {
+        id: slug,
+        nombre: nombre,
+        rubro: "Emprendimiento Local",
+        sector: "Alerce",
+        bio: "Emprendimiento de " + nombre + " en Alerce.",
+        whatsapp: "+56991234567",
+        ownerEmail: email,
+        colorPortada: "#1A202C",
+        colorLogo: "#2B6CB0",
+        necesidades: { tieneStock: true, tieneAgendamiento: false, tieneVentaPorWhatsApp: true, tieneProductosAPedido: false, participaEnFerias: true, tieneForoComunidad: true }
+      };
+      estado.tiendaEmprendedoraId = slug;
+      if (!TIENDAS.some(function(x){ return x.id === slug; })) {
+        TIENDAS.unshift(tiendaPropia);
+      }
+      try {
+        var saved = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
+        if (!saved.some(function(x){ return x.id === slug; })) {
+          saved.unshift(tiendaPropia);
+          localStorage.setItem("trama_tiendas_custom", JSON.stringify(saved));
+        }
+      } catch(e) {}
+      return tiendaPropia;
+    }
+
+    // Solo si no hay usuario identificado, devolver la primera tienda
+    return TIENDAS[0] || { id: "t_comercio", nombre: "Mi Emprendimiento", rubro: "Comercio", sector: "Alerce" };
+  }
+
+
+    function actualizarDashboardEmprendedora() {
+    var tienda = obtenerTiendaUsuarioActivo();
+    var tiendaId = tienda.id;
+    estado.tiendaEmprendedoraId = tiendaId;
+    estadoPOS.tiendaId = tiendaId;
+
     var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
     var prodsActivos = prodsTienda.filter(function (p) { return p.publicado !== false; });
     var stockTotal = prodsTienda.reduce(function (acc, p) { return acc + (p.stockTotal || 0); }, 0);
 
     var saludoEl = document.getElementById("dashboard-emp-saludo");
     var badgeEl = document.getElementById("dashboard-emp-tienda-badge");
+    var subtituloEl = document.getElementById("dashboard-emp-subtitulo");
     var metricaProds = document.getElementById("metrica-prods-activos");
     var metricaStock = document.getElementById("metrica-stock-total");
+    var metricaVentas = document.getElementById("metrica-ventas-mes");
+    var metricaSeguidores = document.getElementById("metrica-seguidores");
+    var metricaSubSeguidores = document.getElementById("metrica-sub-seguidores");
     var alertaStockEl = document.getElementById("texto-alerta-stock");
+    var textoFeriaEl = document.getElementById("texto-proxima-feria");
     var subCatalogo = document.getElementById("subtitulo-gestion-catalogo");
+    var subFerias = document.getElementById("subtitulo-mis-ferias");
 
-    if (saludoEl) saludoEl.textContent = "Hola, " + (tienda.nombre.split(" ").slice(-2).join(" ") || "Doña Rosa") + " 👋";
+    // Nombre a mostrar en el saludo: si el usuario tiene nombre propio (ej: Punto 3D, Carlos), usarlo directamente
+    var nombreSaludo = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre !== "Visitante" && estado.usuario.nombre !== "Usuario")
+      ? estado.usuario.nombre
+      : tienda.nombre;
+
+    if (saludoEl) saludoEl.textContent = "Hola, " + nombreSaludo + " 👋";
     if (badgeEl) badgeEl.textContent = "Modo Emprendedor/a Activo · " + tienda.nombre;
+    if (subtituloEl) subtituloEl.textContent = "Panel comercial y taller virtual para " + tienda.nombre + " (" + tienda.sector + ").";
     if (subCatalogo) subCatalogo.textContent = tienda.nombre + " · " + tienda.sector;
+    if (subFerias) subFerias.textContent = "Inscribe a " + tienda.nombre + " en los eventos de Alerce y Puerto Montt";
+
+    // Ventas del mes: calcular de VENTAS o $148.500 si es Doña Rosa demo
+    var ventasTienda = (typeof VENTAS !== "undefined" && Array.isArray(VENTAS))
+      ? VENTAS.filter(function(v){ return v.tiendaId === tiendaId; })
+      : [];
+    if (metricaVentas) {
+      if (tiendaId === "t_minimarket_rosa") {
+        metricaVentas.textContent = "$ 148.500";
+      } else if (ventasTienda.length > 0) {
+        var totalV = ventasTienda.reduce(function(acc, v){ return acc + (v.total || 0); }, 0);
+        metricaVentas.textContent = formatearMoneda(totalV);
+      } else {
+        metricaVentas.textContent = "$ 0";
+      }
+    }
 
     if (metricaProds) metricaProds.textContent = prodsActivos.length + " activos";
     if (metricaStock) metricaStock.textContent = stockTotal + " un.";
 
-    // Alerta de stock bajo (primer producto con stock <= 10)
+    if (metricaSeguidores) {
+      metricaSeguidores.textContent = (tiendaId === "t_minimarket_rosa") ? "34 vecinos" : "12 vecinos";
+    }
+    if (metricaSubSeguidores) {
+      metricaSubSeguidores.textContent = tienda.sector || "Alerce";
+    }
+
+    // Alerta de stock bajo
     var prodBajoStock = prodsTienda.find(function (p) { return p.stockTotal > 0 && p.stockTotal <= 10; });
     if (alertaStockEl) {
       if (prodBajoStock) {
         alertaStockEl.textContent = prodBajoStock.nombre + ": Quedan " + prodBajoStock.stockTotal + " unidades disponibles en stock.";
+      } else if (prodsTienda.length === 0) {
+        alertaStockEl.textContent = "Catálogo listo: Aún no has agregado productos. Haz clic en '+ Añadir Producto'.";
       } else {
         alertaStockEl.textContent = "Inventario al día: Todos tus productos tienen stock disponible.";
       }
+    }
+
+    if (textoFeriaEl) {
+      textoFeriaEl.textContent = "Próxima feria comunal en Puerto Montt · Disponible para " + tienda.nombre;
     }
   }
 
@@ -3752,7 +3912,8 @@
     var conteo = document.getElementById("conteo-prods-catalogo-gestion");
     if (!cont) return;
 
-    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
+    var tienda = obtenerTiendaUsuarioActivo();
+    var tiendaId = tienda.id;
     var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
 
     if (conteo) conteo.textContent = prodsTienda.length + " productos en catálogo";
@@ -4048,7 +4209,7 @@
         html += '    </button>';
       } else {
         html += '    <button type="button" class="btn-accion-pill btn-negro" style="height: 34px; font-size: 11.5px;" onclick="TramaWeb.toggleInscripcionFeria(\'' + feria.id + '\')">';
-        html += '      Inscribir a Doña Rosa ➔';
+        html += '      Inscribir a ' + tienda.nombre + ' ➔';
         html += '    </button>';
       }
       html += '  </div>';
@@ -5353,6 +5514,8 @@
     iniciarSesionGoogleWeb: iniciarSesionGoogleWeb,
     abrirModalRegistroEmprendedor: abrirModalRegistroEmprendedor,
     abrirModalAuthNormal: abrirModalAuthNormal,
+    aplicarUsuarioLocal: aplicarUsuarioLocal,
+    esUsuarioEmprendedora: esUsuarioEmprendedora,
     seleccionarModoUsuario: seleccionarModoUsuario,
     registrarUsuarioNormalModal: registrarUsuarioNormalModal
   };
