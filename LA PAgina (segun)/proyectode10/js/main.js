@@ -1365,6 +1365,7 @@
     var m = document.getElementById(modalId);
     if (m) {
       m.classList.add("abierto");
+      m.style.display = "flex";
       document.body.style.overflow = "hidden";
     }
   }
@@ -1373,14 +1374,16 @@
     var m = document.getElementById(modalId);
     if (m) {
       m.classList.remove("abierto");
+      m.style.display = "none";
       document.body.style.overflow = "";
     }
   }
 
   // Cerrar al hacer clic en el backdrop
   document.addEventListener("click", function (e) {
-    if (e.target && e.target.classList.contains("modal-overlay")) {
+    if (e.target && (e.target.classList.contains("modal-overlay") || e.target.classList.contains("modal-fondo"))) {
       e.target.classList.remove("abierto");
+      e.target.style.display = "none";
       document.body.style.overflow = "";
     }
   });
@@ -1388,8 +1391,9 @@
   // Cerrar con Escape
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      document.querySelectorAll(".modal-overlay.abierto").forEach(function (m) {
+      document.querySelectorAll(".modal-overlay.abierto, .modal-fondo.abierto").forEach(function (m) {
         m.classList.remove("abierto");
+        m.style.display = "none";
       });
       document.body.style.overflow = "";
     }
@@ -1480,7 +1484,7 @@
   function abrirModalPublicarProducto() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para añadir productos.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para añadir productos.");
       return;
     }
     renderizarGaleriaSugeridaFB();
@@ -1582,7 +1586,7 @@
   function confirmarPublicacionFB() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para publicar productos.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para publicar productos.");
       return;
     }
 
@@ -1615,7 +1619,7 @@
         break;
       }
     }
-    var nombreTienda = tiendaEncontrada ? tiendaEncontrada.nombre : "Emprendedora de Alerce";
+    var nombreTienda = tiendaEncontrada ? tiendaEncontrada.nombre : "Emprendedor/a de Alerce";
 
     var nuevoProducto = {
       id: "p_custom_" + Date.now(),
@@ -1729,7 +1733,7 @@
   function abrirModalEstudioFlyer() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para diseñar afiches comerciales.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para diseñar afiches comerciales.");
       return;
     }
     renderizarGaleriaFotosFlyer();
@@ -2486,7 +2490,7 @@
   function abrirModalPOS() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para acceder a la Caja POS.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para acceder a la Caja POS.");
       return;
     }
     var selectTienda = document.getElementById("pos-select-tienda");
@@ -3040,7 +3044,7 @@
       estadoPOS.tiendaId = meta.tienda_id;
     }
 
-    aplicarUsuarioLocal(nombre, rol === "EMPRENDEDORA" ? "Emprendedora" : (rol === "ADMIN" ? "Administrador" : "Comprador"));
+    aplicarUsuarioLocal(nombre, rol === "EMPRENDEDORA" ? "Emprendedor/a" : (rol === "ADMIN" ? "Administrador" : "Comprador"));
     actualizarUIControlesSegunRol();
   }
 
@@ -3122,31 +3126,205 @@
     }
   }
 
-  function toggleModoAuth() {
-    estadoAuthWeb.modoRegistro = !estadoAuthWeb.modoRegistro;
-    var camposReg = document.getElementById("auth-campos-registro");
+  function seleccionarModoAuth(modo) {
+    var btnTabLogin = document.getElementById("btn-tab-auth-modo-login");
+    var btnTabReg = document.getElementById("btn-tab-auth-modo-registro");
+    var secLogin = document.getElementById("auth-seccion-login");
+    var secReg = document.getElementById("auth-seccion-registro");
     var titulo = document.getElementById("modal-auth-titulo");
-    var btnSubmit = document.getElementById("btn-submit-auth");
-    var btnToggle = document.getElementById("btn-toggle-modo-auth");
-    var errorDiv = document.getElementById("auth-aviso-error");
-    if (errorDiv) errorDiv.style.display = "none";
+    var errLogin = document.getElementById("auth-aviso-error");
+    var errReg = document.getElementById("reg-emp-aviso-error");
+    if (errLogin) errLogin.style.display = "none";
+    if (errReg) errReg.style.display = "none";
 
-    if (estadoAuthWeb.modoRegistro) {
-      if (camposReg) camposReg.style.display = "block";
-      if (titulo) titulo.textContent = "Crear Cuenta en Supabase";
-      if (btnSubmit) btnSubmit.textContent = "Registrarme en Supabase";
-      if (btnToggle) btnToggle.textContent = "¿Ya tienes cuenta? Inicia sesión aquí";
+    if (modo === "REGISTRO") {
+      estadoAuthWeb.modoRegistro = true;
+      if (btnTabLogin) {
+        btnTabLogin.className = "btn-accion-pill";
+        btnTabLogin.style.background = "transparent";
+        btnTabLogin.style.border = "none";
+        btnTabLogin.style.color = "";
+      }
+      if (btnTabReg) {
+        btnTabReg.className = "btn-accion-pill btn-negro";
+        btnTabReg.style.background = "#059669";
+        btnTabReg.style.borderColor = "#059669";
+        btnTabReg.style.color = "#ffffff";
+      }
+      if (secLogin) secLogin.style.display = "none";
+      if (secReg) secReg.style.display = "flex";
+      if (titulo) titulo.textContent = "Registrar Emprendedor/a";
     } else {
-      if (camposReg) camposReg.style.display = "none";
-      if (titulo) titulo.textContent = "Iniciar Sesión";
-      if (btnSubmit) btnSubmit.textContent = "Iniciar Sesión";
-      if (btnToggle) btnToggle.textContent = "¿No tienes cuenta? Regístrate en Supabase aquí";
+      estadoAuthWeb.modoRegistro = false;
+      if (btnTabLogin) {
+        btnTabLogin.className = "btn-accion-pill btn-negro";
+        btnTabLogin.style.background = "";
+        btnTabLogin.style.border = "";
+        btnTabLogin.style.color = "";
+      }
+      if (btnTabReg) {
+        btnTabReg.className = "btn-accion-pill";
+        btnTabReg.style.background = "transparent";
+        btnTabReg.style.border = "none";
+        btnTabReg.style.color = "";
+      }
+      if (secLogin) secLogin.style.display = "flex";
+      if (secReg) secReg.style.display = "none";
+      if (titulo) titulo.textContent = "Acceso Emprendedor/a";
     }
+  }
+
+  function toggleModoAuth() {
+    seleccionarModoAuth(estadoAuthWeb.modoRegistro ? "LOGIN" : "REGISTRO");
+  }
+
+  function registrarEmprendedorModal() {
+    var inpNombre = document.getElementById("reg-emp-nombre");
+    var selectRubro = document.getElementById("reg-emp-rubro");
+    var selectSector = document.getElementById("reg-emp-sector");
+    var inpWsp = document.getElementById("reg-emp-whatsapp");
+    var inpEmail = document.getElementById("reg-emp-email");
+    var inpPass = document.getElementById("reg-emp-password");
+    var errorDiv = document.getElementById("reg-emp-aviso-error");
+    var exitoDiv = document.getElementById("reg-emp-aviso-exito");
+    var btnSubmit = document.getElementById("btn-submit-reg-emp");
+
+    var nombre = inpNombre ? inpNombre.value.trim() : "";
+    var rubro = selectRubro ? selectRubro.value : "Abarrotes y Alimentos";
+    var sector = selectSector ? selectSector.value : "Alerce Histórico";
+    var whatsapp = inpWsp ? inpWsp.value.trim() : "";
+    var email = inpEmail ? inpEmail.value.trim() : "";
+    var pass = inpPass ? inpPass.value : "";
+
+    function mostrarErrorReg(msg) {
+      if (errorDiv) {
+        errorDiv.textContent = msg;
+        errorDiv.style.display = "block";
+      }
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento en Supabase";
+      }
+    }
+
+    if (!nombre) {
+      mostrarErrorReg("Por favor ingresa el nombre de tu emprendimiento o tu nombre.");
+      return;
+    }
+    if (!email || !pass || pass.length < 6) {
+      mostrarErrorReg("Por favor ingresa un correo válido y una contraseña de al menos 6 caracteres.");
+      return;
+    }
+
+    if (errorDiv) errorDiv.style.display = "none";
+    if (exitoDiv) exitoDiv.style.display = "none";
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Registrando en Supabase Cloud...";
+    }
+
+    var slug = "t_" + nombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 24) + "_" + Math.floor(Math.random() * 1000);
+    var nuevaTienda = {
+      id: slug,
+      nombre: nombre,
+      rubro: rubro,
+      sector: sector,
+      bio: "Emprendimiento local de Alerce registrado a través de la plataforma web.",
+      whatsapp: whatsapp || "+56991234567",
+      instagram: "",
+      colorPortada: "#1A202C",
+      colorLogo: "#2B6CB0",
+      necesidades: {
+        tieneStock: true,
+        tieneAgendamiento: false,
+        tieneVentaPorWhatsApp: true,
+        tieneProductosAPedido: false,
+        participaEnFerias: true,
+        tieneForoComunidad: true
+      }
+    };
+
+    function completarRegistro() {
+      var existeIdx = TIENDAS.findIndex(function (t) { return t.id === nuevaTienda.id; });
+      if (existeIdx >= 0) {
+        TIENDAS[existeIdx] = nuevaTienda;
+      } else {
+        TIENDAS.unshift(nuevaTienda);
+      }
+      try {
+        localStorage.setItem("trama_tiendas_completo", JSON.stringify(TIENDAS));
+      } catch(e) {}
+
+      estado.tiendaEmprendedoraId = nuevaTienda.id;
+      estadoPOS.tiendaId = nuevaTienda.id;
+      aplicarUsuarioLocal(nombre, "Emprendedor/a");
+      renderizarTiendasMarketplace();
+      actualizarDashboardEmprendedora();
+      actualizarUIControlesSegunRol();
+      cerrarModal("modal-auth-web");
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento en Supabase";
+      }
+      mostrarToast("¡Bienvenido/a! Emprendimiento " + nombre + " registrado exitosamente.");
+    }
+
+    if (supabaseClient && supabaseClient.auth) {
+      supabaseClient.auth.signUp({
+        email: email,
+        password: pass,
+        options: {
+          data: {
+            nombre: nombre,
+            rubro: rubro,
+            sector: sector,
+            whatsapp: whatsapp,
+            rol: "EMPRENDEDORA",
+            tienda_id: nuevaTienda.id
+          }
+        }
+      }).then(function (res) {
+        if (res.error) throw res.error;
+        console.log("✅ Emprendedor/a registrado/a en Supabase Auth:", email);
+
+        supabaseClient.from("tiendas").insert([{
+          id: nuevaTienda.id,
+          nombre: nuevaTienda.nombre,
+          rubro: nuevaTienda.rubro,
+          sector: nuevaTienda.sector,
+          bio: nuevaTienda.bio,
+          whatsapp: nuevaTienda.whatsapp,
+          color_portada: aArgb(nuevaTienda.colorPortada),
+          color_logo: aArgb(nuevaTienda.colorLogo),
+          necesidades: nuevaTienda.necesidades
+        }]).then(function (resT) {
+          if (resT.error) console.warn("Aviso tienda Supabase (RLS):", resT.error.message);
+          else console.log("✅ Tienda guardada en Supabase Cloud");
+        }).catch(function(e){ console.warn("Aviso:", e); });
+
+        completarRegistro();
+      }).catch(function (err) {
+        console.warn("Aviso Supabase SignUp:", err);
+        if (firebaseAuth) {
+          firebaseAuth.createUserWithEmailAndPassword(email, pass).then(function () {
+            completarRegistro();
+          }).catch(function (errFb) {
+            mostrarErrorReg("Error registrando cuenta: " + (err.message || errFb.message));
+          });
+        } else {
+          completarRegistro();
+        }
+      });
+      return;
+    }
+
+    completarRegistro();
   }
 
   function intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit) {
     if (!firebaseAuth) {
-      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
       if (btnSubmit) {
         btnSubmit.disabled = false;
         btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrarme en Supabase" : "Iniciar Sesión";
@@ -3170,7 +3348,7 @@
                 fechaRegistro: Date.now()
               }).catch(function (e) { console.warn("Aviso Firestore:", e); });
             }
-            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
             if (btnSubmit) {
               btnSubmit.disabled = false;
               btnSubmit.textContent = "Registrarme en Supabase";
@@ -3194,7 +3372,7 @@
         .then(function (cred) {
           var user = cred.user;
           var nombreDetectado = user.displayName || email.split("@")[0];
-          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
           if (btnSubmit) {
             btnSubmit.disabled = false;
             btnSubmit.textContent = "Iniciar Sesión";
@@ -3283,7 +3461,7 @@
           if (user) {
             procesarUsuarioSupabase(user);
           } else {
-            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
           }
           cerrarModal("modal-auth-web");
           mostrarToast("¡Cuenta creada exitosamente en Supabase Cloud!");
@@ -3308,7 +3486,7 @@
           if (user) {
             procesarUsuarioSupabase(user);
           } else {
-            aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedora" : "Comprador");
+            aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
           }
           cerrarModal("modal-auth-web");
           mostrarToast("¡Sesión iniciada con éxito en Supabase Cloud!");
@@ -3358,18 +3536,18 @@
     var nombre = tienda ? tienda.nombre : "Minimarket Doña Rosa";
     estado.tiendaEmprendedoraId = tiendaId;
     estadoPOS.tiendaId = tiendaId;
-    aplicarUsuarioLocal(nombre, "Emprendedora (Prueba)");
+    aplicarUsuarioLocal(nombre, "Emprendedor/a (Prueba)");
     cerrarModal("modal-auth-web");
-    mostrarToast("Entrando como " + nombre + " (Modo Emprendedora)");
+    mostrarToast("Entrando como " + nombre + " (Modo Emprendedor/a)");
   }
 
   function entrarModoDonaRosa() {
-    aplicarUsuarioLocal("Minimarket Doña Rosa", "Emprendedora (Minimarket)");
+    aplicarUsuarioLocal("Minimarket Doña Rosa", "Emprendedor/a (Minimarket)");
     estado.tiendaEmprendedoraId = "t_minimarket_rosa";
     estadoPOS.tiendaId = "t_minimarket_rosa";
     cerrarModal("modal-auth-web");
     actualizarDashboardEmprendedora();
-    mostrarToast("¡Bienvenida Doña Rosa! Modo Emprendedora activado con todas las funciones de la app Android.");
+    mostrarToast("¡Bienvenida Doña Rosa! Modo Emprendedor/a activado con todas las funciones de la app Android.");
   }
 
   function esUsuarioEmprendedora() {
@@ -3410,6 +3588,7 @@
 
   function abrirModalAuthEmprendedora() {
     cambiarRolAuth('EMPRENDEDORA');
+    seleccionarModoAuth('LOGIN');
     abrirModalAuth();
   }
 
@@ -3457,7 +3636,7 @@
             firebaseFirestore.collection("usuarios").doc(user.uid).get().then(function (docU) {
               var rol = "Visitante";
               if (docU.exists && docU.data().rol) {
-                rol = docU.data().rol === "EMPRENDEDORA" ? "Emprendedora" : "Comprador";
+                rol = docU.data().rol === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a";
               }
               aplicarUsuarioLocal(nombre, rol);
             }).catch(function () {
@@ -3493,7 +3672,7 @@
     var subCatalogo = document.getElementById("subtitulo-gestion-catalogo");
 
     if (saludoEl) saludoEl.textContent = "Hola, " + (tienda.nombre.split(" ").slice(-2).join(" ") || "Doña Rosa") + " 👋";
-    if (badgeEl) badgeEl.textContent = "Modo Emprendedora Activo · " + tienda.nombre;
+    if (badgeEl) badgeEl.textContent = "Modo Emprendedor/a Activo · " + tienda.nombre;
     if (subCatalogo) subCatalogo.textContent = tienda.nombre + " · " + tienda.sector;
 
     if (metricaProds) metricaProds.textContent = prodsActivos.length + " activos";
@@ -3513,7 +3692,7 @@
   function abrirModalGestionCatalogo() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora para gestionar el catálogo.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para gestionar el catálogo.");
       return;
     }
     renderizarGestionCatalogo();
@@ -3642,7 +3821,7 @@
   function abrirModalEditarTienda() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a.");
       return;
     }
     var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
@@ -3784,7 +3963,7 @@
   function abrirModalMisFerias() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedora.");
+      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a.");
       return;
     }
     renderizarMisFerias();
@@ -3910,6 +4089,8 @@
     abrirModalAuthEmprendedora: abrirModalAuthEmprendedora,
     cambiarRolAuth: cambiarRolAuth,
     toggleModoAuth: toggleModoAuth,
+    seleccionarModoAuth: seleccionarModoAuth,
+    registrarEmprendedorModal: registrarEmprendedorModal,
     autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
     cargarTiendasDesdeSupabase: cargarTiendasDesdeSupabase,
