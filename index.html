@@ -76,6 +76,13 @@
         </a>
 
         <!-- Botón de Invitación para Emprendedores/as (Visible si NO hay sesión activa) -->
+        <button type="button" class="btn-accion-pill" id="btn-header-admin-panel-placeholder" style="display:none;"></button>
+        <!-- Botón Panel de Administración Web (Visible para Administrador - W01-W02) -->
+        <button type="button" class="btn-accion-pill" id="btn-header-admin-panel" onclick="TramaWeb.abrirModalAdmin()" style="display: none; background: #1e1e24; color: #fff; border-color: #27272a; font-weight: 700; height: 36px; gap: 5px;" title="Panel de Administración de Plataforma (Canal Web Exclusivo)">
+          <span>👑</span>
+          <span>Panel Admin</span>
+        </button>
+
         <button type="button" class="btn-accion-pill" id="btn-header-acceso-emp" onclick="TramaWeb.abrirModalAuthEmprendedora()" style="padding: 0 11px; font-weight: 700; height: 36px; gap: 5px; border-color: var(--gris-borde);" title="Acceso para Emprendedores/as de Alerce">
           <span>🏪</span>
           <span>Soy Emprendedor/a</span>
@@ -1227,6 +1234,311 @@
     }
   </script>
 
+  
+  <!-- ============================================================
+       MODAL 11: PANEL DE ADMINISTRACIÓN DE PLATAFORMA (W01 a W24, WA3-WA6)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-admin-plataforma" role="dialog" aria-modal="true" aria-labelledby="modal-admin-titulo">
+    <div class="modal-panel-editorial" style="max-width: 960px; width: 95%; max-height: 92vh; display: flex; flex-direction: column;">
+      
+      <!-- Cabecera del Panel Admin -->
+      <div class="modal-cabecera" style="border-bottom: 1px solid var(--gris-borde); padding-bottom: 14px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="background: #111; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;">CANAL WEB EXCLUSIVO (W01-W24)</span>
+            <span id="badge-admin-usuario" style="font-size: 11.5px; color: #059669; font-weight: 700;">👑 admin@alerce.app</span>
+          </div>
+          <h2 id="modal-admin-titulo" style="font-size: 20px; font-weight: 900; color: var(--negro-apple); margin: 4px 0 0 0;">
+            Administración de Plataforma · Alerce
+          </h2>
+          <p style="font-size: 12px; color: var(--gris-texto); margin: 2px 0 0 0;">
+            Gestión oficial de cuentas de emprendedoras, asociaciones y catálogos comerciales (Entrega 4).
+          </p>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-admin-plataforma')" aria-label="Cerrar">✕</button>
+      </div>
+
+      <!-- Barra de Estadísticas Rápidas (KPIs) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--gris-borde);">
+        <div style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 10px;">
+          <span style="font-size: 11px; color: var(--gris-texto); display: block;">Emprendedoras</span>
+          <strong id="kpi-admin-total-emp" style="font-size: 18px; font-weight: 900; color: var(--negro-apple);">0</strong>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 10px;">
+          <span style="font-size: 11px; color: var(--gris-texto); display: block;">Asociaciones</span>
+          <strong id="kpi-admin-total-asoc" style="font-size: 18px; font-weight: 900; color: #059669;">0</strong>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 10px;">
+          <span style="font-size: 11px; color: var(--gris-texto); display: block;">Categorías</span>
+          <strong id="kpi-admin-total-cat" style="font-size: 18px; font-weight: 900; color: #2563eb;">0</strong>
+        </div>
+        <div style="background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 10px; padding: 10px;">
+          <span style="font-size: 11px; color: var(--gris-texto); display: block;">Bitácora Acciones</span>
+          <strong id="kpi-admin-total-log" style="font-size: 18px; font-weight: 900; color: #7c3aed;">0</strong>
+        </div>
+      </div>
+
+      <!-- Pestañas Principales del Panel Admin -->
+      <div style="display: flex; gap: 6px; overflow-x: auto; padding: 10px 0; border-bottom: 1px solid var(--gris-borde);">
+        <button type="button" id="tab-btn-admin-emp" class="btn-accion-pill btn-negro" style="height: 34px; font-size: 12px; white-space: nowrap;" onclick="TramaWeb.seleccionarTabAdmin('emp')">
+          👥 Cuentas Emprendedoras (W04–W09)
+        </button>
+        <button type="button" id="tab-btn-admin-asoc" class="btn-accion-pill" style="height: 34px; font-size: 12px; background: transparent; border: 1px solid var(--gris-borde); white-space: nowrap;" onclick="TramaWeb.seleccionarTabAdmin('asoc')">
+          🏛️ Asociaciones (W10–W19)
+        </button>
+        <button type="button" id="tab-btn-admin-cat" class="btn-accion-pill" style="height: 34px; font-size: 12px; background: transparent; border: 1px solid var(--gris-borde); white-space: nowrap;" onclick="TramaWeb.seleccionarTabAdmin('cat')">
+          🏷️ Catálogos y Rubros (W20–W22)
+        </button>
+        <button type="button" id="tab-btn-admin-adm" class="btn-accion-pill" style="height: 34px; font-size: 12px; background: transparent; border: 1px solid var(--gris-borde); white-space: nowrap;" onclick="TramaWeb.seleccionarTabAdmin('adm')">
+          🛡️ Administradores (W23)
+        </button>
+        <button type="button" id="tab-btn-admin-log" class="btn-accion-pill" style="height: 34px; font-size: 12px; background: transparent; border: 1px solid var(--gris-borde); white-space: nowrap;" onclick="TramaWeb.seleccionarTabAdmin('log')">
+          📋 Bitácora (WA3)
+        </button>
+      </div>
+
+      <!-- Contenedor del Cuerpo con Scroll -->
+      <div class="modal-cuerpo" style="flex: 1; overflow-y: auto; padding: 16px 0; gap: 16px;">
+        
+        <!-- ==========================================
+             SECCIÓN 1: CUENTAS DE EMPRENDEDORAS (W04-W09)
+             ========================================== -->
+        <div id="admin-sec-emp" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Barra de Búsqueda y Botón Crear -->
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px; flex: 1; min-width: 260px;">
+              <input type="text" id="admin-busq-emp" class="input-fb-market" placeholder="🔍 Buscar por nombre, tienda o correo..." oninput="TramaWeb.filtrarAdminEmprendedoras()" style="height: 38px;">
+              <select id="admin-filtro-estado-emp" class="input-fb-market" onchange="TramaWeb.filtrarAdminEmprendedoras()" style="width: 140px; height: 38px; background: #fff;">
+                <option value="TODAS">Todas</option>
+                <option value="ACTIVAS">🟢 Activas</option>
+                <option value="DESACTIVADAS">🔴 Desactivadas</option>
+              </select>
+            </div>
+            <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; background: #059669; border-color: #059669;" onclick="TramaWeb.abrirFormCrearEmprendedora()">
+              + Crear Cuenta de Emprendedora (W04)
+            </button>
+          </div>
+
+          <!-- Cuadro de Credenciales Generadas (W05 / WA5) -->
+          <div id="admin-box-credenciales" style="display: none; background: #ecfdf5; border: 1px solid #10b981; border-radius: 12px; padding: 14px 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong style="color: #065f46; font-size: 13.5px;">🔑 Credenciales listas para entregar a la emprendedora (W05)</strong>
+              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; background: #059669; color: #fff; border: none;" onclick="TramaWeb.copiarCredencialesGeneradas()">
+                📋 Copiar credenciales (WA5)
+              </button>
+            </div>
+            <div style="font-family: monospace; font-size: 13px; color: #047857; background: #fff; padding: 10px 12px; border-radius: 8px; border: 1px solid #a7f3d0;" id="admin-texto-credenciales">
+              Usuario: ... · Contraseña: ...
+            </div>
+          </div>
+
+          <!-- Formulario Ocultable para Crear / Editar Emprendedora -->
+          <div id="admin-form-emp-panel" style="display: none; background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 14px; padding: 16px; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 id="admin-form-emp-titulo" style="font-size: 15px; font-weight: 800; margin: 0; color: var(--negro-apple);">
+                Crear Cuenta de Emprendedora
+              </h3>
+              <button type="button" style="background: none; border: none; font-size: 16px; cursor: pointer;" onclick="TramaWeb.cerrarFormEmprendedora()">✕</button>
+            </div>
+            <input type="hidden" id="admin-form-emp-id">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="label-fb-market">Nombre de la Emprendedora *</label>
+                <input type="text" id="admin-form-emp-nombre" class="input-fb-market" placeholder="Ej: Marcela Paredes">
+              </div>
+              <div>
+                <label class="label-fb-market">Nombre de la Tienda *</label>
+                <input type="text" id="admin-form-emp-tienda" class="input-fb-market" placeholder="Ej: Artesanías El Alerce">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="label-fb-market">Correo Electrónico (Usuario) *</label>
+                <input type="email" id="admin-form-emp-email" class="input-fb-market" placeholder="marcela@alerce.app">
+              </div>
+              <div>
+                <label class="label-fb-market">Contraseña Asignada * (W05)</label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="text" id="admin-form-emp-clave" class="input-fb-market" placeholder="Mínimo 6 caracteres" value="alerce123">
+                  <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 11px; padding: 0 10px; white-space: nowrap;" onclick="TramaWeb.generarClaveAleatoriaEmp()">🎲 Clave</button>
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="label-fb-market">Sector en Alerce</label>
+                <select id="admin-form-emp-sector" class="input-fb-market" style="background: #fff; height: 38px;">
+                  <option value="Alerce Histórico">Alerce Histórico</option>
+                  <option value="Alerce Norte">Alerce Norte</option>
+                  <option value="Alerce Sur">Alerce Sur</option>
+                  <option value="Senda Central">Senda Central</option>
+                  <option value="La Vara">La Vara</option>
+                </select>
+              </div>
+              <div>
+                <label class="label-fb-market">Teléfono / WhatsApp</label>
+                <input type="tel" id="admin-form-emp-tel" class="input-fb-market" placeholder="+56 9 9123 4567">
+              </div>
+              <div>
+                <label class="label-fb-market">Asociación (W18)</label>
+                <select id="admin-form-emp-asoc" class="input-fb-market" style="background: #fff; height: 38px;">
+                  <!-- Se llena dinámicamente -->
+                </select>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px;">
+              <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 12px;" onclick="TramaWeb.cerrarFormEmprendedora()">Cancelar</button>
+              <button type="button" id="admin-btn-guardar-emp" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; background: #059669; border-color: #059669;" onclick="TramaWeb.guardarCuentaEmprendedoraAdmin()">
+                💾 Guardar Cuenta y Generar Credenciales
+              </button>
+            </div>
+          </div>
+
+          <!-- Listado Dinámico de Cuentas -->
+          <div id="admin-lista-emp-contenedor" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Renderizado con JS -->
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SECCIÓN 2: ASOCIACIONES (W10-W19)
+             ========================================== -->
+        <div id="admin-sec-asoc" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <input type="text" id="admin-busq-asoc" class="input-fb-market" placeholder="🔍 Buscar asociación..." oninput="TramaWeb.filtrarAdminAsociaciones()" style="height: 38px; max-width: 380px;">
+            <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; background: #2563eb; border-color: #2563eb;" onclick="TramaWeb.abrirFormCrearAsociacion()">
+              + Crear Asociación (W10)
+            </button>
+          </div>
+
+          <!-- Formulario Ocultable para Crear / Editar Asociación -->
+          <div id="admin-form-asoc-panel" style="display: none; background: #f8fafc; border: 1px solid var(--gris-borde); border-radius: 14px; padding: 16px; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3 id="admin-form-asoc-titulo" style="font-size: 15px; font-weight: 800; margin: 0; color: var(--negro-apple);">
+                Crear Nueva Asociación (W10-W15)
+              </h3>
+              <button type="button" style="background: none; border: none; font-size: 16px; cursor: pointer;" onclick="TramaWeb.cerrarFormAsociacion()">✕</button>
+            </div>
+            <input type="hidden" id="admin-form-asoc-id">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="label-fb-market">Nombre de la Asociación * (W11)</label>
+                <input type="text" id="admin-form-asoc-nombre" class="input-fb-market" placeholder="Ej: Manos del Sur">
+              </div>
+              <div>
+                <label class="label-fb-market">Sector / Localidad * (W14)</label>
+                <input type="text" id="admin-form-asoc-sector" class="input-fb-market" placeholder="Ej: Alerce Histórico / Puerto Montt">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="label-fb-market">Contacto (Email / Teléfono) * (W15)</label>
+                <input type="text" id="admin-form-asoc-contacto" class="input-fb-market" placeholder="contacto@asociacion.cl / +56 9 6123 4500">
+              </div>
+              <div>
+                <label class="label-fb-market">URL del Logo o Insignia (W12)</label>
+                <input type="url" id="admin-form-asoc-logo" class="input-fb-market" placeholder="https://... o dejar por defecto">
+              </div>
+            </div>
+            <div>
+              <label class="label-fb-market">Descripción de la Asociación * (W13)</label>
+              <textarea id="admin-form-asoc-desc" class="input-fb-market" rows="2" placeholder="Objetivos y rubros de la agrupación comunitaria..."></textarea>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 12px;" onclick="TramaWeb.cerrarFormAsociacion()">Cancelar</button>
+              <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; background: #2563eb; border-color: #2563eb;" onclick="TramaWeb.guardarAsociacionAdmin()">
+                💾 Guardar Asociación
+              </button>
+            </div>
+          </div>
+
+          <!-- Listado Dinámico de Asociaciones -->
+          <div id="admin-lista-asoc-contenedor" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
+            <!-- Renderizado con JS -->
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SECCIÓN 3: CATÁLOGOS Y RUBROS (W20-W22)
+             ========================================== -->
+        <div id="admin-sec-cat" style="display: none; flex-direction: column; gap: 16px;">
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #166534;">
+            🏷️ <strong>Mantenimiento de Catálogos (W20–W22):</strong> Define los rubros de emprendimiento, tipos de producto y categorías comerciales disponibles en toda la plataforma.
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px;">
+            <!-- Columna 1: Tipos de Emprendimiento (W20) -->
+            <div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="font-size: 13.5px; color: var(--negro-apple);">🏪 Tipos de Emprendimiento (W20)</strong>
+                <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.agregarCatalogoItem('tipoEmp')">+ Añadir</button>
+              </div>
+              <ul id="admin-lista-tipo-emp" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;"></ul>
+            </div>
+
+            <!-- Columna 2: Tipos de Producto (W21) -->
+            <div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="font-size: 13.5px; color: var(--negro-apple);">📦 Tipos de Producto (W21)</strong>
+                <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.agregarCatalogoItem('tipoProd')">+ Añadir</button>
+              </div>
+              <ul id="admin-lista-tipo-prod" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;"></ul>
+            </div>
+
+            <!-- Columna 3: Categorías Oficiales (W22) -->
+            <div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="font-size: 13.5px; color: var(--negro-apple);">🏷️ Categorías (W22)</strong>
+                <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.agregarCatalogoItem('categoria')">+ Añadir</button>
+              </div>
+              <ul id="admin-lista-categorias" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SECCIÓN 4: ADMINISTRADORES (W23)
+             ========================================== -->
+        <div id="admin-sec-adm" style="display: none; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="font-size: 14px; color: var(--negro-apple);">Gestión de Cuentas de Administrador (W23)</strong>
+              <p style="font-size: 12px; color: var(--gris-texto); margin: 2px 0 0 0;">Cuentas autorizadas con acceso al canal web de administración de plataforma.</p>
+            </div>
+            <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12px;" onclick="TramaWeb.abrirFormCrearAdmin()">
+              + Crear Administrador (W23)
+            </button>
+          </div>
+          <div id="admin-lista-admins-contenedor" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- ==========================================
+             SECCIÓN 5: BITÁCORA DE AUDITORÍA (WA3)
+             ========================================== -->
+        <div id="admin-sec-log" style="display: none; flex-direction: column; gap: 12px;">
+          <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #6b21a8;">
+            📋 <strong>Bitácora de Seguridad (WA3 - Adicional +0,1):</strong> Registro inmutable de acciones administrativas (quién realizó qué acción y cuándo).
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+              <thead>
+                <tr style="background: #f4f4f5; border-bottom: 2px solid var(--gris-borde);">
+                  <th style="padding: 10px 12px;">Fecha y Hora</th>
+                  <th style="padding: 10px 12px;">Administrador</th>
+                  <th style="padding: 10px 12px;">Acción Realizada</th>
+                  <th style="padding: 10px 12px;">Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tabla-bitacora-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
   <!-- MODAL AUTENTICACION Y REGISTRO SUPABASE WEB -->
   <div class="modal-overlay" id="modal-auth-web" role="dialog" aria-modal="true" aria-labelledby="modal-auth-titulo">
     <div class="modal-panel-editorial" style="max-width: 480px; width: 92%;">
@@ -1292,6 +1604,17 @@
 
           <div id="auth-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
           <div id="auth-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+
+          
+          <!-- Opciones de Acceso Rápido y Recuperación (W27 / W28) -->
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; margin-top: -4px;">
+            <button type="button" style="background: none; border: none; color: #4b5563; text-decoration: underline; cursor: pointer; padding: 0;" onclick="TramaWeb.recuperarContrasenaWeb()">
+              ¿Olvidaste tu contraseña? (W27)
+            </button>
+            <button type="button" style="background: none; border: none; color: #2563eb; font-weight: 700; cursor: pointer; padding: 0;" onclick="TramaWeb.iniciarSesionGoogleWeb()">
+              🌐 Continuar con Google (W28)
+            </button>
+          </div>
 
           <button type="button" id="btn-submit-auth" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 14px; font-weight: 800;" onclick="TramaWeb.ejecutarAuthFirebase()">
             Iniciar Sesión
@@ -1403,6 +1726,6 @@
 
   <!-- Scripts -->
   <script src="js/qrcode.min.js"></script>
-  <script src="js/main.js?v=20261103_5"></script>
+  <script src="js/main.js?v=20261103_6"></script>
 </body>
 </html>
