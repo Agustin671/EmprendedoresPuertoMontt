@@ -654,12 +654,12 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                     }
 
                                     OutlinedButton(
-                                        onClick = { nav.iniciarSesion(Rol.ADMIN) },
+                                        onClick = { Toast.makeText(contexto, "Acceso exclusivo Web: La administración de plataforma opera solo vía web (Requisito W03).", Toast.LENGTH_LONG).show() },
                                         shape = RoundedCornerShape(10.dp),
                                         border = BorderStroke(1.dp, GrisBorde),
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        Text("Admin Ferias", fontSize = 11.sp, color = NegroApple, fontWeight = FontWeight.Bold)
+                                        Text("Admin (Solo Web W03)", fontSize = 10.sp, color = NegroApple, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
