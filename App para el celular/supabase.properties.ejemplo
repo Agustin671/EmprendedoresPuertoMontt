@@ -1,0 +1,5 @@
+# Copia este archivo como "supabase.properties" (misma carpeta) y completa los datos.
+# supabase.properties está en .gitignore: NO se sube al repositorio (RNF-SEG-03).
+# Usa solo la anon key. Nunca la service_role.
+supabase.url=https://TU-INSTANCIA.ejemplo.cl
+supabase.anonKey=PEGA_AQUI_LA_ANON_KEY

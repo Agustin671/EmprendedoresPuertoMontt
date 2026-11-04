@@ -63,7 +63,7 @@ fun PantallaVisAyuda() {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Tocá un botón grande y te atendemos. No hace falta escribir nada.",
+                text = "Toca un botón grande y te atendemos. No hace falta escribir nada.",
                 style = MaterialTheme.typography.bodyLarge
             )
 
@@ -102,7 +102,7 @@ fun PantallaVisAyuda() {
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Usá estos botones para agrandarlo o achicarlo.",
+                        text = "Usa estos botones para agrandarlo o achicarlo.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )

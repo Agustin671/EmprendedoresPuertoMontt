@@ -31,7 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.trabajodea10.data.FirebaseManager
+import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.Rol
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.componentes.AvatarIniciales
@@ -115,8 +115,8 @@ fun PantallaAjustes(
 
 @Composable
 private fun PerfilAdmin() {
-    val nombre = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) FirebaseManager.nombreUsuarioActual else "Administrador"
-    val email = FirebaseManager.usuarioActual?.email ?: "admin@alerce.app"
+    val nombre = if (SesionManager.nombreUsuarioActual.isNotBlank()) SesionManager.nombreUsuarioActual else "Administrador"
+    val email = SesionManager.emailActual ?: "admin@alerce.app"
     Tarjeta {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),

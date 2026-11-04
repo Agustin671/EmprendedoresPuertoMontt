@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Credenciales de Supabase (RNF-SEG-03)
+/supabase.properties

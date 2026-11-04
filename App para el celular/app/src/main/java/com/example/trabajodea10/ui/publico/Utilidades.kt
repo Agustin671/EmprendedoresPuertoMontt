@@ -9,6 +9,9 @@ import android.net.Uri
  */
 const val URL_VITRINA = "https://agustin671.github.io/EmprendedoresPuertoMontt/"
 
+/** Enlace que abre directamente la ficha de una tienda en la vitrina web (también va en su QR). */
+fun urlTienda(tiendaId: String): String = URL_VITRINA + "?tienda=" + android.net.Uri.encode(tiendaId)
+
 /**
  * Acciones externas (mapas, teléfono, WhatsApp) pensadas para botones grandes.
  * Se usan desde las pantallas públicas (Visitante) para que las personas mayores

@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,10 +29,13 @@ import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.Producto
 import com.example.trabajodea10.data.TramaStore
+import com.example.trabajodea10.data.Variante
 import com.example.trabajodea10.data.formatearMoneda
+import com.example.trabajodea10.data.remoto.Sincronizador
+import kotlinx.coroutines.delay
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.CampoBusqueda
 import com.example.trabajodea10.ui.componentes.ChipEstado
@@ -64,9 +72,9 @@ import com.example.trabajodea10.ui.theme.VerdeOk
 
 private enum class FiltroCatalogo(val etiqueta: String) {
     TODOS("Todos"),
-    PUBLICADOS("Publicados"),
-    BORRADORES("Borradores"),
-    STOCK_BAJO("Stock bajo")
+    PUBLICADOS("Los ven todos"),
+    BORRADORES("Solo yo los veo"),
+    STOCK_BAJO("Quedan pocos")
 }
 
 @Composable
@@ -76,8 +84,18 @@ fun PantallaCatalogo(
 ) {
     var busqueda by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf(FiltroCatalogo.TODOS) }
+    // Último producto marcado como "Se acabó", para poder deshacerlo.
+    var ultimoAgotado by remember { mutableStateOf<Pair<Producto, List<Variante>>?>(null) }
+    // El aviso con "Deshacer" se esconde solo después de 8 segundos.
+    LaunchedEffect(ultimoAgotado) {
+        if (ultimoAgotado != null) {
+            delay(8000)
+            ultimoAgotado = null
+        }
+    }
 
-    val todos = TramaStore.productos
+    // Solo los productos de la tienda con la sesión iniciada.
+    val todos = TramaStore.productosDeMiTienda()
     val visibles = todos.filter { producto ->
         val coincideBusqueda = producto.nombre.contains(busqueda, true) ||
             producto.categoria.etiqueta.contains(busqueda, true)
@@ -92,8 +110,9 @@ fun PantallaCatalogo(
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = "Catálogo",
-            subtitulo = "${TramaStore.productosPublicados()} publicados de ${todos.size} · stock total ${TramaStore.stockTotal()}",
+            titulo = "Mis productos",
+            subtitulo = "${TramaStore.productosPublicados()} a la vista de tus clientas · ${todos.size} en total" +
+                if (Sincronizador.pendientes > 0) " · ${Sincronizador.pendientes} cambios por subir (sin señal)" else "",
             acciones = {
                 IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
                     Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
@@ -145,7 +164,7 @@ fun PantallaCatalogo(
             valor = busqueda,
             onValorChange = { busqueda = it },
             modifier = Modifier.padding(horizontal = 16.dp),
-            placeholder = "Buscar producto o categoría…"
+            placeholder = "Buscar por nombre o tipo…"
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -168,23 +187,60 @@ fun PantallaCatalogo(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        ultimoAgotado?.let { (producto, variantes) ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .background(NegroApple, RoundedCornerShape(12.dp))
+                    .padding(start = 14.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Marcaste «${producto.nombre}» como agotado",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(
+                    onClick = {
+                        TramaStore.restaurarVariantes(producto.id, variantes)
+                        ultimoAgotado = null
+                        avisar("Listo, «${producto.nombre}» vuelve a tener unidades")
+                    },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text("Deshacer", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+
         if (visibles.isEmpty()) {
             Vacio(
                 titulo = "Sin productos",
-                mensaje = "Creá tu primer producto con el botón + o cambiá el filtro.",
+                mensaje = "Crea tu primer producto con el botón «Añadir producto» o cambia el filtro.",
                 icono = { Icon(Icons.Filled.Inventory2, contentDescription = null, tint = TextoSecundario) }
             )
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                contentPadding = PaddingValues(
                     start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(visibles, key = { it.id }) { producto ->
                     Tarjeta(onClick = { nav.irA(Ruta.ProductoDetalle(producto.id)) }) {
-                        TarjetaProducto(producto, nav, avisar)
+                        TarjetaProducto(
+                            producto = producto,
+                            nav = nav,
+                            avisar = avisar,
+                            onSeAcabo = {
+                                ultimoAgotado = producto to producto.variantes
+                                TramaStore.marcarAgotado(producto.id)
+                            }
+                        )
                     }
                 }
             }
@@ -196,7 +252,8 @@ fun PantallaCatalogo(
 fun TarjetaProducto(
     producto: Producto,
     nav: ControladorNavegacion,
-    avisar: (String) -> Unit
+    avisar: (String) -> Unit,
+    onSeAcabo: () -> Unit = { TramaStore.marcarAgotado(producto.id) }
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -248,52 +305,74 @@ fun TarjetaProducto(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (producto.agotado) "Agotado" else "Stock: ${producto.stockTotal}",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
+                    text = if (producto.agotado) "Se acabó" else "Quedan ${producto.stockTotal}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
                     color = colorDeStock(producto.stockTotal)
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                if (!producto.agotado && producto.publicado) {
-                    androidx.compose.material3.TextButton(
-                        onClick = {
-                            val variante = producto.variantes.firstOrNull { it.stock > 0 } ?: producto.variantes.firstOrNull()
-                            if (variante != null) {
-                                TramaStore.agregarAlCarrito(
-                                    com.example.trabajodea10.data.ItemVenta(
-                                        productoId = producto.id,
-                                        varianteId = variante.id,
-                                        nombre = producto.nombre,
-                                        detalle = variante.nombre,
-                                        precio = producto.precio,
-                                        cantidad = 1,
-                                        fotoUrl = producto.fotoUrl
-                                    )
-                                )
-                                avisar("${producto.nombre} agregado al carrito")
-                            }
-                        },
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text("Agregar al carrito", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                } else {
-                    Text(
-                        text = if (producto.publicado) "Publicado" else "Borrador",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (producto.publicado) VerdeOk else NaranjaAlerta,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Switch(
-                        checked = producto.publicado,
-                        onCheckedChange = { TramaStore.togglePublicado(producto.id) },
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = Berenjena,
-                            uncheckedTrackColor = SuperficieVariante,
-                            uncheckedBorderColor = com.example.trabajodea10.ui.theme.LineaSuave
+                Text(
+                    text = if (producto.publicado) "Lo ven todos" else "Solo yo lo veo",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (producto.publicado) VerdeOk else NaranjaAlerta,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Switch(
+                    checked = producto.publicado,
+                    onCheckedChange = {
+                        TramaStore.togglePublicado(producto.id)
+                        avisar(
+                            if (producto.publicado) "«${producto.nombre}» ya no se muestra en tu tienda"
+                            else "«${producto.nombre}» ahora se muestra en tu tienda"
                         )
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = Berenjena,
+                        uncheckedTrackColor = SuperficieVariante,
+                        uncheckedBorderColor = com.example.trabajodea10.ui.theme.LineaSuave
                     )
+                )
+            }
+            if (!producto.agotado) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onSeAcabo,
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Text("Se acabó", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = NegroApple)
+                    }
+                    if (producto.publicado) {
+                        TextButton(
+                            onClick = {
+                                val variante = producto.variantes.firstOrNull { it.stock > 0 } ?: producto.variantes.firstOrNull()
+                                if (variante != null) {
+                                    TramaStore.agregarAlCarrito(
+                                        com.example.trabajodea10.data.ItemVenta(
+                                            productoId = producto.id,
+                                            varianteId = variante.id,
+                                            nombre = producto.nombre,
+                                            detalle = variante.nombre,
+                                            precio = producto.precio,
+                                            cantidad = 1,
+                                            fotoUrl = producto.fotoUrl
+                                        )
+                                    )
+                                    avisar("«${producto.nombre}» agregado a la venta")
+                                }
+                            },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        ) {
+                            Text("Agregar a la venta", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                 }
             }
         }

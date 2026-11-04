@@ -57,7 +57,7 @@ fun PantallaVenta(
         if (carrito.isEmpty()) {
             Vacio(
                 titulo = "El carrito está vacío",
-                mensaje = "Agregá productos desde el catálogo para armar la venta.",
+                mensaje = "Agrega productos desde «Mis productos» para armar la venta.",
                 icono = {
                     Icon(
                         Icons.Filled.ShoppingCart,

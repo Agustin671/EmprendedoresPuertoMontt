@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import com.example.trabajodea10.data.Rol
+import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.SuperficieBlanca
@@ -65,7 +66,7 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
     )
     Rol.EMPRENDEDORA -> listOf(
         ItemNavegacion(Ruta.EmpInicio, "Inicio", Icons.Filled.Home),
-        ItemNavegacion(Ruta.EmpCatalogo, "Catálogo", Icons.Filled.Inventory2),
+        ItemNavegacion(Ruta.EmpCatalogo, "Productos", Icons.Filled.Inventory2),
         ItemNavegacion(Ruta.EmpVenta, "Venta", Icons.Filled.ShoppingCart),
         ItemNavegacion(Ruta.EmpFerias, "Ferias", Icons.Filled.CalendarMonth),
         ItemNavegacion(Ruta.EmpTienda, "Tienda", Icons.Filled.Store)
@@ -128,7 +129,8 @@ class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
     }
 
     fun cerrarSesion() {
-        TramaStore.cerrarSesion()
+        // Cierra también la sesión del servidor (o la conserva si la huella está activada)
+        SesionManager.cerrarSesion()
         if (pila.isNotEmpty()) {
             pila[0] = Ruta.Login
             while (pila.size > 1) {

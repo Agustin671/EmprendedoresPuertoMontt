@@ -1,6 +1,7 @@
 package com.example.trabajodea10.data
 
 import android.content.Context
+import com.example.trabajodea10.data.remoto.Sincronizador
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -232,8 +233,8 @@ object TramaStore {
         )
     }
 
-    // Escala de texto del modo accesible (+A / -A). 0.90f = tamaño cómodo compacto editorial.
-    var escalaTexto by mutableStateOf(0.90f)
+    // Escala de texto del modo accesible (+A / -A). 1f = el mismo tamaño que eligió la persona en su celular.
+    var escalaTexto by mutableStateOf(1f)
         private set
 
     val emprendedoraActual: Emprendedora
@@ -278,7 +279,8 @@ object TramaStore {
         prefs = estado.prefs
         inscripcionesVisitante.clear()
         inscripcionesVisitante.addAll(estado.inscripcionesVisitante)
-        escalaTexto = estado.escalaTexto
+        // Nunca por debajo del tamaño de letra que eligió la persona en su celular.
+        escalaTexto = estado.escalaTexto.coerceAtLeast(1f)
     }
 
     private fun persistir() {
@@ -416,6 +418,8 @@ object TramaStore {
             )
         )
         persistir()
+        // RN-01: deja el correo autorizado en el servidor; al registrarse queda como emprendedora.
+        Sincronizador.autorizarEmprendedora(email.trim(), nombre.trim())
         return true
     }
 
@@ -432,11 +436,12 @@ object TramaStore {
 
     fun productoPorId(id: String): Producto? = productos.firstOrNull { it.id == id }
 
-    fun productosDeTienda(tiendaId: String): List<Producto> {
-        val prods = productos.filter { it.tiendaId == tiendaId && it.publicado }
-        if (prods.isNotEmpty()) return prods
-        return productos.filter { it.publicado }.take(4)
-    }
+    /** Productos que pertenecen a la tienda con la sesión iniciada (no los de otras tiendas). */
+    fun productosDeMiTienda(): List<Producto> = productos.filter { it.tiendaId == tienda.id }
+
+    /** Productos visibles de una tienda. Ya no rellena con productos de otras tiendas. */
+    fun productosDeTienda(tiendaId: String): List<Producto> =
+        productos.filter { it.tiendaId == tiendaId && it.publicado }
 
     fun crearProductoBorrador(): String {
         val id = "p${System.currentTimeMillis()}"
@@ -444,6 +449,7 @@ object TramaStore {
             0,
             Producto(
                 id = id,
+                tiendaId = tienda.id,
                 nombre = "",
                 categoria = Categoria.TEXTIL,
                 precio = 0.0,
@@ -461,6 +467,7 @@ object TramaStore {
         val indice = productos.indexOfFirst { it.id == producto.id }
         if (indice >= 0) productos[indice] = producto else productos.add(producto)
         persistir()
+        Sincronizador.productoCambiado(producto.id)
     }
 
     fun togglePublicado(id: String) {
@@ -469,6 +476,7 @@ object TramaStore {
             val producto = productos[indice]
             productos[indice] = producto.copy(publicado = !producto.publicado)
             persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -478,6 +486,28 @@ object TramaStore {
             val producto = productos[indice]
             productos[indice] = producto.copy(destacado = !producto.destacado)
             persistir()
+            Sincronizador.productoCambiado(id)
+        }
+    }
+
+    /** "Se acabó": deja en cero las unidades de todas las opciones del producto. */
+    fun marcarAgotado(id: String) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0) {
+            val producto = productos[indice]
+            productos[indice] = producto.copy(variantes = producto.variantes.map { it.copy(stock = 0) })
+            persistir()
+            Sincronizador.productoCambiado(id)
+        }
+    }
+
+    /** Deshace "Se acabó" devolviendo las unidades que tenía cada opción. */
+    fun restaurarVariantes(id: String, variantes: List<Variante>) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0) {
+            productos[indice] = productos[indice].copy(variantes = variantes)
+            persistir()
+            Sincronizador.productoCambiado(id)
         }
     }
 
@@ -485,6 +515,49 @@ object TramaStore {
         productos.filter { it.id == id }.forEach { FotoProductoStore.eliminar(it.fotoUrl) }
         productos.removeAll { it.id == id }
         persistir()
+        Sincronizador.productoEliminado(id)
+    }
+
+    // ---------- Datos que llegan del servidor (Supabase) ----------
+
+    /** Reemplaza los productos de una tienda por los del servidor, sin pisar los que faltan subir. */
+    fun reemplazarProductosDeTienda(tiendaId: String, remotos: List<Producto>, conservar: Set<String>) {
+        val locales = productos.filter { it.tiendaId == tiendaId && it.id in conservar }
+        val idsLocales = locales.map { it.id }.toSet()
+        productos.removeAll { it.tiendaId == tiendaId }
+        productos.addAll(remotos.filterNot { it.id in idsLocales })
+        productos.addAll(locales)
+        persistir()
+    }
+
+    /** Agrega o actualiza los productos publicados de la vitrina (excepto los de mi propia tienda). */
+    fun fusionarProductosPublicos(remotos: List<Producto>, excluirTienda: String?) {
+        val tiendasRemotas = remotos.map { it.tiendaId }.toSet()
+        // Quita lo viejo de esas tiendas (lo despublicado ya no viene del servidor)
+        productos.removeAll { it.tiendaId in tiendasRemotas && it.tiendaId != excluirTienda && it.publicado }
+        remotos.filter { it.tiendaId != excluirTienda }.forEach { remoto ->
+            val i = productos.indexOfFirst { it.id == remoto.id }
+            if (i >= 0) productos[i] = remoto else productos.add(remoto)
+        }
+        persistir()
+    }
+
+    fun reemplazarVentas(remotas: List<Venta>, conservar: Set<String>) {
+        val pendientes = ventas.filter { it.id in conservar }
+        val idsPendientes = pendientes.map { it.id }.toSet()
+        ventas.clear()
+        ventas.addAll((pendientes + remotas.filterNot { it.id in idsPendientes }).sortedByDescending { it.fecha })
+        persistir()
+    }
+
+    /** La foto ya se subió: se usa la URL pública y se borra la copia del celular. */
+    fun aplicarFotoRemota(id: String, rutaLocal: String, url: String) {
+        val indice = productos.indexOfFirst { it.id == id }
+        if (indice >= 0 && productos[indice].fotoUrl == rutaLocal) {
+            productos[indice] = productos[indice].copy(fotoUrl = url)
+            persistir()
+            FotoProductoStore.eliminar(rutaLocal)
+        }
     }
 
     // ---------- Ventas ----------
@@ -506,6 +579,8 @@ object TramaStore {
         ventas.add(0, venta)
         descontarStock(items)
         persistir()
+        Sincronizador.ventaRegistrada(venta.id)
+        items.map { it.productoId }.distinct().forEach { Sincronizador.productoCambiado(it) }
         return venta
     }
 
@@ -555,13 +630,13 @@ object TramaStore {
 
     fun ventasDelMes(): Double = ventas.totalDelMes()
 
-    fun productosPublicados(): Int = productos.count { it.publicado }
+    fun productosPublicados(): Int = productosDeMiTienda().count { it.publicado }
 
-    fun stockTotal(): Int = productos.sumOf { it.stockTotal }
+    fun stockTotal(): Int = productosDeMiTienda().sumOf { it.stockTotal }
 
     fun seguidores(): Int = emprendedoraActual.seguidores
 
-    fun alertasStock(): List<Producto> = productos.filter { it.agotado || it.stockBajo }
+    fun alertasStock(): List<Producto> = productosDeMiTienda().filter { it.agotado || it.stockBajo }
 
     fun feriasEnCurso(): List<Feria> = ferias.filter { it.estado == EstadoFeria.EN_CURSO }
 
@@ -720,7 +795,7 @@ object TramaStore {
     }
 
     fun reducirTexto() {
-        escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(0.85f)
+        escalaTexto = (escalaTexto - 0.15f).coerceAtLeast(1f)
         persistir()
     }
 

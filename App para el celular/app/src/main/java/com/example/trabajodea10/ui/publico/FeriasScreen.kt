@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trabajodea10.data.EstadoFeria
 import com.example.trabajodea10.data.Feria
-import com.example.trabajodea10.data.FirebaseManager
+import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.ui.componentes.BarraSuperior
@@ -128,7 +128,7 @@ fun PantallaVisFerias(
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
-            titulo = if (FirebaseManager.nombreUsuarioActual.isNotBlank()) "Bienvenido(a), ${FirebaseManager.nombreUsuarioActual}" else "Próximas Ferias",
+            titulo = if (SesionManager.nombreUsuarioActual.isNotBlank()) "Bienvenido(a), ${SesionManager.nombreUsuarioActual}" else "Próximas Ferias",
             subtitulo = "Explora ferias artesanales cerca de ti · Alerce",
             acciones = { BotonesTamanoTexto() }
         )

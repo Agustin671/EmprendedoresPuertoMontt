@@ -131,7 +131,7 @@ fun PantallaAdminEmprendedoras(
             onCrear = { nombre, email, tel, asociacionId, estado ->
                 val ok = TramaStore.altaEmprendedora(nombre, email, tel, asociacionId, estado)
                 mostrarAlta = false
-                avisar(if (ok) "Cuenta creada para $nombre" else "Completá nombre y email")
+                avisar(if (ok) "Cuenta creada para $nombre" else "Completa nombre y correo")
             }
         )
     }
@@ -199,7 +199,7 @@ private fun Directorio(
         if (visibles.isEmpty()) {
             Vacio(
                 titulo = "Sin resultados",
-                mensaje = "Probá con otro nombre o quitá los filtros activos.",
+                mensaje = "Prueba con otro nombre o quita los filtros activos.",
                 icono = { Icon(Icons.Filled.Search, contentDescription = null, tint = TextoSecundario) }
             )
         } else {
@@ -338,7 +338,7 @@ private fun ListadoAsociaciones() {
                     Icon(Icons.Filled.Groups, contentDescription = null, tint = Berenjena)
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("¿Creás una asociación?", fontWeight = FontWeight.Medium)
+                        Text("¿Crear una asociación?", fontWeight = FontWeight.Medium)
                         Text(
                             text = "Se generan desde la plataforma web y quedan disponibles aquí.",
                             style = MaterialTheme.typography.bodySmall,

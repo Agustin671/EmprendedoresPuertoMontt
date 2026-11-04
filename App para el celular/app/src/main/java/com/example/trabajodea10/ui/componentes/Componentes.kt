@@ -1,5 +1,12 @@
 package com.example.trabajodea10.ui.componentes
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -45,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -299,7 +308,8 @@ fun CampoTexto(
     placeholder: String = "",
     soloLectura: Boolean = false,
     esMultilinea: Boolean = false,
-    tipoTeclado: KeyboardType = KeyboardType.Text
+    tipoTeclado: KeyboardType = KeyboardType.Text,
+    iconoFinal: (@Composable () -> Unit)? = null
 ) {
     OutlinedTextField(
         value = valor,
@@ -312,12 +322,57 @@ fun CampoTexto(
         minLines = if (esMultilinea) 3 else 1,
         maxLines = if (esMultilinea) 6 else 1,
         keyboardOptions = KeyboardOptions(keyboardType = tipoTeclado),
+        trailingIcon = iconoFinal,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Berenjena,
             unfocusedBorderColor = LineaSuave
         )
     )
+}
+
+/**
+ * Dictado por voz (P02): abre el reconocimiento de voz que ya trae el celular
+ * y entrega el texto escuchado. No usa IA propia ni servicios pagados.
+ * Devuelve una función que se llama al tocar el micrófono.
+ */
+@Composable
+fun rememberDictadoPorVoz(onTexto: (String) -> Unit): () -> Unit {
+    val contexto = LocalContext.current
+    val lanzador = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { resultado ->
+        if (resultado.resultCode == Activity.RESULT_OK) {
+            val texto = resultado.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+            if (!texto.isNullOrBlank()) onTexto(texto)
+        }
+    }
+    return {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-CL")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Habla ahora, te escucho")
+        }
+        try {
+            lanzador.launch(intent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(
+                contexto,
+                "Este celular no tiene dictado por voz. Puedes escribirlo con el teclado.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+}
+
+/** Botón de micrófono de 48 dp para poner al final de un campo de texto. */
+@Composable
+fun BotonMicrofono(onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp)) {
+        Icon(Icons.Filled.Mic, contentDescription = "Dictar con la voz", tint = Berenjena)
+    }
 }
 
 @Composable
@@ -512,19 +567,19 @@ fun ContadorCantidad(
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = { if (cantidad > 0) onCambio(cantidad - 1) },
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(Icons.Filled.Remove, contentDescription = "Restar", modifier = Modifier.size(18.dp))
             }
             Text(
                 text = cantidad.toString(),
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(28.dp),
+                modifier = Modifier.width(36.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             IconButton(
                 onClick = { if (cantidad < maximo) onCambio(cantidad + 1) },
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size(48.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Sumar", modifier = Modifier.size(18.dp))
             }
@@ -628,9 +683,9 @@ fun BotonesTamanoTexto(
         ) {
             if (mostrarEtiqueta) {
                 val etiquetaNivel = when {
-                    escala <= 0.85f -> "Compacto"
                     escala <= 1.0f -> "Normal"
-                    else -> "Grande"
+                    escala <= 1.3f -> "Grande"
+                    else -> "Muy grande"
                 }
                 Text(
                     text = etiquetaNivel,
@@ -642,14 +697,14 @@ fun BotonesTamanoTexto(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(
                     onClick = { TramaStore.reducirTexto() },
-                    enabled = escala > 0.80f,
+                    enabled = escala > 1.0f,
                     modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Text(
                         text = "A−",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (escala > 0.80f) Berenjena else TextoSecundario
+                        color = if (escala > 1.0f) Berenjena else TextoSecundario
                     )
                 }
                 TextButton(

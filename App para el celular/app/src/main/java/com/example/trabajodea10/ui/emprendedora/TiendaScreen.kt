@@ -67,7 +67,7 @@ import com.example.trabajodea10.data.PublicacionForo
 import com.example.trabajodea10.data.RespuestaForo
 import androidx.compose.foundation.BorderStroke
 import com.example.trabajodea10.data.Tienda
-import com.example.trabajodea10.data.FirebaseManager
+import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.nombreDiaLegible
 import com.example.trabajodea10.ui.componentes.BarraSuperior
@@ -77,7 +77,7 @@ import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
-import com.example.trabajodea10.ui.publico.URL_VITRINA
+import com.example.trabajodea10.ui.publico.urlTienda
 import com.example.trabajodea10.ui.publico.compartirPorWhatsApp
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
@@ -113,7 +113,7 @@ fun PantallaTienda(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     // Buscar si ya existe tienda cargada o usar la de TramaStore
-    val tiendaBase = FirebaseManager.tiendas.firstOrNull { it.id == TramaStore.tienda.id } ?: TramaStore.tienda
+    val tiendaBase = SesionManager.tiendas.firstOrNull { it.id == TramaStore.tienda.id } ?: TramaStore.tienda
 
     var nombre by remember { mutableStateOf(tiendaBase.nombre) }
     var rubro by remember { mutableStateOf(tiendaBase.rubro) }
@@ -193,7 +193,7 @@ fun PantallaTienda(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "¡Hola, ${FirebaseManager.nombreUsuarioDemo}!",
+                            text = "¡Hola, ${SesionManager.nombreUsuarioDemo}!",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = NegroApple
@@ -448,14 +448,17 @@ fun PantallaTienda(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // BOTÓN DE GUARDADO EN CLOUD FIRESTORE
+            // BOTÓN DE GUARDADO (celular + servidor)
             Button(
                 onClick = {
                     guardando = true
                     coroutineScope.launch {
-                        val exito = FirebaseManager.guardarTiendaEnFirestore(tiendaActualizada)
+                        val exito = SesionManager.guardarTienda(tiendaActualizada)
                         guardando = false
-                        avisar(if (exito) "¡Guardado exitosamente en Cloud Firestore!" else "Guardado localmente en tu app")
+                        avisar(
+                            if (exito) "Guardado. Tus clientas ya ven los cambios"
+                            else "Guardado en tu celular. Se subirá cuando haya conexión"
+                        )
                     }
                 },
                 enabled = !guardando,
@@ -471,7 +474,7 @@ fun PantallaTienda(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Guardar Cambios en Firebase", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
+                        Text("Guardar cambios", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                     }
                 }
             }
@@ -497,7 +500,7 @@ fun PantallaTienda(
                         compartirPorWhatsApp(
                             context,
                             "¡Mira mi tienda ${tiendaActualizada.nombre}! " +
-                                "Puedes ver mis productos y pedir en línea aquí: $URL_VITRINA"
+                                "Puedes ver mis productos y pedir en línea aquí: ${urlTienda(tiendaBase.id)}"
                         )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = VerdeOk),
