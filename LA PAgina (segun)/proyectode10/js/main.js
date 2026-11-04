@@ -460,1075 +460,7 @@
       var guardado = localStorage.getItem("trama_tiendas_favoritas");
       return guardado ? JSON.parse(guardado) : {};
     } catch (e) {
-    
-  // ============================================================
-  // MÓDULO 11: ADMINISTRACIÓN DE PLATAFORMA (W01 a W24, WA3-WA6)
-  // Requisitos Entrega 4: Canal exclusivo Web para el Administrador
-  // ============================================================
-
-  var ESTADO_ADMIN = {
-    cuentasEmprendedoras: [
-      {
-        id: "emp_marta",
-        nombre: "Doña Marta Sánchez",
-        email: "donamarta@alerce.app",
-        telefono: "+56 9 9123 4567",
-        tiendaId: "t_minimarket_rosa",
-        tiendaNombre: "Minimarket Doña Rosa",
-        sector: "Alerce Histórico",
-        asociacionId: "as1",
-        asociacionNombre: "Manos del Sur",
-        clave: "alerce123",
-        activa: true,
-        creadoEn: "2026-10-01"
-      },
-      {
-        id: "emp_barberia",
-        nombre: "Carlos Almonacid",
-        email: "barberia@alerce.app",
-        telefono: "+56 9 8765 4321",
-        tiendaId: "t_barberia_alerce",
-        tiendaNombre: "Barbería & Estilo Alerce",
-        sector: "Alerce Norte",
-        asociacionId: "as1",
-        asociacionNombre: "Manos del Sur",
-        clave: "alerce123",
-        activa: true,
-        creadoEn: "2026-10-02"
-      },
-      {
-        id: "emp_tejidos",
-        nombre: "Elena Soto",
-        email: "tejidos@alerce.app",
-        telefono: "+56 9 7654 3210",
-        tiendaId: "t_tejidos_austral",
-        tiendaNombre: "Tejidos & Lanas Austral",
-        sector: "Alerce Sur",
-        asociacionId: "as2",
-        asociacionNombre: "Red del Lago",
-        clave: "alerce123",
-        activa: true,
-        creadoEn: "2026-10-03"
-      },
-      {
-        id: "emp_reposteria",
-        nombre: "Clara Mansilla",
-        email: "reposteria@alerce.app",
-        telefono: "+56 9 6543 2109",
-        tiendaId: "t_reposteria_surena",
-        tiendaNombre: "Repostería Casera Tradición Sureña",
-        sector: "Senda Central",
-        asociacionId: "as3",
-        asociacionNombre: "Taller Costero",
-        clave: "alerce123",
-        activa: true,
-        creadoEn: "2026-10-04"
-      }
-    ],
-    asociaciones: [
-      {
-        id: "as1",
-        nombre: "Manos del Sur",
-        localidad: "Puerto Montt",
-        sector: "Alerce Histórico",
-        descripcion: "Agrupación de artesanas y productoras dedicadas a oficios tradicionales y manufactura local.",
-        contacto: "contacto@manosdelsur.cl / +56 9 6123 4500",
-        logo: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80",
-        color: 4287523732,
-        activa: true
-      },
-      {
-        id: "as2",
-        nombre: "Red del Lago",
-        localidad: "Puerto Varas",
-        sector: "Alerce Norte",
-        descripcion: "Red colaborativa de emprendedoras gastronómicas, repostería casera y huertos comunitarios.",
-        contacto: "reddellago@alerce.cl / +56 9 6123 4510",
-        logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-        color: 4282285422,
-        activa: true
-      },
-      {
-        id: "as3",
-        nombre: "Taller Costero",
-        localidad: "Frutillar",
-        sector: "Senda Central",
-        descripcion: "Talleristas de lana virgen chilota, telar decorativo, orfebrería y cosmética natural de bosque nativo.",
-        contacto: "tallercostero@alerce.cl / +56 9 6123 4520",
-        logo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-        color: 4290804286,
-        activa: true
-      }
-    ],
-    tiposEmprendimiento: [
-      "Artesanía Tradicional",
-      "Abarrotes y Alimentos",
-      "Servicios Personales",
-      "Pastelería y Gastronomía",
-      "Cosmética y Belleza",
-      "Confección y Textil",
-      "Diseño y Decoración"
-    ],
-    tiposProducto: [
-      "Producto Físico Artesanal",
-      "Alimento Empacado / Fresco",
-      "Prenda o Accesorio Textil",
-      "Servicio con Turno / Cita",
-      "Pieza Decorativa Única"
-    ],
-    categorias: [
-      "Abarrotes y Alimentos",
-      "Servicios y Peluquería",
-      "Artesanía y Textil",
-      "Pastelería y Gastronomía",
-      "Joyería y Accesorios",
-      "Decoración y Hogar"
-    ],
-    admins: [
-      {
-        id: "adm1",
-        nombre: "Administración General Alerce",
-        email: "admin@alerce.app",
-        rol: "SUPERADMIN",
-        activa: true,
-        creadoEn: "2026-09-01"
-      },
-      {
-        id: "adm2",
-        nombre: "Coordinación Comunal Alerce",
-        email: "coordinacion@alerce.app",
-        rol: "ADMIN",
-        activa: true,
-        creadoEn: "2026-10-15"
-      }
-    ],
-    bitacora: [
-      {
-        id: "log_1",
-        fecha: "2026-11-03 21:00",
-        admin: "admin@alerce.app",
-        accion: "Inicio de Plataforma",
-        detalle: "Sistema administrativo verificado para Entrega 4 (W01 a W24)."
-      }
-    ],
-    tabActual: "emp",
-    credencialesGeneradas: null
-  };
-
-  // Cargar estado admin desde localStorage
-  (function initEstadoAdmin() {
-    try {
-      var raw = localStorage.getItem("alerce_admin_state_v1");
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        if (parsed && parsed.cuentasEmprendedoras) {
-          ESTADO_ADMIN = parsed;
-        }
-      }
-    } catch (e) {
-      console.warn("Aviso cargando estado admin:", e);
-    }
-  })();
-
-  function persistirEstadoAdmin() {
-    try {
-      localStorage.setItem("alerce_admin_state_v1", JSON.stringify(ESTADO_ADMIN));
-    } catch (e) {
-      console.warn("Aviso persistiendo estado admin:", e);
-    }
-  }
-
-  function registrarAccionBitacora(accion, detalle) {
-    var adminActual = (estado.usuario && estado.usuario.email) || "admin@alerce.app";
-    var fechaStr = new Date().toISOString().replace("T", " ").slice(0, 16);
-    ESTADO_ADMIN.bitacora.unshift({
-      id: "log_" + Date.now(),
-      fecha: fechaStr,
-      admin: adminActual,
-      accion: accion,
-      detalle: detalle
-    });
-    if (ESTADO_ADMIN.bitacora.length > 50) ESTADO_ADMIN.bitacora.pop();
-    persistirEstadoAdmin();
-    actualizarKPIsAdmin();
-  }
-
-  function actualizarKPIsAdmin() {
-    var kpiEmp = document.getElementById("kpi-admin-total-emp");
-    var kpiAsoc = document.getElementById("kpi-admin-total-asoc");
-    var kpiCat = document.getElementById("kpi-admin-total-cat");
-    var kpiLog = document.getElementById("kpi-admin-total-log");
-
-    if (kpiEmp) kpiEmp.textContent = ESTADO_ADMIN.cuentasEmprendedoras.length;
-    if (kpiAsoc) kpiAsoc.textContent = ESTADO_ADMIN.asociaciones.filter(function(a){ return a.activa; }).length;
-    if (kpiCat) kpiCat.textContent = ESTADO_ADMIN.categorias.length;
-    if (kpiLog) kpiLog.textContent = ESTADO_ADMIN.bitacora.length;
-  }
-
-  function abrirModalAdmin() {
-    if (!esUsuarioAdmin()) {
-      // Si no ha iniciado como admin, ofrecer login directo de admin
-      cambiarRolAuth('ADMIN');
-      abrirModalAuth();
-      mostrarToast("🔒 Acceso exclusivo para Administradores de Plataforma (W01).");
-      return;
-    }
-    actualizarKPIsAdmin();
-    seleccionarTabAdmin(ESTADO_ADMIN.tabActual || "emp");
-    abrirModal("modal-admin-plataforma");
-  }
-
-  function esUsuarioAdmin() {
-    return estado.usuario && (estado.usuario.rol === "Administrador" || estado.usuario.rol === "ADMIN");
-  }
-
-  function entrarModoAdmin() {
-    aplicarUsuarioLocal("Administración Alerce", "Administrador");
-    estado.usuario = estado.usuario || {};
-    estado.usuario.rol = "Administrador";
-    estado.usuario.email = "admin@alerce.app";
-    cerrarModal("modal-auth-web");
-    mostrarToast("👑 Bienvenido, Administrador de Plataforma.");
-    setTimeout(function() {
-      abrirModalAdmin();
-    }, 300);
-  }
-
-  function seleccionarTabAdmin(tab) {
-    ESTADO_ADMIN.tabActual = tab;
-    var tabs = ["emp", "asoc", "cat", "adm", "log"];
-    tabs.forEach(function(t) {
-      var btn = document.getElementById("tab-btn-admin-" + t);
-      var sec = document.getElementById("admin-sec-" + t);
-      if (btn) {
-        if (t === tab) {
-          btn.className = "btn-accion-pill btn-negro";
-          btn.style.background = "#111";
-          btn.style.color = "#fff";
-        } else {
-          btn.className = "btn-accion-pill";
-          btn.style.background = "transparent";
-          btn.style.color = "";
-        }
-      }
-      if (sec) {
-        sec.style.display = (t === tab) ? "flex" : "none";
-      }
-    });
-
-    if (tab === "emp") renderizarAdminEmprendedoras();
-    else if (tab === "asoc") renderizarAdminAsociaciones();
-    else if (tab === "cat") renderizarAdminCatalogos();
-    else if (tab === "adm") renderizarAdminAdmins();
-    else if (tab === "log") renderizarAdminBitacora();
-  }
-
-  // ==========================================
-  // GESTIÓN DE EMPRENDEDORAS (W04 - W09)
-  // ==========================================
-
-  function filtrarAdminEmprendedoras() {
-    renderizarAdminEmprendedoras();
-  }
-
-  function renderizarAdminEmprendedoras() {
-    var cont = document.getElementById("admin-lista-emp-contenedor");
-    if (!cont) return;
-
-    var busqEl = document.getElementById("admin-busq-emp");
-    var busq = busqEl ? busqEl.value.trim().toLowerCase() : "";
-    var filtroEstadoEl = document.getElementById("admin-filtro-estado-emp");
-    var filtroEstado = filtroEstadoEl ? filtroEstadoEl.value : "TODAS";
-
-    var lista = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e) {
-      var cumpleBusq = !busq || 
-        (e.nombre && e.nombre.toLowerCase().indexOf(busq) !== -1) ||
-        (e.tiendaNombre && e.tiendaNombre.toLowerCase().indexOf(busq) !== -1) ||
-        (e.email && e.email.toLowerCase().indexOf(busq) !== -1);
-      
-      var cumpleEstado = true;
-      if (filtroEstado === "ACTIVAS") cumpleEstado = e.activa === true;
-      if (filtroEstado === "DESACTIVADAS") cumpleEstado = e.activa === false;
-
-      return cumpleBusq && cumpleEstado;
-    });
-
-    if (lista.length === 0) {
-      cont.innerHTML = '<div style="text-align: center; padding: 24px; color: var(--gris-texto); font-size: 13px;">No se encontraron cuentas de emprendedoras con los filtros actuales.</div>';
-      return;
-    }
-
-    var html = "";
-    lista.forEach(function(emp) {
-      var estadoBadge = emp.activa 
-        ? '<span style="background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">🟢 ACTIVA</span>'
-        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">🔴 DESACTIVADA (W08)</span>';
-
-      html += '<div style="background: #ffffff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">';
-      html += '  <div style="display: flex; align-items: center; gap: 12px;">';
-      html += '    <div style="width: 38px; height: 38px; border-radius: 50%; background: #1e1e24; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">' + (emp.nombre.charAt(0) || "E") + '</div>';
-      html += '    <div>';
-      html += '      <div style="display: flex; align-items: center; gap: 6px;">';
-      html += '        <strong style="font-size: 13.5px; color: var(--negro-apple);">' + emp.nombre + '</strong>';
-      html += '        ' + estadoBadge;
-      html += '      </div>';
-      html += '      <div style="font-size: 12px; color: var(--gris-texto); margin-top: 2px;">';
-      html += '        🏪 <strong>' + emp.tiendaNombre + '</strong> · 📍 ' + (emp.sector || "Alerce") + ' · 🏛️ ' + (emp.asociacionNombre || "Sin asociación");
-      html += '      </div>';
-      html += '      <div style="font-size: 11.5px; color: #6b7280; margin-top: 1px;">';
-      html += '        ✉️ ' + emp.email + ' &middot; 📞 ' + (emp.telefono || "Sin teléfono");
-      html += '      </div>';
-      html += '    </div>';
-      html += '  </div>';
-
-      html += '  <div style="display: flex; gap: 6px; align-items: center;">';
-      html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.mostrarCredencialesEmprendedora(\'' + emp.id + '\')" title="Ver credenciales (W05)">📋 Credenciales</button>';
-      html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.editarCuentaEmprendedoraAdmin(\'' + emp.id + '\')" title="Editar datos (W06)">✏️ Editar</button>';
-      if (emp.activa) {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px; background: #fee2e2; color: #dc2626; border-color: #fca5a5;" onclick="TramaWeb.toggleEstadoCuentaEmprendedora(\'' + emp.id + '\')" title="Desactivar cuenta (W08)">🚫 Desactivar</button>';
-      } else {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px; background: #dcfce7; color: #166534; border-color: #86efac;" onclick="TramaWeb.toggleEstadoCuentaEmprendedora(\'' + emp.id + '\')" title="Reactivar cuenta">✅ Activar</button>';
-      }
-      html += '  </div>';
-      html += '</div>';
-    });
-
-    cont.innerHTML = html;
-  }
-
-  function abrirFormCrearEmprendedora() {
-    var panel = document.getElementById("admin-form-emp-panel");
-    var tit = document.getElementById("admin-form-emp-titulo");
-    var idInput = document.getElementById("admin-form-emp-id");
-    var inpNom = document.getElementById("admin-form-emp-nombre");
-    var inpTienda = document.getElementById("admin-form-emp-tienda");
-    var inpEmail = document.getElementById("admin-form-emp-email");
-    var inpClave = document.getElementById("admin-form-emp-clave");
-    var inpTel = document.getElementById("admin-form-emp-tel");
-    var selAsoc = document.getElementById("admin-form-emp-asoc");
-
-    if (idInput) idInput.value = "";
-    if (tit) tit.textContent = "Crear Cuenta de Emprendedora (W04)";
-    if (inpNom) inpNom.value = "";
-    if (inpTienda) inpTienda.value = "";
-    if (inpEmail) inpEmail.value = "";
-    if (inpClave) inpClave.value = "alerce" + Math.floor(100 + Math.random() * 900);
-    if (inpTel) inpTel.value = "+56 9 ";
-
-    if (selAsoc) {
-      selAsoc.innerHTML = '<option value="">Sin asociación asignada</option>' + 
-        ESTADO_ADMIN.asociaciones.filter(function(a){ return a.activa; }).map(function(a) {
-          return '<option value="' + a.id + '">' + a.nombre + ' (' + a.sector + ')</option>';
-        }).join("");
-    }
-
-    if (panel) {
-      panel.style.display = "flex";
-      panel.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-
-  function cerrarFormEmprendedora() {
-    var panel = document.getElementById("admin-form-emp-panel");
-    if (panel) panel.style.display = "none";
-  }
-
-  function generarClaveAleatoriaEmp() {
-    var inpClave = document.getElementById("admin-form-emp-clave");
-    if (inpClave) inpClave.value = "alerce" + Math.floor(100 + Math.random() * 900);
-  }
-
-  function guardarCuentaEmprendedoraAdmin() {
-    var idInput = document.getElementById("admin-form-emp-id");
-    var inpNom = document.getElementById("admin-form-emp-nombre");
-    var inpTienda = document.getElementById("admin-form-emp-tienda");
-    var inpEmail = document.getElementById("admin-form-emp-email");
-    var inpClave = document.getElementById("admin-form-emp-clave");
-    var inpTel = document.getElementById("admin-form-emp-tel");
-    var selSector = document.getElementById("admin-form-emp-sector");
-    var selAsoc = document.getElementById("admin-form-emp-asoc");
-
-    var id = idInput ? idInput.value.trim() : "";
-    var nombre = inpNom ? inpNom.value.trim() : "";
-    var tiendaNombre = inpTienda ? inpTienda.value.trim() : "";
-    var email = inpEmail ? inpEmail.value.trim().toLowerCase() : "";
-    var clave = inpClave ? inpClave.value.trim() : "alerce123";
-    var tel = inpTel ? inpTel.value.trim() : "";
-    var sector = selSector ? selSector.value : "Alerce Histórico";
-    var asocId = selAsoc ? selAsoc.value : "";
-    var asocObj = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
-    var asocNombre = asocObj ? asocObj.nombre : "Sin asociación";
-
-    if (!nombre || !tiendaNombre || !email) {
-      alert("Por favor completa el nombre, tienda y correo de la emprendedora.");
-      return;
-    }
-
-    if (id) {
-      // EDITAR CUENTA EXISTENTE (W06 - W07)
-      var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
-      if (emp) {
-        emp.nombre = nombre;
-        emp.tiendaNombre = tiendaNombre;
-        emp.email = email;
-        if (clave) emp.clave = clave;
-        emp.telefono = tel;
-        emp.sector = sector;
-        emp.asociacionId = asocId;
-        emp.asociacionNombre = asocNombre;
-
-        // Actualizar también la tienda si coincide
-        var tObj = TIENDAS.find(function(t){ return t.id === emp.tiendaId; });
-        if (tObj) {
-          tObj.nombre = tiendaNombre;
-          tObj.sector = sector;
-          tObj.whatsapp = tel;
-        }
-
-        registrarAccionBitacora("Editó cuenta emprendedora", nombre + " (" + email + ")");
-        persistirEstadoAdmin();
-        cerrarFormEmprendedora();
-        renderizarAdminEmprendedoras();
-        mostrarToast("✅ Cuenta de " + nombre + " actualizada y guardada (W07).");
-      }
-    } else {
-      // CREAR NUEVA CUENTA (W04 - W05)
-      var nuevoId = "emp_" + Date.now();
-      var tiendaId = "t_" + tiendaNombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 20) + "_" + Math.floor(Math.random() * 100);
-
-      var nuevaCuenta = {
-        id: nuevoId,
-        nombre: nombre,
-        email: email,
-        telefono: tel,
-        tiendaId: tiendaId,
-        tiendaNombre: tiendaNombre,
-        sector: sector,
-        asociacionId: asocId,
-        asociacionNombre: asocNombre,
-        clave: clave,
-        activa: true,
-        creadoEn: new Date().toISOString().slice(0, 10)
-      };
-
-      ESTADO_ADMIN.cuentasEmprendedoras.unshift(nuevaCuenta);
-
-      // Crear tienda correspondiente en la vitrina
-      TIENDAS.unshift({
-        id: tiendaId,
-        nombre: tiendaNombre,
-        rubro: "Artesanía y Emprendimiento",
-        sector: sector,
-        bio: "Emprendimiento oficial registrado por la Administración de Alerce.",
-        whatsapp: tel || "+56991234567",
-        instagram: "",
-        colorPortada: "#1A202C",
-        colorLogo: "#2B6CB0",
-        necesidades: { tieneStock: true, tieneVentaPorWhatsApp: true, participaEnFerias: true }
-      });
-
-      // Si Supabase está conectado, guardar en cuentas_autorizadas
-      if (supabaseClient) {
-        supabaseClient.from("cuentas_autorizadas").insert([{
-          email: email,
-          rol: "EMPRENDEDORA",
-          nombre: nombre,
-          tienda_id: tiendaId,
-          asociacion_id: asocId || null
-        }]).then(function(res) {
-          console.log("Cuenta autorizada en Supabase:", res);
-        }).catch(function(e){ console.warn("Aviso:", e); });
-      }
-
-      registrarAccionBitacora("Creó cuenta emprendedora (W04)", nombre + " <" + email + "> con tienda " + tiendaNombre);
-      persistirEstadoAdmin();
-      cerrarFormEmprendedora();
-      renderizarAdminEmprendedoras();
-      actualizarKPIsAdmin();
-
-      // Mostrar caja de credenciales listas para entregar (W05 / WA5)
-      mostrarCredencialesDatos(email, clave, nombre, tiendaNombre);
-      mostrarToast("🚀 Cuenta creada. Credenciales generadas listas para entregar.");
-    }
-  }
-
-  function mostrarCredencialesDatos(email, clave, nombre, tienda) {
-    ESTADO_ADMIN.credencialesGeneradas = { email: email, clave: clave, nombre: nombre, tienda: tienda };
-    var box = document.getElementById("admin-box-credenciales");
-    var texto = document.getElementById("admin-texto-credenciales");
-    if (texto) {
-      texto.innerHTML = "<strong>Emprendedora:</strong> " + nombre + " (" + tienda + ")<br>" +
-                        "<strong>Usuario / Correo:</strong> <code>" + email + "</code><br>" +
-                        "<strong>Contraseña Inicial:</strong> <code>" + clave + "</code>";
-    }
-    if (box) {
-      box.style.display = "block";
-      box.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-
-  function mostrarCredencialesEmprendedora(id) {
-    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
-    if (!emp) return;
-    mostrarCredencialesDatos(emp.email, emp.clave || "alerce123", emp.nombre, emp.tiendaNombre);
-  }
-
-  function copiarCredencialesGeneradas() {
-    var c = ESTADO_ADMIN.credencialesGeneradas;
-    if (!c) return;
-    var texto = "Plataforma de Emprendedoras Alerce\n" +
-                "Hola " + (c.nombre || "") + ", aquí están tus credenciales de acceso:\n" +
-                "Usuario: " + c.email + "\n" +
-                "Contraseña: " + c.clave + "\n" +
-                "Ingresa en: https://agustin671.github.io/EmprendedoresPuertoMontt/";
-    
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(texto).then(function() {
-        mostrarToast("📋 Credenciales copiadas al portapapeles con éxito (WA5).");
-      });
-    } else {
-      prompt("Copia las credenciales manualmente:", texto);
-    }
-  }
-
-  function editarCuentaEmprendedoraAdmin(id) {
-    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
-    if (!emp) return;
-
-    abrirFormCrearEmprendedora();
-    var tit = document.getElementById("admin-form-emp-titulo");
-    var idInput = document.getElementById("admin-form-emp-id");
-    var inpNom = document.getElementById("admin-form-emp-nombre");
-    var inpTienda = document.getElementById("admin-form-emp-tienda");
-    var inpEmail = document.getElementById("admin-form-emp-email");
-    var inpClave = document.getElementById("admin-form-emp-clave");
-    var inpTel = document.getElementById("admin-form-emp-tel");
-    var selSector = document.getElementById("admin-form-emp-sector");
-    var selAsoc = document.getElementById("admin-form-emp-asoc");
-
-    if (tit) tit.textContent = "Editar Cuenta de Emprendedora (W06)";
-    if (idInput) idInput.value = emp.id;
-    if (inpNom) inpNom.value = emp.nombre;
-    if (inpTienda) inpTienda.value = emp.tiendaNombre;
-    if (inpEmail) inpEmail.value = emp.email;
-    if (inpClave) inpClave.value = emp.clave || "alerce123";
-    if (inpTel) inpTel.value = emp.telefono || "";
-    if (selSector) selSector.value = emp.sector || "Alerce Histórico";
-    if (selAsoc) selAsoc.value = emp.asociacionId || "";
-  }
-
-  function toggleEstadoCuentaEmprendedora(id) {
-    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
-    if (!emp) return;
-
-    var accion = emp.activa ? "desactivar" : "activar";
-    // Confirmación explícita (WA4)
-    var seguro = confirm("¿Confirmas que deseas " + accion + " la cuenta de " + emp.nombre + " (" + emp.email + ")?\n\n" +
-      (emp.activa ? "Al desactivarla, la emprendedora NO podrá iniciar sesión en la plataforma (W09)." : "Al activarla, podrá ingresar normalmente."));
-    
-    if (!seguro) return;
-
-    emp.activa = !emp.activa;
-    registrarAccionBitacora((emp.activa ? "Reactivó" : "Desactivó (W08)") + " cuenta emprendedora", emp.nombre + " <" + emp.email + ">");
-    persistirEstadoAdmin();
-    renderizarAdminEmprendedoras();
-    actualizarKPIsAdmin();
-    mostrarToast("Cuenta de " + emp.nombre + " " + (emp.activa ? "reactivada" : "desactivada") + " correctamente.");
-  }
-
-  // ==========================================
-  // GESTIÓN DE ASOCIACIONES (W10 - W19)
-  // ==========================================
-
-  function filtrarAdminAsociaciones() {
-    renderizarAdminAsociaciones();
-  }
-
-  function renderizarAdminAsociaciones() {
-    var cont = document.getElementById("admin-lista-asoc-contenedor");
-    if (!cont) return;
-
-    var busqEl = document.getElementById("admin-busq-asoc");
-    var busq = busqEl ? busqEl.value.trim().toLowerCase() : "";
-
-    var lista = ESTADO_ADMIN.asociaciones.filter(function(a) {
-      return !busq || (a.nombre && a.nombre.toLowerCase().indexOf(busq) !== -1) ||
-                      (a.sector && a.sector.toLowerCase().indexOf(busq) !== -1);
-    });
-
-    if (lista.length === 0) {
-      cont.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 24px; color: var(--gris-texto); font-size: 13px;">No se encontraron asociaciones.</div>';
-      return;
-    }
-
-    var html = "";
-    lista.forEach(function(asoc) {
-      // Contar socias
-      var socias = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId === asoc.id; });
-      var estadoBadge = asoc.activa 
-        ? '<span style="background: #dcfce7; color: #166534; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🟢 ACTIVA</span>'
-        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🔴 DESACTIVADA (W17)</span>';
-
-      html += '<div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">';
-      html += '  <div>';
-      html += '    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">';
-      html += '      <div style="display: flex; align-items: center; gap: 10px;">';
-      html += '        <img src="' + (asoc.logo || "https://picsum.photos/seed/" + asoc.id + "/100/100") + '" alt="' + asoc.nombre + '" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gris-borde);">';
-      html += '        <div>';
-      html += '          <strong style="font-size: 14px; color: var(--negro-apple); display: block;">' + asoc.nombre + '</strong>';
-      html += '          <span style="font-size: 11.5px; color: var(--gris-texto);">' + asoc.sector + '</span>';
-      html += '        </div>';
-      html += '      </div>';
-      html += '      ' + estadoBadge;
-      html += '    </div>';
-      html += '    <p style="font-size: 12px; color: #4b5563; line-height: 1.4; margin: 6px 0 8px 0;">' + asoc.descripcion + '</p>';
-      html += '    <div style="font-size: 11.5px; color: #6b7280; margin-bottom: 6px;">📞 ' + asoc.contacto + '</div>';
-      html += '    <div style="font-size: 11.5px; background: #f8fafc; border-radius: 6px; padding: 6px 8px; color: #334155;">';
-      html += '      👥 <strong>' + socias.length + ' emprendedoras asignadas:</strong> ' + (socias.map(function(s){ return s.nombre; }).join(", ") || "Ninguna aún.");
-      html += '    </div>';
-      html += '  </div>';
-
-      html += '  <div style="display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--gris-borde); padding-top: 10px; margin-top: 4px;">';
-      html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.editarAsociacionAdmin(\'' + asoc.id + '\')">✏️ Editar (W16)</button>';
-      html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #f0fdf4; color: #166534; border-color: #86efac;" onclick="TramaWeb.asignarEmprendedoraAsocPrompt(\'' + asoc.id + '\')">+ Asignar (W18)</button>';
-      if (socias.length > 0) {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.quitarEmprendedoraAsocPrompt(\'' + asoc.id + '\')">- Quitar (W19)</button>';
-      }
-      if (asoc.activa) {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #fee2e2; color: #991b1b; border-color: #fca5a5;" onclick="TramaWeb.toggleEstadoAsociacionAdmin(\'' + asoc.id + '\')">🚫 Desactivar (W17)</button>';
-      } else {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #dcfce7; color: #166534; border-color: #86efac;" onclick="TramaWeb.toggleEstadoAsociacionAdmin(\'' + asoc.id + '\')">✅ Activar</button>';
-      }
-      html += '  </div>';
-      html += '</div>';
-    });
-
-    cont.innerHTML = html;
-  }
-
-  function abrirFormCrearAsociacion() {
-    var panel = document.getElementById("admin-form-asoc-panel");
-    var tit = document.getElementById("admin-form-asoc-titulo");
-    var idInput = document.getElementById("admin-form-asoc-id");
-    var inpNom = document.getElementById("admin-form-asoc-nombre");
-    var inpSector = document.getElementById("admin-form-asoc-sector");
-    var inpCont = document.getElementById("admin-form-asoc-contacto");
-    var inpLogo = document.getElementById("admin-form-asoc-logo");
-    var inpDesc = document.getElementById("admin-form-asoc-desc");
-
-    if (idInput) idInput.value = "";
-    if (tit) tit.textContent = "Crear Nueva Asociación (W10-W15)";
-    if (inpNom) inpNom.value = "";
-    if (inpSector) inpSector.value = "Alerce Histórico";
-    if (inpCont) inpCont.value = "contacto@asociacion.cl / +56 9 6123 4500";
-    if (inpLogo) inpLogo.value = "";
-    if (inpDesc) inpDesc.value = "";
-
-    if (panel) {
-      panel.style.display = "flex";
-      panel.scrollIntoView({ behavior: "smooth" });
-    }
-  }
-
-  function cerrarFormAsociacion() {
-    var panel = document.getElementById("admin-form-asoc-panel");
-    if (panel) panel.style.display = "none";
-  }
-
-  function guardarAsociacionAdmin() {
-    var idInput = document.getElementById("admin-form-asoc-id");
-    var inpNom = document.getElementById("admin-form-asoc-nombre");
-    var inpSector = document.getElementById("admin-form-asoc-sector");
-    var inpCont = document.getElementById("admin-form-asoc-contacto");
-    var inpLogo = document.getElementById("admin-form-asoc-logo");
-    var inpDesc = document.getElementById("admin-form-asoc-desc");
-
-    var id = idInput ? idInput.value.trim() : "";
-    var nombre = inpNom ? inpNom.value.trim() : "";
-    var sector = inpSector ? inpSector.value.trim() : "Alerce";
-    var contacto = inpCont ? inpCont.value.trim() : "";
-    var logo = inpLogo ? inpLogo.value.trim() : "";
-    var desc = inpDesc ? inpDesc.value.trim() : "";
-
-    if (!nombre || !desc) {
-      alert("Por favor ingresa nombre y descripción de la asociación.");
-      return;
-    }
-
-    if (id) {
-      // EDITAR ASOCIACIÓN (W16)
-      var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
-      if (asoc) {
-        asoc.nombre = nombre;
-        asoc.sector = sector;
-        asoc.contacto = contacto;
-        if (logo) asoc.logo = logo;
-        asoc.descripcion = desc;
-
-        registrarAccionBitacora("Editó asociación (W16)", nombre + " (" + sector + ")");
-        persistirEstadoAdmin();
-        cerrarFormAsociacion();
-        renderizarAdminAsociaciones();
-        mostrarToast("✅ Asociación " + nombre + " actualizada con éxito (W16).");
-      }
-    } else {
-      // CREAR ASOCIACIÓN (W10 - W15)
-      var nuevoId = "as_" + Date.now();
-      var nuevaAsoc = {
-        id: nuevoId,
-        nombre: nombre,
-        sector: sector,
-        localidad: "Puerto Montt",
-        contacto: contacto || "contacto@alerce.cl",
-        logo: logo || ("https://picsum.photos/seed/" + nuevoId + "/200/200"),
-        descripcion: desc,
-        color: 4287523732,
-        activa: true
-      };
-
-      ESTADO_ADMIN.asociaciones.push(nuevaAsoc);
-
-      if (supabaseClient) {
-        supabaseClient.from("asociaciones").insert([{
-          id: nuevoId,
-          nombre: nombre,
-          localidad: sector,
-          color: 4287523732
-        }]).then(function(res){ console.log("Asociación en Supabase:", res); });
-      }
-
-      registrarAccionBitacora("Creó nueva asociación (W10)", nombre + " con ficha completa (W11-W15)");
-      persistirEstadoAdmin();
-      cerrarFormAsociacion();
-      renderizarAdminAsociaciones();
-      actualizarKPIsAdmin();
-      mostrarToast("🏛️ Asociación " + nombre + " creada exitosamente.");
-    }
-  }
-
-  function editarAsociacionAdmin(id) {
-    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
-    if (!asoc) return;
-
-    abrirFormCrearAsociacion();
-    var tit = document.getElementById("admin-form-asoc-titulo");
-    var idInput = document.getElementById("admin-form-asoc-id");
-    var inpNom = document.getElementById("admin-form-asoc-nombre");
-    var inpSector = document.getElementById("admin-form-asoc-sector");
-    var inpCont = document.getElementById("admin-form-asoc-contacto");
-    var inpLogo = document.getElementById("admin-form-asoc-logo");
-    var inpDesc = document.getElementById("admin-form-asoc-desc");
-
-    if (tit) tit.textContent = "Editar Asociación (W16)";
-    if (idInput) idInput.value = asoc.id;
-    if (inpNom) inpNom.value = asoc.nombre;
-    if (inpSector) inpSector.value = asoc.sector;
-    if (inpCont) inpCont.value = asoc.contacto;
-    if (inpLogo) inpLogo.value = asoc.logo;
-    if (inpDesc) inpDesc.value = asoc.descripcion;
-  }
-
-  function toggleEstadoAsociacionAdmin(id) {
-    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
-    if (!asoc) return;
-
-    var accion = asoc.activa ? "desactivar" : "activar";
-    // Confirmación explícita (WA4)
-    var seguro = confirm("¿Confirmas que deseas " + accion + " la asociación '" + asoc.nombre + "'?\n\n" +
-      (asoc.activa ? "Tras desactivarla, no aparecerá como activa en los selectores de la vitrina (WA6)." : "Al reactivarla, quedará disponible para asignar socias."));
-    
-    if (!seguro) return;
-
-    asoc.activa = !asoc.activa;
-    registrarAccionBitacora((asoc.activa ? "Activó" : "Desactivó (W17)") + " asociación", asoc.nombre);
-    persistirEstadoAdmin();
-    renderizarAdminAsociaciones();
-    actualizarKPIsAdmin();
-    mostrarToast("Asociación '" + asoc.nombre + "' " + (asoc.activa ? "activada" : "desactivada") + " con éxito.");
-  }
-
-  function asignarEmprendedoraAsocPrompt(asocId) {
-    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
-    if (!asoc) return;
-
-    // Buscar emprendedoras que no pertenezcan a esta asociación
-    var candidatas = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId !== asocId; });
-    if (candidatas.length === 0) {
-      alert("Todas las emprendedoras registradas ya están asignadas a esta asociación.");
-      return;
-    }
-
-    var opciones = candidatas.map(function(e, i) { return (i + 1) + ". " + e.nombre + " (" + e.tiendaNombre + ")"; }).join("\n");
-    var res = prompt("Selecciona el NÚMERO de la emprendedora para ASIGNAR a " + asoc.nombre + " (W18):\n\n" + opciones);
-    if (!res) return;
-
-    var idx = parseInt(res, 10) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= candidatas.length) {
-      alert("Opción no válida.");
-      return;
-    }
-
-    var seleccionada = candidatas[idx];
-    seleccionada.asociacionId = asoc.id;
-    seleccionada.asociacionNombre = asoc.nombre;
-
-    registrarAccionBitacora("Asignó emprendedora a asociación (W18)", seleccionada.nombre + " -> " + asoc.nombre);
-    persistirEstadoAdmin();
-    renderizarAdminAsociaciones();
-    renderizarAdminEmprendedoras();
-    mostrarToast("✅ " + seleccionada.nombre + " asignada a " + asoc.nombre + " (W18).");
-  }
-
-  function quitarEmprendedoraAsocPrompt(asocId) {
-    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
-    if (!asoc) return;
-
-    var socias = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId === asocId; });
-    if (socias.length === 0) return;
-
-    var opciones = socias.map(function(e, i) { return (i + 1) + ". " + e.nombre; }).join("\n");
-    var res = prompt("Selecciona el NÚMERO de la emprendedora para QUITAR de " + asoc.nombre + " (W19):\n\n" + opciones);
-    if (!res) return;
-
-    var idx = parseInt(res, 10) - 1;
-    if (isNaN(idx) || idx < 0 || idx >= socias.length) {
-      alert("Opción no válida.");
-      return;
-    }
-
-    var seleccionada = socias[idx];
-    seleccionada.asociacionId = null;
-    seleccionada.asociacionNombre = "Sin asociación";
-
-    registrarAccionBitacora("Quitó emprendedora de asociación (W19)", seleccionada.nombre + " de " + asoc.nombre);
-    persistirEstadoAdmin();
-    renderizarAdminAsociaciones();
-    renderizarAdminEmprendedoras();
-    mostrarToast("Emprendedora " + seleccionada.nombre + " removida de " + asoc.nombre + ".");
-  }
-
-  // ==========================================
-  // GESTIÓN DE CATÁLOGOS Y RUBROS (W20 - W22)
-  // ==========================================
-
-  function renderizarAdminCatalogos() {
-    var ulEmp = document.getElementById("admin-lista-tipo-emp");
-    var ulProd = document.getElementById("admin-lista-tipo-prod");
-    var ulCat = document.getElementById("admin-lista-categorias");
-
-    if (ulEmp) {
-      ulEmp.innerHTML = ESTADO_ADMIN.tiposEmprendimiento.map(function(item, i) {
-        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
-          '<span>' + item + '</span>' +
-          '<div style="display: flex; gap: 4px;">' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'tipoEmp\', ' + i + ')" title="Editar (W20)">✏️</button>' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'tipoEmp\', ' + i + ')" title="Eliminar">🗑️</button>' +
-          '</div>' +
-        '</li>';
-      }).join("");
-    }
-
-    if (ulProd) {
-      ulProd.innerHTML = ESTADO_ADMIN.tiposProducto.map(function(item, i) {
-        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
-          '<span>' + item + '</span>' +
-          '<div style="display: flex; gap: 4px;">' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'tipoProd\', ' + i + ')" title="Editar (W21)">✏️</button>' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'tipoProd\', ' + i + ')" title="Eliminar">🗑️</button>' +
-          '</div>' +
-        '</li>';
-      }).join("");
-    }
-
-    if (ulCat) {
-      ulCat.innerHTML = ESTADO_ADMIN.categorias.map(function(item, i) {
-        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
-          '<span>' + item + '</span>' +
-          '<div style="display: flex; gap: 4px;">' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'categoria\', ' + i + ')" title="Editar (W22)">✏️</button>' +
-          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'categoria\', ' + i + ')" title="Eliminar">🗑️</button>' +
-          '</div>' +
-        '</li>';
-      }).join("");
-    }
-  }
-
-  function agregarCatalogoItem(tipo) {
-    var titulos = {
-      tipoEmp: "Nuevo Tipo de Emprendimiento (W20)",
-      tipoProd: "Nuevo Tipo de Producto (W21)",
-      categoria: "Nueva Categoría Comercial (W22)"
-    };
-    var valor = prompt(titulos[tipo] + ":");
-    if (!valor || !valor.trim()) return;
-
-    valor = valor.trim();
-    if (tipo === "tipoEmp") ESTADO_ADMIN.tiposEmprendimiento.push(valor);
-    if (tipo === "tipoProd") ESTADO_ADMIN.tiposProducto.push(valor);
-    if (tipo === "categoria") ESTADO_ADMIN.categorias.push(valor);
-
-    registrarAccionBitacora("Añadió elemento de catálogo (" + tipo + ")", valor);
-    persistirEstadoAdmin();
-    renderizarAdminCatalogos();
-    actualizarKPIsAdmin();
-    mostrarToast("✅ '" + valor + "' agregado al catálogo.");
-  }
-
-  function editarCatalogoItem(tipo, index) {
-    var arrayActual = tipo === "tipoEmp" ? ESTADO_ADMIN.tiposEmprendimiento : (tipo === "tipoProd" ? ESTADO_ADMIN.tiposProducto : ESTADO_ADMIN.categorias);
-    if (!arrayActual || index < 0 || index >= arrayActual.length) return;
-
-    var actual = arrayActual[index];
-    var nuevo = prompt("Modificar valor:", actual);
-    if (!nuevo || !nuevo.trim() || nuevo.trim() === actual) return;
-
-    arrayActual[index] = nuevo.trim();
-    registrarAccionBitacora("Editó elemento catálogo", actual + " -> " + nuevo.trim());
-    persistirEstadoAdmin();
-    renderizarAdminCatalogos();
-    mostrarToast("Catálogo actualizado.");
-  }
-
-  function eliminarCatalogoItem(tipo, index) {
-    var arrayActual = tipo === "tipoEmp" ? ESTADO_ADMIN.tiposEmprendimiento : (tipo === "tipoProd" ? ESTADO_ADMIN.tiposProducto : ESTADO_ADMIN.categorias);
-    if (!arrayActual || index < 0 || index >= arrayActual.length) return;
-
-    var item = arrayActual[index];
-    if (!confirm("¿Eliminar '" + item + "' del catálogo?")) return;
-
-    arrayActual.splice(index, 1);
-    registrarAccionBitacora("Eliminó elemento catálogo", item);
-    persistirEstadoAdmin();
-    renderizarAdminCatalogos();
-    actualizarKPIsAdmin();
-    mostrarToast("Elemento eliminado.");
-  }
-
-  // ==========================================
-  // GESTIÓN DE ADMINISTRADORES (W23)
-  // ==========================================
-
-  function renderizarAdminAdmins() {
-    var cont = document.getElementById("admin-lista-admins-contenedor");
-    if (!cont) return;
-
-    var html = "";
-    ESTADO_ADMIN.admins.forEach(function(adm) {
-      var badge = adm.activa
-        ? '<span style="background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🟢 ACTIVA</span>'
-        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🔴 SUSPENDIDA</span>';
-
-      html += '<div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">';
-      html += '  <div>';
-      html += '    <div style="display: flex; align-items: center; gap: 8px;">';
-      html += '      <strong style="font-size: 13.5px; color: var(--negro-apple);">' + adm.nombre + '</strong>';
-      html += '      ' + badge;
-      html += '    </div>';
-      html += '    <span style="font-size: 12px; color: var(--gris-texto);">' + adm.email + ' &middot; Rol: ' + adm.rol + '</span>';
-      html += '  </div>';
-      html += '  <div style="display: flex; gap: 6px;">';
-      if (adm.email !== "admin@alerce.app") {
-        html += '    <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px;" onclick="TramaWeb.toggleEstadoAdmin(\'' + adm.id + '\')">' + (adm.activa ? "Desactivar" : "Activar") + '</button>';
-      } else {
-        html += '    <span style="font-size: 11px; color: var(--gris-texto); font-weight: 700;">Superadmin Principal</span>';
-      }
-      html += '  </div>';
-      html += '</div>';
-    });
-
-    cont.innerHTML = html;
-  }
-
-  function abrirFormCrearAdmin() {
-    var nombre = prompt("Nombre del nuevo administrador:");
-    if (!nombre || !nombre.trim()) return;
-    var email = prompt("Correo del nuevo administrador (ej: soporte@alerce.app):");
-    if (!email || !email.trim()) return;
-
-    var nuevo = {
-      id: "adm_" + Date.now(),
-      nombre: nombre.trim(),
-      email: email.trim().toLowerCase(),
-      rol: "ADMIN",
-      activa: true,
-      creadoEn: new Date().toISOString().slice(0, 10)
-    };
-
-    ESTADO_ADMIN.admins.push(nuevo);
-    registrarAccionBitacora("Creó cuenta de administrador (W23)", nombre + " <" + email + ">");
-    persistirEstadoAdmin();
-    renderizarAdminAdmins();
-    mostrarToast("👑 Administrador creado con éxito (W23).");
-  }
-
-  function toggleEstadoAdmin(id) {
-    var adm = ESTADO_ADMIN.admins.find(function(a){ return a.id === id; });
-    if (!adm) return;
-
-    if (!confirm("¿Deseas cambiar el estado de la cuenta de " + adm.nombre + "?")) return;
-    adm.activa = !adm.activa;
-    registrarAccionBitacora((adm.activa ? "Activó" : "Desactivó") + " cuenta admin", adm.email);
-    persistirEstadoAdmin();
-    renderizarAdminAdmins();
-    mostrarToast("Cuenta de administrador actualizada.");
-  }
-
-  // ==========================================
-  // BITÁCORA DE AUDITORÍA (WA3)
-  // ==========================================
-
-  function renderizarAdminBitacora() {
-    var tbody = document.getElementById("admin-tabla-bitacora-body");
-    if (!tbody) return;
-
-    if (ESTADO_ADMIN.bitacora.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 18px; color: var(--gris-texto);">No hay eventos en la bitácora.</td></tr>';
-      return;
-    }
-
-    var html = "";
-    ESTADO_ADMIN.bitacora.forEach(function(item) {
-      html += '<tr style="border-bottom: 1px solid var(--gris-borde);">';
-      html += '  <td style="padding: 9px 12px; font-family: monospace; font-size: 11.5px; color: #4b5563;">' + item.fecha + '</td>';
-      html += '  <td style="padding: 9px 12px; font-weight: 700; color: #1e1e24;">' + item.admin + '</td>';
-      html += '  <td style="padding: 9px 12px;"><span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-weight: 600;">' + item.accion + '</span></td>';
-      html += '  <td style="padding: 9px 12px; color: #374151;">' + item.detalle + '</td>';
-      html += '</tr>';
-    });
-
-    tbody.innerHTML = html;
-  }
-
-  // ==========================================
-  // RECUPERACIÓN DE CONTRASEÑA (W27) Y GOOGLE (W28)
-  // ==========================================
-
-  function recuperarContrasenaWeb() {
-    var inpEmail = document.getElementById("auth-inp-email");
-    var emailInicial = inpEmail ? inpEmail.value.trim() : "";
-    var email = prompt("Ingresa el correo electrónico de tu cuenta para recuperar la contraseña (W27):", emailInicial);
-    if (!email || !email.trim()) return;
-
-    email = email.trim().toLowerCase();
-    if (supabaseClient && supabaseClient.auth) {
-      supabaseClient.auth.resetPasswordForEmail(email).then(function(res) {
-        if (res.error) console.warn("Aviso Supabase resetPassword:", res.error);
-      }).catch(function(e){ console.warn("Aviso:", e); });
-    }
-
-    alert("📧 Enlace de restablecimiento enviado a " + email + ". Revisa tu bandeja de entrada para cambiar tu contraseña.");
-    mostrarToast("📧 Solicitud de recuperación procesada para " + email);
-  }
-
-  function iniciarSesionGoogleWeb() {
-    // Modo Comprador con Google (W28 / RF-ACC-04)
-    aplicarUsuarioLocal("Paul Ferrada (Google)", "Comprador");
-    cerrarModal("modal-auth-web");
-    mostrarToast("🎉 ¡Bienvenido! Sesión de Comprador iniciada con Google (W28).");
-  }
-
-
-  return {};
+      return {};
     }
   }
 
@@ -4177,28 +3109,52 @@
     estadoAuthWeb.rolSeleccionado = rol;
     var btnEmp = document.getElementById("btn-tab-auth-emprendedora");
     var btnComp = document.getElementById("btn-tab-auth-comprador");
-    if (rol === "EMPRENDEDORA") {
-      if (btnEmp) {
-        btnEmp.className = "btn-accion-pill btn-negro";
-        btnEmp.style.background = "";
+    var btnAdmin = document.getElementById("btn-tab-auth-admin");
+    var boxDonaMarta = document.getElementById("box-demo-donamarta");
+    var boxAdmin = document.getElementById("box-demo-admin");
+    var titulo = document.getElementById("auth-modal-titulo");
+    var subtitulo = document.getElementById("auth-modal-subtitulo");
+    var btnSubmit = document.getElementById("btn-auth-submit");
+
+    if (btnEmp) {
+      btnEmp.className = (rol === "EMPRENDEDORA") ? "btn-accion-pill btn-negro" : "btn-accion-pill";
+      btnEmp.style.background = (rol === "EMPRENDEDORA") ? "" : "transparent";
+      btnEmp.style.color = (rol === "EMPRENDEDORA") ? "" : "#374151";
+    }
+    if (btnComp) {
+      btnComp.className = (rol === "COMPRADOR") ? "btn-accion-pill btn-negro" : "btn-accion-pill";
+      btnComp.style.background = (rol === "COMPRADOR") ? "" : "transparent";
+      btnComp.style.color = (rol === "COMPRADOR") ? "" : "#374151";
+    }
+    if (btnAdmin) {
+      btnAdmin.className = (rol === "ADMIN") ? "btn-accion-pill btn-negro" : "btn-accion-pill";
+      btnAdmin.style.background = (rol === "ADMIN") ? "#1e3a8a" : "transparent";
+      btnAdmin.style.color = (rol === "ADMIN") ? "#ffffff" : "#374151";
+    }
+
+    if (boxDonaMarta) boxDonaMarta.style.display = (rol === "EMPRENDEDORA") ? "block" : "none";
+    if (boxAdmin) boxAdmin.style.display = (rol === "ADMIN") ? "block" : "none";
+
+    if (titulo) {
+      if (rol === "EMPRENDEDORA") titulo.textContent = "Acceso Emprendedor/a";
+      else if (rol === "ADMIN") titulo.textContent = "Acceso Administración de Plataforma";
+      else titulo.textContent = "Acceso Comprador/a";
+    }
+    if (subtitulo) {
+      if (rol === "EMPRENDEDORA") {
+        subtitulo.textContent = "Ingresa a tu taller virtual de Alerce y administra tu vitrina comercial.";
+      } else if (rol === "ADMIN") {
+        subtitulo.textContent = "Panel de control oficial exclusivo para el Administrador de Plataforma (W01 / W02 / W03).";
+      } else {
+        subtitulo.textContent = "Inicia sesión para guardar favoritos y chatear con las artesanas.";
       }
-      if (btnComp) {
-        btnComp.className = "btn-accion-pill";
-        btnComp.style.background = "transparent";
-      }
-    } else {
-      if (btnEmp) {
-        btnEmp.className = "btn-accion-pill";
-        btnEmp.style.background = "transparent";
-      }
-      if (btnComp) {
-        btnComp.className = "btn-accion-pill btn-negro";
-        btnComp.style.background = "";
-      }
+    }
+    if (btnSubmit) {
+      btnSubmit.textContent = (rol === "ADMIN") ? "Iniciar Sesión como Administrador (W01)" : "Iniciar Sesión en Supabase";
     }
   }
 
-  window.alternarPestanaAuth = alternarPestanaAuth;
+  window.alternarPestanaAuth = seleccionarModoAuth;
   window.seleccionarModoAuth = seleccionarModoAuth;
   window.registrarEmprendedorModal = registrarEmprendedorModal;
 
@@ -4490,14 +3446,15 @@
     var pass = inpPass ? inpPass.value : "";
     var nombre = inpNombre ? inpNombre.value.trim() : "";
 
-
     // Verificación de cuenta desactivada por el administrador (W08 / W09 / RNF-SEG-01)
-    var cuentaAdmin = ESTADO_ADMIN.cuentasEmprendedoras.find(function(c) {
-      return c.email && c.email.toLowerCase() === email.toLowerCase();
-    });
-    if (cuentaAdmin && cuentaAdmin.activa === false) {
-      mostrarErrorAuth("🚫 Tu cuenta ha sido desactivada por el administrador de la plataforma (Requisito W09). Comunícate con la administración.");
-      return;
+    if (typeof ESTADO_ADMIN !== "undefined" && ESTADO_ADMIN.cuentasEmprendedoras) {
+      var cuentaAdmin = ESTADO_ADMIN.cuentasEmprendedoras.find(function(c) {
+        return c.email && c.email.toLowerCase() === email.toLowerCase();
+      });
+      if (cuentaAdmin && cuentaAdmin.activa === false) {
+        mostrarErrorAuth("🚫 Tu cuenta ha sido desactivada por el administrador de la plataforma (Requisito W09). Comunícate con la administración.");
+        return;
+      }
     }
 
     if (estadoAuthWeb.rolSeleccionado === "ADMIN" || email === "admin@alerce.app") {
@@ -5134,6 +4091,1039 @@
     }
   }
 
+
+  // ============================================================
+  // MÓDULO 11: ADMINISTRACIÓN DE PLATAFORMA (W01 a W24, WA3-WA6)
+  // Requisitos Entrega 4: Canal exclusivo Web para el Administrador
+  // ============================================================
+
+  var ESTADO_ADMIN = {
+    cuentasEmprendedoras: [
+      {
+        id: "emp_marta",
+        nombre: "Doña Marta Sánchez",
+        email: "donamarta@alerce.app",
+        telefono: "+56 9 9123 4567",
+        tiendaId: "t_minimarket_rosa",
+        tiendaNombre: "Minimarket Doña Rosa",
+        sector: "Alerce Histórico",
+        asociacionId: "as1",
+        asociacionNombre: "Manos del Sur",
+        clave: "alerce123",
+        activa: true,
+        creadoEn: "2026-10-01"
+      },
+      {
+        id: "emp_barberia",
+        nombre: "Carlos Almonacid",
+        email: "barberia@alerce.app",
+        telefono: "+56 9 8765 4321",
+        tiendaId: "t_barberia_alerce",
+        tiendaNombre: "Barbería & Estilo Alerce",
+        sector: "Alerce Norte",
+        asociacionId: "as1",
+        asociacionNombre: "Manos del Sur",
+        clave: "alerce123",
+        activa: true,
+        creadoEn: "2026-10-02"
+      },
+      {
+        id: "emp_tejidos",
+        nombre: "Elena Soto",
+        email: "tejidos@alerce.app",
+        telefono: "+56 9 7654 3210",
+        tiendaId: "t_tejidos_austral",
+        tiendaNombre: "Tejidos & Lanas Austral",
+        sector: "Alerce Sur",
+        asociacionId: "as2",
+        asociacionNombre: "Red del Lago",
+        clave: "alerce123",
+        activa: true,
+        creadoEn: "2026-10-03"
+      },
+      {
+        id: "emp_reposteria",
+        nombre: "Clara Mansilla",
+        email: "reposteria@alerce.app",
+        telefono: "+56 9 6543 2109",
+        tiendaId: "t_reposteria_surena",
+        tiendaNombre: "Repostería Casera Tradición Sureña",
+        sector: "Senda Central",
+        asociacionId: "as3",
+        asociacionNombre: "Taller Costero",
+        clave: "alerce123",
+        activa: true,
+        creadoEn: "2026-10-04"
+      }
+    ],
+    asociaciones: [
+      {
+        id: "as1",
+        nombre: "Manos del Sur",
+        localidad: "Puerto Montt",
+        sector: "Alerce Histórico",
+        descripcion: "Agrupación de artesanas y productoras dedicadas a oficios tradicionales y manufactura local.",
+        contacto: "contacto@manosdelsur.cl / +56 9 6123 4500",
+        logo: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&auto=format&fit=crop&q=80",
+        color: 4287523732,
+        activa: true
+      },
+      {
+        id: "as2",
+        nombre: "Red del Lago",
+        localidad: "Puerto Varas",
+        sector: "Alerce Norte",
+        descripcion: "Red colaborativa de emprendedoras gastronómicas, repostería casera y huertos comunitarios.",
+        contacto: "reddellago@alerce.cl / +56 9 6123 4510",
+        logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+        color: 4282285422,
+        activa: true
+      },
+      {
+        id: "as3",
+        nombre: "Taller Costero",
+        localidad: "Frutillar",
+        sector: "Senda Central",
+        descripcion: "Talleristas de lana virgen chilota, telar decorativo, orfebrería y cosmética natural de bosque nativo.",
+        contacto: "tallercostero@alerce.cl / +56 9 6123 4520",
+        logo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+        color: 4290804286,
+        activa: true
+      }
+    ],
+    tiposEmprendimiento: [
+      "Artesanía Tradicional",
+      "Abarrotes y Alimentos",
+      "Servicios Personales",
+      "Pastelería y Gastronomía",
+      "Cosmética y Belleza",
+      "Confección y Textil",
+      "Diseño y Decoración"
+    ],
+    tiposProducto: [
+      "Producto Físico Artesanal",
+      "Alimento Empacado / Fresco",
+      "Prenda o Accesorio Textil",
+      "Servicio con Turno / Cita",
+      "Pieza Decorativa Única"
+    ],
+    categorias: [
+      "Abarrotes y Alimentos",
+      "Servicios y Peluquería",
+      "Artesanía y Textil",
+      "Pastelería y Gastronomía",
+      "Joyería y Accesorios",
+      "Decoración y Hogar"
+    ],
+    admins: [
+      {
+        id: "adm1",
+        nombre: "Administración General Alerce",
+        email: "admin@alerce.app",
+        rol: "SUPERADMIN",
+        activa: true,
+        creadoEn: "2026-09-01"
+      },
+      {
+        id: "adm2",
+        nombre: "Coordinación Comunal Alerce",
+        email: "coordinacion@alerce.app",
+        rol: "ADMIN",
+        activa: true,
+        creadoEn: "2026-10-15"
+      }
+    ],
+    bitacora: [
+      {
+        id: "log_1",
+        fecha: "2026-11-03 21:00",
+        admin: "admin@alerce.app",
+        accion: "Inicio de Plataforma",
+        detalle: "Sistema administrativo verificado para Entrega 4 (W01 a W24)."
+      }
+    ],
+    tabActual: "emp",
+    credencialesGeneradas: null
+  };
+
+  (function initEstadoAdmin() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        var raw = localStorage.getItem("alerce_admin_state_v1");
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && parsed.cuentasEmprendedoras) {
+            ESTADO_ADMIN = parsed;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Aviso cargando estado admin:", e);
+    }
+  })();
+
+  function persistirEstadoAdmin() {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("alerce_admin_state_v1", JSON.stringify(ESTADO_ADMIN));
+      }
+    } catch (e) {
+      console.warn("Aviso persistiendo estado admin:", e);
+    }
+  }
+
+  function registrarAccionBitacora(accion, detalle) {
+    var adminActual = (estado.usuario && estado.usuario.email) || "admin@alerce.app";
+    var fechaStr = new Date().toISOString().replace("T", " ").slice(0, 16);
+    ESTADO_ADMIN.bitacora.unshift({
+      id: "log_" + Date.now(),
+      fecha: fechaStr,
+      admin: adminActual,
+      accion: accion,
+      detalle: detalle
+    });
+    if (ESTADO_ADMIN.bitacora.length > 50) ESTADO_ADMIN.bitacora.pop();
+    persistirEstadoAdmin();
+    actualizarKPIsAdmin();
+  }
+
+  function actualizarKPIsAdmin() {
+    var kpiEmp = document.getElementById("kpi-admin-total-emp");
+    var kpiAsoc = document.getElementById("kpi-admin-total-asoc");
+    var kpiCat = document.getElementById("kpi-admin-total-cat");
+    var kpiLog = document.getElementById("kpi-admin-total-log");
+
+    if (kpiEmp) kpiEmp.textContent = ESTADO_ADMIN.cuentasEmprendedoras.length;
+    if (kpiAsoc) kpiAsoc.textContent = ESTADO_ADMIN.asociaciones.filter(function(a){ return a.activa; }).length;
+    if (kpiCat) kpiCat.textContent = ESTADO_ADMIN.categorias.length;
+    if (kpiLog) kpiLog.textContent = ESTADO_ADMIN.bitacora.length;
+  }
+
+  function abrirModalAdmin() {
+    if (!esUsuarioAdmin()) {
+      cambiarRolAuth('ADMIN');
+      abrirModalAuth();
+      mostrarToast("🔒 Acceso exclusivo para Administradores de Plataforma (W01).");
+      return;
+    }
+    actualizarKPIsAdmin();
+    seleccionarTabAdmin(ESTADO_ADMIN.tabActual || "emp");
+    abrirModal("modal-admin-plataforma");
+  }
+
+  function esUsuarioAdmin() {
+    return estado.usuario && (estado.usuario.rol === "Administrador" || estado.usuario.rol === "ADMIN");
+  }
+
+  function entrarModoAdmin() {
+    aplicarUsuarioLocal("Administración Alerce", "Administrador");
+    estado.usuario = estado.usuario || {};
+    estado.usuario.rol = "Administrador";
+    estado.usuario.email = "admin@alerce.app";
+    cerrarModal("modal-auth-web");
+    mostrarToast("👑 Bienvenido, Administrador de Plataforma.");
+    setTimeout(function() {
+      abrirModalAdmin();
+    }, 300);
+  }
+
+  function seleccionarTabAdmin(tab) {
+    ESTADO_ADMIN.tabActual = tab;
+    var tabs = ["emp", "asoc", "cat", "adm", "log"];
+    tabs.forEach(function(t) {
+      var btn = document.getElementById("tab-btn-admin-" + t);
+      var sec = document.getElementById("admin-sec-" + t);
+      if (btn) {
+        if (t === tab) {
+          btn.className = "btn-accion-pill btn-negro";
+          btn.style.background = "#111";
+          btn.style.color = "#fff";
+        } else {
+          btn.className = "btn-accion-pill";
+          btn.style.background = "transparent";
+          btn.style.color = "";
+        }
+      }
+      if (sec) {
+        sec.style.display = (t === tab) ? "flex" : "none";
+      }
+    });
+
+    if (tab === "emp") renderizarAdminEmprendedoras();
+    else if (tab === "asoc") renderizarAdminAsociaciones();
+    else if (tab === "cat") renderizarAdminCatalogos();
+    else if (tab === "adm") renderizarAdminAdmins();
+    else if (tab === "log") renderizarAdminBitacora();
+  }
+
+  function filtrarAdminEmprendedoras() {
+    renderizarAdminEmprendedoras();
+  }
+
+  function renderizarAdminEmprendedoras() {
+    var cont = document.getElementById("admin-lista-emp-contenedor");
+    if (!cont) return;
+
+    var busqEl = document.getElementById("admin-busq-emp");
+    var busq = busqEl ? busqEl.value.trim().toLowerCase() : "";
+    var filtroEstadoEl = document.getElementById("admin-filtro-estado-emp");
+    var filtroEstado = filtroEstadoEl ? filtroEstadoEl.value : "TODAS";
+
+    var lista = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e) {
+      var cumpleBusq = !busq || 
+        (e.nombre && e.nombre.toLowerCase().indexOf(busq) !== -1) ||
+        (e.tiendaNombre && e.tiendaNombre.toLowerCase().indexOf(busq) !== -1) ||
+        (e.email && e.email.toLowerCase().indexOf(busq) !== -1);
+      
+      var cumpleEstado = true;
+      if (filtroEstado === "ACTIVAS") cumpleEstado = e.activa === true;
+      if (filtroEstado === "DESACTIVADAS") cumpleEstado = e.activa === false;
+
+      return cumpleBusq && cumpleEstado;
+    });
+
+    if (lista.length === 0) {
+      cont.innerHTML = '<div style="text-align: center; padding: 24px; color: var(--gris-texto); font-size: 13px;">No se encontraron cuentas de emprendedoras con los filtros actuales.</div>';
+      return;
+    }
+
+    var html = "";
+    lista.forEach(function(emp) {
+      var estadoBadge = emp.activa 
+        ? '<span style="background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">🟢 ACTIVA</span>'
+        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">🔴 DESACTIVADA (W08)</span>';
+
+      html += '<div style="background: #ffffff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">';
+      html += '  <div style="display: flex; align-items: center; gap: 12px;">';
+      html += '    <div style="width: 38px; height: 38px; border-radius: 50%; background: #1e1e24; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">' + (emp.nombre.charAt(0) || "E") + '</div>';
+      html += '    <div>';
+      html += '      <div style="display: flex; align-items: center; gap: 6px;">';
+      html += '        <strong style="font-size: 13.5px; color: var(--negro-apple);">' + emp.nombre + '</strong>';
+      html += '        ' + estadoBadge;
+      html += '      </div>';
+      html += '      <div style="font-size: 12px; color: var(--gris-texto); margin-top: 2px;">';
+      html += '        🏪 <strong>' + emp.tiendaNombre + '</strong> · 📍 ' + (emp.sector || "Alerce") + ' · 🏛️ ' + (emp.asociacionNombre || "Sin asociación");
+      html += '      </div>';
+      html += '      <div style="font-size: 11.5px; color: #6b7280; margin-top: 1px;">';
+      html += '        ✉️ ' + emp.email + ' &middot; 📞 ' + (emp.telefono || "Sin teléfono");
+      html += '      </div>';
+      html += '    </div>';
+      html += '  </div>';
+
+      html += '  <div style="display: flex; gap: 6px; align-items: center;">';
+      html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.mostrarCredencialesEmprendedora(\'' + emp.id + '\')" title="Ver credenciales (W05)">📋 Credenciales</button>';
+      html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.editarCuentaEmprendedoraAdmin(\'' + emp.id + '\')" title="Editar datos (W06)">✏️ Editar</button>';
+      if (emp.activa) {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px; background: #fee2e2; color: #dc2626; border-color: #fca5a5;" onclick="TramaWeb.toggleEstadoCuentaEmprendedora(\'' + emp.id + '\')" title="Desactivar cuenta (W08)">🚫 Desactivar</button>';
+      } else {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 32px; font-size: 11px; padding: 0 10px; background: #dcfce7; color: #166534; border-color: #86efac;" onclick="TramaWeb.toggleEstadoCuentaEmprendedora(\'' + emp.id + '\')" title="Reactivar cuenta">✅ Activar</button>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    });
+
+    cont.innerHTML = html;
+  }
+
+  function abrirFormCrearEmprendedora() {
+    var panel = document.getElementById("admin-form-emp-panel");
+    var tit = document.getElementById("admin-form-emp-titulo");
+    var idInput = document.getElementById("admin-form-emp-id");
+    var inpNom = document.getElementById("admin-form-emp-nombre");
+    var inpTienda = document.getElementById("admin-form-emp-tienda");
+    var inpEmail = document.getElementById("admin-form-emp-email");
+    var inpClave = document.getElementById("admin-form-emp-clave");
+    var inpTel = document.getElementById("admin-form-emp-tel");
+    var selAsoc = document.getElementById("admin-form-emp-asoc");
+
+    if (idInput) idInput.value = "";
+    if (tit) tit.textContent = "Crear Cuenta de Emprendedora (W04)";
+    if (inpNom) inpNom.value = "";
+    if (inpTienda) inpTienda.value = "";
+    if (inpEmail) inpEmail.value = "";
+    if (inpClave) inpClave.value = "alerce" + Math.floor(100 + Math.random() * 900);
+    if (inpTel) inpTel.value = "+56 9 ";
+
+    if (selAsoc) {
+      selAsoc.innerHTML = '<option value="">Sin asociación asignada</option>' + 
+        ESTADO_ADMIN.asociaciones.filter(function(a){ return a.activa; }).map(function(a) {
+          return '<option value="' + a.id + '">' + a.nombre + ' (' + a.sector + ')</option>';
+        }).join("");
+    }
+
+    if (panel) {
+      panel.style.display = "flex";
+      panel.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  function cerrarFormEmprendedora() {
+    var panel = document.getElementById("admin-form-emp-panel");
+    if (panel) panel.style.display = "none";
+  }
+
+  function generarClaveAleatoriaEmp() {
+    var inpClave = document.getElementById("admin-form-emp-clave");
+    if (inpClave) inpClave.value = "alerce" + Math.floor(100 + Math.random() * 900);
+  }
+
+  function guardarCuentaEmprendedoraAdmin() {
+    var idInput = document.getElementById("admin-form-emp-id");
+    var inpNom = document.getElementById("admin-form-emp-nombre");
+    var inpTienda = document.getElementById("admin-form-emp-tienda");
+    var inpEmail = document.getElementById("admin-form-emp-email");
+    var inpClave = document.getElementById("admin-form-emp-clave");
+    var inpTel = document.getElementById("admin-form-emp-tel");
+    var selSector = document.getElementById("admin-form-emp-sector");
+    var selAsoc = document.getElementById("admin-form-emp-asoc");
+
+    var id = idInput ? idInput.value.trim() : "";
+    var nombre = inpNom ? inpNom.value.trim() : "";
+    var tiendaNombre = inpTienda ? inpTienda.value.trim() : "";
+    var email = inpEmail ? inpEmail.value.trim().toLowerCase() : "";
+    var clave = inpClave ? inpClave.value.trim() : "alerce123";
+    var tel = inpTel ? inpTel.value.trim() : "";
+    var sector = selSector ? selSector.value : "Alerce Histórico";
+    var asocId = selAsoc ? selAsoc.value : "";
+    var asocObj = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
+    var asocNombre = asocObj ? asocObj.nombre : "Sin asociación";
+
+    if (!nombre || !tiendaNombre || !email) {
+      alert("Por favor completa el nombre, tienda y correo de la emprendedora.");
+      return;
+    }
+
+    if (id) {
+      var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
+      if (emp) {
+        emp.nombre = nombre;
+        emp.tiendaNombre = tiendaNombre;
+        emp.email = email;
+        if (clave) emp.clave = clave;
+        emp.telefono = tel;
+        emp.sector = sector;
+        emp.asociacionId = asocId;
+        emp.asociacionNombre = asocNombre;
+
+        var tObj = TIENDAS.find(function(t){ return t.id === emp.tiendaId; });
+        if (tObj) {
+          tObj.nombre = tiendaNombre;
+          tObj.sector = sector;
+          tObj.whatsapp = tel;
+        }
+
+        registrarAccionBitacora("Editó cuenta emprendedora", nombre + " (" + email + ")");
+        persistirEstadoAdmin();
+        cerrarFormEmprendedora();
+        renderizarAdminEmprendedoras();
+        mostrarToast("✅ Cuenta de " + nombre + " actualizada y guardada (W07).");
+      }
+    } else {
+      var nuevoId = "emp_" + Date.now();
+      var tiendaId = "t_" + tiendaNombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 20) + "_" + Math.floor(Math.random() * 100);
+
+      var nuevaCuenta = {
+        id: nuevoId,
+        nombre: nombre,
+        email: email,
+        telefono: tel,
+        tiendaId: tiendaId,
+        tiendaNombre: tiendaNombre,
+        sector: sector,
+        asociacionId: asocId,
+        asociacionNombre: asocNombre,
+        clave: clave,
+        activa: true,
+        creadoEn: new Date().toISOString().slice(0, 10)
+      };
+
+      ESTADO_ADMIN.cuentasEmprendedoras.unshift(nuevaCuenta);
+
+      TIENDAS.unshift({
+        id: tiendaId,
+        nombre: tiendaNombre,
+        rubro: "Artesanía y Emprendimiento",
+        sector: sector,
+        bio: "Emprendimiento oficial registrado por la Administración de Alerce.",
+        whatsapp: tel || "+56991234567",
+        instagram: "",
+        colorPortada: "#1A202C",
+        colorLogo: "#2B6CB0",
+        necesidades: { tieneStock: true, tieneVentaPorWhatsApp: true, participaEnFerias: true }
+      });
+
+      if (supabaseClient) {
+        supabaseClient.from("cuentas_autorizadas").insert([{
+          email: email,
+          rol: "EMPRENDEDORA",
+          nombre: nombre,
+          tienda_id: tiendaId,
+          asociacion_id: asocId || null
+        }]).then(function(res) {
+          console.log("Cuenta autorizada en Supabase:", res);
+        }).catch(function(e){ console.warn("Aviso:", e); });
+      }
+
+      registrarAccionBitacora("Creó cuenta emprendedora (W04)", nombre + " <" + email + "> con tienda " + tiendaNombre);
+      persistirEstadoAdmin();
+      cerrarFormEmprendedora();
+      renderizarAdminEmprendedoras();
+      actualizarKPIsAdmin();
+
+      mostrarCredencialesDatos(email, clave, nombre, tiendaNombre);
+      mostrarToast("🚀 Cuenta creada. Credenciales generadas listas para entregar.");
+    }
+  }
+
+  function mostrarCredencialesDatos(email, clave, nombre, tienda) {
+    ESTADO_ADMIN.credencialesGeneradas = { email: email, clave: clave, nombre: nombre, tienda: tienda };
+    var box = document.getElementById("admin-box-credenciales");
+    var texto = document.getElementById("admin-texto-credenciales");
+    if (texto) {
+      texto.innerHTML = "<strong>Emprendedora:</strong> " + nombre + " (" + tienda + ")<br>" +
+                        "<strong>Usuario / Correo:</strong> <code>" + email + "</code><br>" +
+                        "<strong>Contraseña Inicial:</strong> <code>" + clave + "</code>";
+    }
+    if (box) {
+      box.style.display = "block";
+      box.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  function mostrarCredencialesEmprendedora(id) {
+    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
+    if (!emp) return;
+    mostrarCredencialesDatos(emp.email, emp.clave || "alerce123", emp.nombre, emp.tiendaNombre);
+  }
+
+  function copiarCredencialesGeneradas() {
+    var c = ESTADO_ADMIN.credencialesGeneradas;
+    if (!c) return;
+    var texto = "Plataforma de Emprendedoras Alerce\\n" +
+                "Hola " + (c.nombre || "") + ", aquí están tus credenciales de acceso:\\n" +
+                "Usuario: " + c.email + "\\n" +
+                "Contraseña: " + c.clave + "\\n" +
+                "Ingresa en: https://agustin671.github.io/EmprendedoresPuertoMontt/";
+    
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(function() {
+        mostrarToast("📋 Credenciales copiadas al portapapeles con éxito (WA5).");
+      });
+    } else {
+      prompt("Copia las credenciales manualmente:", texto);
+    }
+  }
+
+  function editarCuentaEmprendedoraAdmin(id) {
+    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
+    if (!emp) return;
+
+    abrirFormCrearEmprendedora();
+    var tit = document.getElementById("admin-form-emp-titulo");
+    var idInput = document.getElementById("admin-form-emp-id");
+    var inpNom = document.getElementById("admin-form-emp-nombre");
+    var inpTienda = document.getElementById("admin-form-emp-tienda");
+    var inpEmail = document.getElementById("admin-form-emp-email");
+    var inpClave = document.getElementById("admin-form-emp-clave");
+    var inpTel = document.getElementById("admin-form-emp-tel");
+    var selSector = document.getElementById("admin-form-emp-sector");
+    var selAsoc = document.getElementById("admin-form-emp-asoc");
+
+    if (tit) tit.textContent = "Editar Cuenta de Emprendedora (W06)";
+    if (idInput) idInput.value = emp.id;
+    if (inpNom) inpNom.value = emp.nombre;
+    if (inpTienda) inpTienda.value = emp.tiendaNombre;
+    if (inpEmail) inpEmail.value = emp.email;
+    if (inpClave) inpClave.value = emp.clave || "alerce123";
+    if (inpTel) inpTel.value = emp.telefono || "";
+    if (selSector) selSector.value = emp.sector || "Alerce Histórico";
+    if (selAsoc) selAsoc.value = emp.asociacionId || "";
+  }
+
+  function toggleEstadoCuentaEmprendedora(id) {
+    var emp = ESTADO_ADMIN.cuentasEmprendedoras.find(function(e){ return e.id === id; });
+    if (!emp) return;
+
+    var accion = emp.activa ? "desactivar" : "activar";
+    var seguro = confirm("¿Confirmas que deseas " + accion + " la cuenta de " + emp.nombre + " (" + emp.email + ")?\\n\\n" +
+      (emp.activa ? "Al desactivarla, la emprendedora NO podrá iniciar sesión en la plataforma (W09)." : "Al activarla, podrá ingresar normalmente."));
+    
+    if (!seguro) return;
+
+    emp.activa = !emp.activa;
+    registrarAccionBitacora((emp.activa ? "Reactivó" : "Desactivó (W08)") + " cuenta emprendedora", emp.nombre + " <" + emp.email + ">");
+    persistirEstadoAdmin();
+    renderizarAdminEmprendedoras();
+    actualizarKPIsAdmin();
+    mostrarToast("Cuenta de " + emp.nombre + " " + (emp.activa ? "reactivada" : "desactivada") + " correctamente.");
+  }
+
+  function filtrarAdminAsociaciones() {
+    renderizarAdminAsociaciones();
+  }
+
+  function renderizarAdminAsociaciones() {
+    var cont = document.getElementById("admin-lista-asoc-contenedor");
+    if (!cont) return;
+
+    var busqEl = document.getElementById("admin-busq-asoc");
+    var busq = busqEl ? busqEl.value.trim().toLowerCase() : "";
+
+    var lista = ESTADO_ADMIN.asociaciones.filter(function(a) {
+      return !busq || (a.nombre && a.nombre.toLowerCase().indexOf(busq) !== -1) ||
+                      (a.sector && a.sector.toLowerCase().indexOf(busq) !== -1);
+    });
+
+    if (lista.length === 0) {
+      cont.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 24px; color: var(--gris-texto); font-size: 13px;">No se encontraron asociaciones.</div>';
+      return;
+    }
+
+    var html = "";
+    lista.forEach(function(asoc) {
+      var socias = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId === asoc.id; });
+      var estadoBadge = asoc.activa 
+        ? '<span style="background: #dcfce7; color: #166534; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🟢 ACTIVA</span>'
+        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🔴 DESACTIVADA (W17)</span>';
+
+      html += '<div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">';
+      html += '  <div>';
+      html += '    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">';
+      html += '      <div style="display: flex; align-items: center; gap: 10px;">';
+      html += '        <img src="' + (asoc.logo || "https://picsum.photos/seed/" + asoc.id + "/100/100") + '" alt="' + asoc.nombre + '" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gris-borde);">';
+      html += '        <div>';
+      html += '          <strong style="font-size: 14px; color: var(--negro-apple); display: block;">' + asoc.nombre + '</strong>';
+      html += '          <span style="font-size: 11.5px; color: var(--gris-texto);">' + asoc.sector + '</span>';
+      html += '        </div>';
+      html += '      </div>';
+      html += '      ' + estadoBadge;
+      html += '    </div>';
+      html += '    <p style="font-size: 12px; color: #4b5563; line-height: 1.4; margin: 6px 0 8px 0;">' + asoc.descripcion + '</p>';
+      html += '    <div style="font-size: 11.5px; color: #6b7280; margin-bottom: 6px;">📞 ' + asoc.contacto + '</div>';
+      html += '    <div style="font-size: 11.5px; background: #f8fafc; border-radius: 6px; padding: 6px 8px; color: #334155;">';
+      html += '      👥 <strong>' + socias.length + ' emprendedoras asignadas:</strong> ' + (socias.map(function(s){ return s.nombre; }).join(", ") || "Ninguna aún.");
+      html += '    </div>';
+      html += '  </div>';
+
+      html += '  <div style="display: flex; gap: 6px; flex-wrap: wrap; border-top: 1px solid var(--gris-borde); padding-top: 10px; margin-top: 4px;">';
+      html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.editarAsociacionAdmin(\'' + asoc.id + '\')">✏️ Editar (W16)</button>';
+      html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #f0fdf4; color: #166534; border-color: #86efac;" onclick="TramaWeb.asignarEmprendedoraAsocPrompt(\'' + asoc.id + '\')">+ Asignar (W18)</button>';
+      if (socias.length > 0) {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px;" onclick="TramaWeb.quitarEmprendedoraAsocPrompt(\'' + asoc.id + '\')">- Quitar (W19)</button>';
+      }
+      if (asoc.activa) {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #fee2e2; color: #991b1b; border-color: #fca5a5;" onclick="TramaWeb.toggleEstadoAsociacionAdmin(\'' + asoc.id + '\')">🚫 Desactivar (W17)</button>';
+      } else {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 28px; font-size: 11px; padding: 0 8px; background: #dcfce7; color: #166534; border-color: #86efac;" onclick="TramaWeb.toggleEstadoAsociacionAdmin(\'' + asoc.id + '\')">✅ Activar</button>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    });
+
+    cont.innerHTML = html;
+  }
+
+  function abrirFormCrearAsociacion() {
+    var panel = document.getElementById("admin-form-asoc-panel");
+    var tit = document.getElementById("admin-form-asoc-titulo");
+    var idInput = document.getElementById("admin-form-asoc-id");
+    var inpNom = document.getElementById("admin-form-asoc-nombre");
+    var inpSector = document.getElementById("admin-form-asoc-sector");
+    var inpCont = document.getElementById("admin-form-asoc-contacto");
+    var inpLogo = document.getElementById("admin-form-asoc-logo");
+    var inpDesc = document.getElementById("admin-form-asoc-desc");
+
+    if (idInput) idInput.value = "";
+    if (tit) tit.textContent = "Crear Nueva Asociación (W10-W15)";
+    if (inpNom) inpNom.value = "";
+    if (inpSector) inpSector.value = "Alerce Histórico";
+    if (inpCont) inpCont.value = "contacto@asociacion.cl / +56 9 6123 4500";
+    if (inpLogo) inpLogo.value = "";
+    if (inpDesc) inpDesc.value = "";
+
+    if (panel) {
+      panel.style.display = "flex";
+      panel.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  function cerrarFormAsociacion() {
+    var panel = document.getElementById("admin-form-asoc-panel");
+    if (panel) panel.style.display = "none";
+  }
+
+  function guardarAsociacionAdmin() {
+    var idInput = document.getElementById("admin-form-asoc-id");
+    var inpNom = document.getElementById("admin-form-asoc-nombre");
+    var inpSector = document.getElementById("admin-form-asoc-sector");
+    var inpCont = document.getElementById("admin-form-asoc-contacto");
+    var inpLogo = document.getElementById("admin-form-asoc-logo");
+    var inpDesc = document.getElementById("admin-form-asoc-desc");
+
+    var id = idInput ? idInput.value.trim() : "";
+    var nombre = inpNom ? inpNom.value.trim() : "";
+    var sector = inpSector ? inpSector.value.trim() : "Alerce";
+    var contacto = inpCont ? inpCont.value.trim() : "";
+    var logo = inpLogo ? inpLogo.value.trim() : "";
+    var desc = inpDesc ? inpDesc.value.trim() : "";
+
+    if (!nombre || !desc) {
+      alert("Por favor ingresa nombre y descripción de la asociación.");
+      return;
+    }
+
+    if (id) {
+      var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
+      if (asoc) {
+        asoc.nombre = nombre;
+        asoc.sector = sector;
+        asoc.contacto = contacto;
+        if (logo) asoc.logo = logo;
+        asoc.descripcion = desc;
+
+        registrarAccionBitacora("Editó asociación (W16)", nombre + " (" + sector + ")");
+        persistirEstadoAdmin();
+        cerrarFormAsociacion();
+        renderizarAdminAsociaciones();
+        mostrarToast("✅ Asociación " + nombre + " actualizada con éxito (W16).");
+      }
+    } else {
+      var nuevoId = "as_" + Date.now();
+      var nuevaAsoc = {
+        id: nuevoId,
+        nombre: nombre,
+        sector: sector,
+        localidad: "Puerto Montt",
+        contacto: contacto || "contacto@alerce.cl",
+        logo: logo || ("https://picsum.photos/seed/" + nuevoId + "/200/200"),
+        descripcion: desc,
+        color: 4287523732,
+        activa: true
+      };
+
+      ESTADO_ADMIN.asociaciones.push(nuevaAsoc);
+
+      if (supabaseClient) {
+        supabaseClient.from("asociaciones").insert([{
+          id: nuevoId,
+          nombre: nombre,
+          localidad: sector,
+          color: 4287523732
+        }]).then(function(res){ console.log("Asociación en Supabase:", res); });
+      }
+
+      registrarAccionBitacora("Creó nueva asociación (W10)", nombre + " con ficha completa (W11-W15)");
+      persistirEstadoAdmin();
+      cerrarFormAsociacion();
+      renderizarAdminAsociaciones();
+      actualizarKPIsAdmin();
+      mostrarToast("🏛️ Asociación " + nombre + " creada exitosamente.");
+    }
+  }
+
+  function editarAsociacionAdmin(id) {
+    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
+    if (!asoc) return;
+
+    abrirFormCrearAsociacion();
+    var tit = document.getElementById("admin-form-asoc-titulo");
+    var idInput = document.getElementById("admin-form-asoc-id");
+    var inpNom = document.getElementById("admin-form-asoc-nombre");
+    var inpSector = document.getElementById("admin-form-asoc-sector");
+    var inpCont = document.getElementById("admin-form-asoc-contacto");
+    var inpLogo = document.getElementById("admin-form-asoc-logo");
+    var inpDesc = document.getElementById("admin-form-asoc-desc");
+
+    if (tit) tit.textContent = "Editar Asociación (W16)";
+    if (idInput) idInput.value = asoc.id;
+    if (inpNom) inpNom.value = asoc.nombre;
+    if (inpSector) inpSector.value = asoc.sector;
+    if (inpCont) inpCont.value = asoc.contacto;
+    if (inpLogo) inpLogo.value = asoc.logo;
+    if (inpDesc) inpDesc.value = asoc.descripcion;
+  }
+
+  function toggleEstadoAsociacionAdmin(id) {
+    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === id; });
+    if (!asoc) return;
+
+    var accion = asoc.activa ? "desactivar" : "activar";
+    var seguro = confirm("¿Confirmas que deseas " + accion + " la asociación '" + asoc.nombre + "'?\\n\\n" +
+      (asoc.activa ? "Tras desactivarla, no aparecerá como activa en los selectores de la vitrina (WA6)." : "Al reactivarla, quedará disponible para asignar socias."));
+    
+    if (!seguro) return;
+
+    asoc.activa = !asoc.activa;
+    registrarAccionBitacora((asoc.activa ? "Activó" : "Desactivó (W17)") + " asociación", asoc.nombre);
+    persistirEstadoAdmin();
+    renderizarAdminAsociaciones();
+    actualizarKPIsAdmin();
+    mostrarToast("Asociación '" + asoc.nombre + "' " + (asoc.activa ? "activada" : "desactivada") + " con éxito.");
+  }
+
+  function asignarEmprendedoraAsocPrompt(asocId) {
+    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
+    if (!asoc) return;
+
+    var candidatas = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId !== asocId; });
+    if (candidatas.length === 0) {
+      alert("Todas las emprendedoras registradas ya están asignadas a esta asociación.");
+      return;
+    }
+
+    var opciones = candidatas.map(function(e, i) { return (i + 1) + ". " + e.nombre + " (" + e.tiendaNombre + ")"; }).join("\\n");
+    var res = prompt("Selecciona el NÚMERO de la emprendedora para ASIGNAR a " + asoc.nombre + " (W18):\\n\\n" + opciones);
+    if (!res) return;
+
+    var idx = parseInt(res, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= candidatas.length) {
+      alert("Opción no válida.");
+      return;
+    }
+
+    var seleccionada = candidatas[idx];
+    seleccionada.asociacionId = asoc.id;
+    seleccionada.asociacionNombre = asoc.nombre;
+
+    registrarAccionBitacora("Asignó emprendedora a asociación (W18)", seleccionada.nombre + " -> " + asoc.nombre);
+    persistirEstadoAdmin();
+    renderizarAdminAsociaciones();
+    renderizarAdminEmprendedoras();
+    mostrarToast("✅ " + seleccionada.nombre + " asignada a " + asoc.nombre + " (W18).");
+  }
+
+  function quitarEmprendedoraAsocPrompt(asocId) {
+    var asoc = ESTADO_ADMIN.asociaciones.find(function(a){ return a.id === asocId; });
+    if (!asoc) return;
+
+    var socias = ESTADO_ADMIN.cuentasEmprendedoras.filter(function(e){ return e.asociacionId === asocId; });
+    if (socias.length === 0) return;
+
+    var opciones = socias.map(function(e, i) { return (i + 1) + ". " + e.nombre; }).join("\\n");
+    var res = prompt("Selecciona el NÚMERO de la emprendedora para QUITAR de " + asoc.nombre + " (W19):\\n\\n" + opciones);
+    if (!res) return;
+
+    var idx = parseInt(res, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx >= socias.length) {
+      alert("Opción no válida.");
+      return;
+    }
+
+    var seleccionada = socias[idx];
+    seleccionada.asociacionId = null;
+    seleccionada.asociacionNombre = "Sin asociación";
+
+    registrarAccionBitacora("Quitó emprendedora de asociación (W19)", seleccionada.nombre + " de " + asoc.nombre);
+    persistirEstadoAdmin();
+    renderizarAdminAsociaciones();
+    renderizarAdminEmprendedoras();
+    mostrarToast("Emprendedora " + seleccionada.nombre + " removida de " + asoc.nombre + ".");
+  }
+
+  function renderizarAdminCatalogos() {
+    var ulEmp = document.getElementById("admin-lista-tipo-emp");
+    var ulProd = document.getElementById("admin-lista-tipo-prod");
+    var ulCat = document.getElementById("admin-lista-categorias");
+
+    if (ulEmp) {
+      ulEmp.innerHTML = ESTADO_ADMIN.tiposEmprendimiento.map(function(item, i) {
+        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
+          '<span>' + item + '</span>' +
+          '<div style="display: flex; gap: 4px;">' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'tipoEmp\', ' + i + ')" title="Editar (W20)">✏️</button>' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'tipoEmp\', ' + i + ')" title="Eliminar">🗑️</button>' +
+          '</div>' +
+        '</li>';
+      }).join("");
+    }
+
+    if (ulProd) {
+      ulProd.innerHTML = ESTADO_ADMIN.tiposProducto.map(function(item, i) {
+        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
+          '<span>' + item + '</span>' +
+          '<div style="display: flex; gap: 4px;">' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'tipoProd\', ' + i + ')" title="Editar (W21)">✏️</button>' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'tipoProd\', ' + i + ')" title="Eliminar">🗑️</button>' +
+          '</div>' +
+        '</li>';
+      }).join("");
+    }
+
+    if (ulCat) {
+      ulCat.innerHTML = ESTADO_ADMIN.categorias.map(function(item, i) {
+        return '<li style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12.5px;">' +
+          '<span>' + item + '</span>' +
+          '<div style="display: flex; gap: 4px;">' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.editarCatalogoItem(\'categoria\', ' + i + ')" title="Editar (W22)">✏️</button>' +
+          '  <button type="button" style="background: none; border: none; cursor: pointer; font-size: 11px;" onclick="TramaWeb.eliminarCatalogoItem(\'categoria\', ' + i + ')" title="Eliminar">🗑️</button>' +
+          '</div>' +
+        '</li>';
+      }).join("");
+    }
+  }
+
+  function agregarCatalogoItem(tipo) {
+    var titulos = {
+      tipoEmp: "Nuevo Tipo de Emprendimiento (W20)",
+      tipoProd: "Nuevo Tipo de Producto (W21)",
+      categoria: "Nueva Categoría Comercial (W22)"
+    };
+    var valor = prompt(titulos[tipo] + ":");
+    if (!valor || !valor.trim()) return;
+
+    valor = valor.trim();
+    if (tipo === "tipoEmp") ESTADO_ADMIN.tiposEmprendimiento.push(valor);
+    if (tipo === "tipoProd") ESTADO_ADMIN.tiposProducto.push(valor);
+    if (tipo === "categoria") ESTADO_ADMIN.categorias.push(valor);
+
+    registrarAccionBitacora("Añadió elemento de catálogo (" + tipo + ")", valor);
+    persistirEstadoAdmin();
+    renderizarAdminCatalogos();
+    actualizarKPIsAdmin();
+    mostrarToast("✅ '" + valor + "' agregado al catálogo.");
+  }
+
+  function editarCatalogoItem(tipo, index) {
+    var arrayActual = tipo === "tipoEmp" ? ESTADO_ADMIN.tiposEmprendimiento : (tipo === "tipoProd" ? ESTADO_ADMIN.tiposProducto : ESTADO_ADMIN.categorias);
+    if (!arrayActual || index < 0 || index >= arrayActual.length) return;
+
+    var actual = arrayActual[index];
+    var nuevo = prompt("Modificar valor:", actual);
+    if (!nuevo || !nuevo.trim() || nuevo.trim() === actual) return;
+
+    arrayActual[index] = nuevo.trim();
+    registrarAccionBitacora("Editó elemento catálogo", actual + " -> " + nuevo.trim());
+    persistirEstadoAdmin();
+    renderizarAdminCatalogos();
+    mostrarToast("Catálogo actualizado.");
+  }
+
+  function eliminarCatalogoItem(tipo, index) {
+    var arrayActual = tipo === "tipoEmp" ? ESTADO_ADMIN.tiposEmprendimiento : (tipo === "tipoProd" ? ESTADO_ADMIN.tiposProducto : ESTADO_ADMIN.categorias);
+    if (!arrayActual || index < 0 || index >= arrayActual.length) return;
+
+    var item = arrayActual[index];
+    if (!confirm("¿Eliminar '" + item + "' del catálogo?")) return;
+
+    arrayActual.splice(index, 1);
+    registrarAccionBitacora("Eliminó elemento catálogo", item);
+    persistirEstadoAdmin();
+    renderizarAdminCatalogos();
+    actualizarKPIsAdmin();
+    mostrarToast("Elemento eliminado.");
+  }
+
+  function renderizarAdminAdmins() {
+    var cont = document.getElementById("admin-lista-admins-contenedor");
+    if (!cont) return;
+
+    var html = "";
+    ESTADO_ADMIN.admins.forEach(function(adm) {
+      var badge = adm.activa
+        ? '<span style="background: #dcfce7; color: #166534; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🟢 ACTIVA</span>'
+        : '<span style="background: #fee2e2; color: #991b1b; font-size: 10.5px; font-weight: 800; padding: 2px 7px; border-radius: 12px;">🔴 SUSPENDIDA</span>';
+
+      html += '<div style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">';
+      html += '  <div>';
+      html += '    <div style="display: flex; align-items: center; gap: 8px;">';
+      html += '      <strong style="font-size: 13.5px; color: var(--negro-apple);">' + adm.nombre + '</strong>';
+      html += '      ' + badge;
+      html += '    </div>';
+      html += '    <span style="font-size: 12px; color: var(--gris-texto);">' + adm.email + ' &middot; Rol: ' + adm.rol + '</span>';
+      html += '  </div>';
+      html += '  <div style="display: flex; gap: 6px;">';
+      if (adm.email !== "admin@alerce.app") {
+        html += '    <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px;" onclick="TramaWeb.toggleEstadoAdmin(\'' + adm.id + '\')">' + (adm.activa ? "Desactivar" : "Activar") + '</button>';
+      } else {
+        html += '    <span style="font-size: 11px; color: var(--gris-texto); font-weight: 700;">Superadmin Principal</span>';
+      }
+      html += '  </div>';
+      html += '</div>';
+    });
+
+    cont.innerHTML = html;
+  }
+
+  function abrirFormCrearAdmin() {
+    var nombre = prompt("Nombre del nuevo administrador:");
+    if (!nombre || !nombre.trim()) return;
+    var email = prompt("Correo del nuevo administrador (ej: soporte@alerce.app):");
+    if (!email || !email.trim()) return;
+
+    var nuevo = {
+      id: "adm_" + Date.now(),
+      nombre: nombre.trim(),
+      email: email.trim().toLowerCase(),
+      rol: "ADMIN",
+      activa: true,
+      creadoEn: new Date().toISOString().slice(0, 10)
+    };
+
+    ESTADO_ADMIN.admins.push(nuevo);
+    registrarAccionBitacora("Creó cuenta de administrador (W23)", nombre + " <" + email + ">");
+    persistirEstadoAdmin();
+    renderizarAdminAdmins();
+    mostrarToast("👑 Administrador creado con éxito (W23).");
+  }
+
+  function toggleEstadoAdmin(id) {
+    var adm = ESTADO_ADMIN.admins.find(function(a){ return a.id === id; });
+    if (!adm) return;
+
+    if (!confirm("¿Deseas cambiar el estado de la cuenta de " + adm.nombre + "?")) return;
+    adm.activa = !adm.activa;
+    registrarAccionBitacora((adm.activa ? "Activó" : "Desactivó") + " cuenta admin", adm.email);
+    persistirEstadoAdmin();
+    renderizarAdminAdmins();
+    mostrarToast("Cuenta de administrador actualizada.");
+  }
+
+  function renderizarAdminBitacora() {
+    var tbody = document.getElementById("admin-tabla-bitacora-body");
+    if (!tbody) return;
+
+    if (ESTADO_ADMIN.bitacora.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 18px; color: var(--gris-texto);">No hay eventos en la bitácora.</td></tr>';
+      return;
+    }
+
+    var html = "";
+    ESTADO_ADMIN.bitacora.forEach(function(item) {
+      html += '<tr style="border-bottom: 1px solid var(--gris-borde);">';
+      html += '  <td style="padding: 9px 12px; font-family: monospace; font-size: 11.5px; color: #4b5563;">' + item.fecha + '</td>';
+      html += '  <td style="padding: 9px 12px; font-weight: 700; color: #1e1e24;">' + item.admin + '</td>';
+      html += '  <td style="padding: 9px 12px;"><span style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-weight: 600;">' + item.accion + '</span></td>';
+      html += '  <td style="padding: 9px 12px; color: #374151;">' + item.detalle + '</td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  function recuperarContrasenaWeb() {
+    var inpEmail = document.getElementById("auth-inp-email");
+    var emailInicial = inpEmail ? inpEmail.value.trim() : "";
+    var email = prompt("Ingresa el correo electrónico de tu cuenta para recuperar la contraseña (W27):", emailInicial);
+    if (!email || !email.trim()) return;
+
+    email = email.trim().toLowerCase();
+    if (supabaseClient && supabaseClient.auth) {
+      supabaseClient.auth.resetPasswordForEmail(email).then(function(res) {
+        if (res.error) console.warn("Aviso Supabase resetPassword:", res.error);
+      }).catch(function(e){ console.warn("Aviso:", e); });
+    }
+
+    alert("📧 Enlace de restablecimiento enviado a " + email + ". Revisa tu bandeja de entrada para cambiar tu contraseña.");
+    mostrarToast("📧 Solicitud de recuperación procesada para " + email);
+  }
+
+  function iniciarSesionGoogleWeb() {
+    aplicarUsuarioLocal("Paul Ferrada (Google)", "Comprador");
+    cerrarModal("modal-auth-web");
+    mostrarToast("🎉 ¡Bienvenido! Sesión de Comprador iniciada con Google (W28).");
+  }
+
+
   // Exponer API global para callbacks en línea
   window.TramaWeb = {
     abrirVitrinaTienda: abrirVitrinaTienda,
@@ -5211,7 +5201,6 @@
     abrirModalMisFerias: abrirModalMisFerias,
     renderizarMisFerias: renderizarMisFerias,
     toggleInscripcionFeria: toggleInscripcionFeria,
-
     // Módulo 11: Administración de Plataforma (W01 a W24, WA3-WA6)
     abrirModalAdmin: abrirModalAdmin,
     entrarModoAdmin: entrarModoAdmin,
@@ -5239,8 +5228,7 @@
     abrirFormCrearAdmin: abrirFormCrearAdmin,
     toggleEstadoAdmin: toggleEstadoAdmin,
     recuperarContrasenaWeb: recuperarContrasenaWeb,
-    iniciarSesionGoogleWeb: iniciarSesionGoogleWeb,
-
+    iniciarSesionGoogleWeb: iniciarSesionGoogleWeb
   };
 
   // Si se llegó por el QR o el enlace de una tienda (?tienda=ID), abrir su ficha.
