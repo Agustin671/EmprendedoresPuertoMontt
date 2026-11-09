@@ -150,10 +150,22 @@ object SesionManager {
      * Crea la cuenta. El rol lo asigna el servidor: si el administrador autorizó
      * el correo, queda como emprendedora con su tienda; si no, como comprador.
      */
-    suspend fun registrarUsuario(correo: String, clave: String, nombre: String): Result<Rol> = runCatching {
-        ClienteSupabase.registrar(correo, clave, nombre)
+    suspend fun registrarUsuario(
+        correo: String,
+        clave: String,
+        nombre: String,
+        crearTienda: Boolean = false
+    ): Result<Rol> = runCatching {
+        ClienteSupabase.registrar(correo, clave, nombre, crearTienda)
         prepararSesion()
     }.onFailure { Log.w(TAG, "Registro fallido: ${it.message}") }
+
+    /** Una cuenta compradora existente puede abrir su propia tienda. */
+    suspend fun crearTiendaParaUsuario(nombre: String): Result<Rol> = runCatching {
+        if (nombre.isBlank()) throw ErrorSupabase(0, "Escribe el nombre de tu tienda.")
+        TiendaRepositorio.crearMiTienda(nombre)
+        prepararSesion()
+    }.onFailure { Log.w(TAG, "No se pudo crear la tienda: ${it.message}") }
 
     /** Envía el correo con el enlace para crear una contraseña nueva. */
     suspend fun recuperarContrasena(correo: String): Result<Unit> = runCatching {

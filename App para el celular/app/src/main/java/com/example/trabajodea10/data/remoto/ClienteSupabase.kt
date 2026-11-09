@@ -164,6 +164,8 @@ object ClienteSupabase {
         }.getOrNull() ?: texto.take(160)
         val minus = original.lowercase()
         return when {
+            "could not find the function" in minus || "schema cache" in minus ->
+                "Supabase aún no tiene cargada la función para crear tiendas. Ejecuta supabase/04_registro_vendedores.sql en el SQL Editor de Supabase y vuelve a intentar."
             "invalid login credentials" in minus -> "Correo o contraseña incorrectos."
             "already registered" in minus || "already been registered" in minus ->
                 "Ese correo ya tiene cuenta. Usa «Iniciar sesión»."
@@ -192,11 +194,19 @@ object ClienteSupabase {
         return SesionSupabase(access, refresh, id, email)
     }
 
-    suspend fun registrar(email: String, clave: String, nombre: String): SesionSupabase {
+    suspend fun registrar(
+        email: String,
+        clave: String,
+        nombre: String,
+        crearTienda: Boolean = false
+    ): SesionSupabase {
         val cuerpo = buildJsonObject {
             put("email", email.trim())
             put("password", clave)
-            putJsonObject("data") { put("nombre", nombre.trim()) }
+            putJsonObject("data") {
+                put("nombre", nombre.trim())
+                put("tipo_cuenta", if (crearTienda) "EMPRENDEDORA" else "VISITANTE")
+            }
         }.toString()
         val texto = pedir("POST", "/auth/v1/signup", cuerpoJson = cuerpo, conToken = false)
         val nueva = leerSesion(texto, email.trim())

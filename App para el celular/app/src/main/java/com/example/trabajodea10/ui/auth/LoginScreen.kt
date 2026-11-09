@@ -525,7 +525,12 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             coroutineScope.launch {
                                 // El rol lo decide el servidor (RN-01), no la pestaña elegida.
                                 val res = if (esModoRegistro) {
-                                    SesionManager.registrarUsuario(correo, clave, nombreRegistro)
+                                    SesionManager.registrarUsuario(
+                                        correo = correo,
+                                        clave = clave,
+                                        nombre = nombreRegistro,
+                                        crearTienda = esPestanaEmprendedora
+                                    )
                                 } else {
                                     SesionManager.iniciarSesion(correo, clave)
                                 }
@@ -549,7 +554,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                         // RN-01: solo el administrador autoriza emprendedoras.
                                         Toast.makeText(
                                             contexto,
-                                            "Tu cuenta se creó como comprador. Pide al administrador que te autorice como emprendedora.",
+                                            "Tu cuenta quedó como compradora. Actualiza Supabase con 04_registro_vendedores.sql y vuelve a iniciar sesión para activar tu tienda.",
                                             Toast.LENGTH_LONG
                                         ).show()
                                         }

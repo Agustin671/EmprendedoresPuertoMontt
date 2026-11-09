@@ -14,7 +14,7 @@ Requisitos oficiales del curso: <https://github.com/rinostrozacl/ProyectoVincula
 - **Interfaz en español de Chile** (RNF-IDI-01): nada de voseo ("creá", "tocá"). Palabras simples para la emprendedora: "Mis productos", "Cuántos tengo", "Se acabó", "Solo yo lo veo / Lo ven todos". Evita "stock", "variante", "publicar", "borrador" en pantalla.
 - **Botones de 48 dp mínimo** y respetar el tamaño de letra del celular (RNF-USA-02/03).
 - **Las pantallas no llaman a la base de datos**: todo pasa por repositorios (RNF-DAT-02).
-- **El rol lo decide el servidor**, no la app ni la web (RN-01). Ver sección 4.
+- **El servidor confirma el tipo de cuenta y crea la tienda** (RN-01). En el alta se puede elegir compradora o emprendedora; solo ADMIN requiere autorización del administrador. Ver sección 4.
 
 ## 2. Estructura
 
@@ -82,7 +82,7 @@ Sin `supabase.properties` la app compila y funciona solo con datos de ejemplo.
 | `asociaciones`, `ferias` | `id` | todos | admin |
 | `participaciones` | (`feria_id`, `tienda_id`) | todos | admin; la dueña responde la suya |
 
-- **Registro no libre (RN-01)**: un trigger en `auth.users` crea el perfil. Si el correo está en `cuentas_autorizadas` como `EMPRENDEDORA`, crea (o asigna) su tienda; si no, queda `VISITANTE` (comprador). El admin autoriza correos desde la app (Emprendedoras → alta).
+- **Registro (RN-01)**: un trigger en `auth.users` crea el perfil. El alta puede solicitar cuenta `VISITANTE` o `EMPRENDEDORA`; el servidor asigna el rol y crea la tienda de quien elige emprender. `ADMIN` solo se concede desde `cuentas_autorizadas`; nunca se acepta desde metadatos enviados por el cliente. Las cuentas compradoras existentes también pueden crear su tienda desde Mi perfil.
 - Funciones de apoyo: `es_admin()`, `es_duena_de(tienda_id)`.
 - **Storage**: bucket público `productos`; cada usuaria escribe solo en su carpeta `uid/…`.
 - Cuentas de prueba (se registran una vez desde la app o la web con cualquier contraseña de 6+): `admin@alerce.app`, `donamarta@alerce.app`, `barberia@alerce.app`, `tejidos@alerce.app`, `reposteria@alerce.app`.
@@ -108,8 +108,8 @@ const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 
 ## 5. Qué está hecho (al 8-nov-2026)
 
-- App conectada a Supabase: inicio y registro con roles decididos por el servidor (`cuentas_autorizadas`), perfil con foto, recuperación de contraseña y acceso biométrico opcional que usa BiometricPrompt con credencial del dispositivo como alternativa.
-- Las personas autorizadas como emprendedoras reciben su tienda desde el servidor; el alta no concede ese rol por los metadatos enviados por el cliente.
+- App conectada a Supabase: inicio y registro con rol asignado por el servidor, perfil con foto, recuperación de contraseña y acceso biométrico opcional que usa BiometricPrompt con credencial del dispositivo como alternativa.
+- Cualquier persona puede registrarse como emprendedora y recibe su propia tienda desde el servidor. Las cuentas compradoras existentes también pueden crear su tienda desde Mi perfil. ADMIN se conserva restringido a `cuentas_autorizadas`.
 - Esquema base `supabase/01_esquema.sql` y migración `supabase/03_migracion_fotos.sql`: fotos de perfil, logo de tienda, bucket `perfiles` con escritura limitada a la carpeta del usuario y función `actualizar_mi_perfil` (solo nombre/foto).
 - Las fotos web y móvil se comprimen antes de subir; perfiles y fichas de negocio muestran sus imágenes cuando están disponibles.
 - Web conectada a Supabase por `js/config.js`, generado en despliegue con `SUPABASE_URL` y `SUPABASE_ANON_KEY` de GitHub Actions. La clave pública queda expuesta en el cliente por diseño; RLS es el control de acceso. No incluir secretos en el repositorio.
@@ -117,7 +117,7 @@ const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 
 ## 6. Qué falta / configuración externa
 
-1. En Supabase, ejecutar `03_migracion_fotos.sql` después de `01_esquema.sql` en una base ya creada. Para una base nueva, ejecutar `01_esquema.sql` y luego la migración.
+1. En Supabase, ejecutar `03_migracion_fotos.sql` y `04_registro_vendedores.sql` en una base ya creada. Para una base nueva, ejecutar `01_esquema.sql`, `02_datos_prueba.sql`, `03_migracion_fotos.sql` y `04_registro_vendedores.sql`.
 2. En Supabase Auth, desactivar la confirmación de correo si se requiere entrar inmediatamente después del registro; si permanece activa, el flujo informa que se debe confirmar el correo.
 3. Configurar los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions y `supabase.properties` local para conectar web y Android a la instancia. Sin esa configuración solo se pueden compilar y usar pantallas sin servicios remotos.
 4. Ferias en el servidor: las tablas `ferias` y `participaciones` existen, pero la app y la web aún usan datos locales (Entrega 7).
@@ -126,10 +126,10 @@ const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 
 ## 7. Conexión web a Supabase
 
-La web inicializa Supabase solo cuando `js/config.js` define URL y anon key. El workflow escribe ese archivo desde los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY`; el archivo generado está ignorado por Git. La clave anon se sirve al navegador, por lo que todas las operaciones deben quedar protegidas por RLS. El rol se lee desde `perfiles`; nunca se decide a partir de metadatos editables por el cliente. Las imágenes se suben a los buckets `productos` y `perfiles`, bajo la carpeta del ID autenticado.
+La web inicializa Supabase solo cuando `js/config.js` define URL y anon key. El workflow escribe ese archivo desde los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY`; el archivo generado está ignorado por Git. La clave anon se sirve al navegador, por lo que todas las operaciones deben quedar protegidas por RLS. El alta de vendedor solicita `tipo_cuenta=EMPRENDEDORA`; el trigger del servidor asigna el rol y crea su tienda. `ADMIN` sigue reservado a `cuentas_autorizadas`. Las imágenes se suben a los buckets `productos` y `perfiles`, bajo la carpeta del ID autenticado.
 ## 8. Probar las reglas de seguridad
 
-En un Postgres local (no en la instancia del curso); los comandos están en `supabase/README.md`. Resultado esperado: cada caso imprime `OK`. La batería tiene 37 casos documentados; vuelve a ejecutarla al modificar el esquema. Si cambias `01_esquema.sql`, vuelve a correrlas y agrega casos para lo nuevo.
+En un Postgres local (no en la instancia del curso); los comandos están en `supabase/README.md`. Resultado esperado: cada caso imprime `OK`. La batería valida también el registro de vendedores y la creación de productos por tienda; vuelve a ejecutarla al modificar el esquema.
 
 ## 9. Trampas conocidas
 

@@ -8,15 +8,16 @@ La app Android y la web usan Supabase para cuentas (Auth), datos (tablas con RLS
 2. Pega y ejecuta `01_esquema.sql` (tablas, reglas de seguridad y buckets).
 3. Pega y ejecuta `02_datos_prueba.sql` (datos ficticios: 4 tiendas de Alerce, sus productos y cuentas autorizadas).
 4. Ejecuta `03_migracion_fotos.sql` para configurar el bucket de perfiles y la función segura de actualización de nombre/foto (es idempotente).
-5. En `App para el celular/`, copia `supabase.properties.ejemplo` como `supabase.properties` y completa URL y **anon key** (nunca `service_role`). El archivo está en `.gitignore`.
-6. Configura los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions para generar la configuración web.
-7. En Supabase Auth, desactiva confirmación de correo si el registro debe iniciar sesión inmediatamente. Sin `supabase.properties`, la app funciona con datos de ejemplo.
+5. Ejecuta `04_registro_vendedores.sql` para que cualquier persona pueda crear una cuenta de emprendedora, recibir su tienda y convertir una cuenta compradora existente en tienda propia.
+6. En `App para el celular/`, copia `supabase.properties.ejemplo` como `supabase.properties` y completa URL y **anon key** (nunca `service_role`). El archivo está en `.gitignore`.
+7. Configura los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions para generar la configuración web.
+8. En Supabase Auth, desactiva confirmación de correo si el registro debe iniciar sesión inmediatamente. Sin `supabase.properties`, la app funciona con datos de ejemplo.
 
 Los scripts SQL se pueden volver a ejecutar sin romper nada.
 
 ## Cuentas de prueba
 
-El registro **no es libre** (RN-01): el rol lo decide el servidor según la tabla `cuentas_autorizadas`. Para usar una cuenta de prueba, regístrala una vez desde la app («¿No tienes cuenta? Regístrate aquí») con cualquier contraseña de 6+ caracteres:
+El rol lo crea el servidor (RN-01). En la app, elige “Emprendedora” para recibir una tienda propia o “Compradora” para entrar a la vitrina. ADMIN sigue reservado a la lista `cuentas_autorizadas`. Para usar una cuenta de prueba, regístrala una vez desde la app con cualquier contraseña de 6+ caracteres:
 
 | Correo | Rol | Tienda |
 |---|---|---|
@@ -26,7 +27,7 @@ El registro **no es libre** (RN-01): el rol lo decide el servidor según la tabl
 | tejidos@alerce.app | Emprendedora | Tejidos & Lanares Alerce Austral |
 | reposteria@alerce.app | Emprendedora | Repostería Casera Tradición Sureña |
 
-Cualquier otro correo queda como **comprador**. Cuando el administrador da de alta una emprendedora en la app, su correo queda autorizado; al registrarse, recibe su tienda automáticamente.
+Cualquier otro correo se crea como **comprador**, salvo que la persona elija “Emprendedora”. Si la cuenta ya existe como compradora, puede abrir “Mi perfil” y crear su tienda sin registrar otra cuenta.
 
 ## Modelo de datos (RNF-DAT-01)
 
@@ -52,7 +53,7 @@ Todo cambio se guarda primero en el celular y queda en una cola «por subir» (`
 
 ## Pruebas de reglas de seguridad (RNF-SEG-04)
 
-`pruebas_rls.sql` prueba 37 casos por perfil (admin, emprendedora, comprador y sin sesión), incluidos los rechazos esperados. Se ejecuta en un **Postgres local**, nunca en la instancia del curso:
+`pruebas_rls.sql` prueba los permisos por perfil, incluido el registro abierto de vendedoras, la creación de productos en la tienda propia y los rechazos de acceso cruzado. Se ejecuta en un **Postgres local**, nunca en la instancia del curso:
 
 ```bash
 psql -h localhost -U postgres -c "create database prueba_alerce"

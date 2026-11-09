@@ -110,6 +110,15 @@ object CuentaRepositorio {
 
 object TiendaRepositorio {
 
+    /** Crea una tienda para la persona autenticada; el servidor asigna propiedad y rol. */
+    suspend fun crearMiTienda(nombre: String) {
+        val cuerpo = buildJsonObject { put("p_nombre", nombre.trim()) }.toString()
+        ClienteSupabase.pedir(
+            "POST", "/rest/v1/rpc/crear_mi_tienda",
+            cuerpoJson = cuerpo
+        )
+    }
+
     fun desdeJson(o: JsonObject): Tienda {
         val nec = o["necesidades"] as? JsonObject ?: JsonObject(emptyMap())
         fun n(clave: String, porDefecto: Boolean) = nec[clave]?.jsonPrimitive?.booleanOrNull ?: porDefecto

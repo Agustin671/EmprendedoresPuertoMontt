@@ -10,9 +10,9 @@
 
 -- ---------- 1. Tablas ----------
 
--- Lista que llena el administrador: solo estos correos pueden quedar como
--- EMPRENDEDORA o ADMIN al registrarse (RN-01). Cualquier otro correo
--- queda como VISITANTE (comprador).
+-- Permisos especiales asignados por administración. ADMIN sigue siendo
+-- exclusivo de esta lista; las cuentas nuevas pueden elegir ser compradoras
+-- o emprendedoras al registrarse.
 create table if not exists public.cuentas_autorizadas (
   email        text primary key,
   rol          text not null check (rol in ('ADMIN', 'EMPRENDEDORA')),
@@ -124,8 +124,9 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (select 1 from public.tiendas where id = p_tienda and owner_id = auth.uid());
 $$;
 
--- Al registrarse alguien (Auth), se crea su perfil. Si su correo está en
--- cuentas_autorizadas como EMPRENDEDORA, también se crea (o se le asigna) su tienda.
+-- Al registrarse alguien (Auth), el servidor crea su perfil. Las cuentas de
+-- administración tienen prioridad; cualquier alta que solicite ser
+-- EMPRENDEDORA recibe tienda propia. Nunca se acepta ADMIN desde metadatos.
 create or replace function public.al_crear_usuario()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
@@ -136,18 +137,32 @@ begin
   select rol, nombre, tienda_id into v_rol, v_nombre, v_tienda
   from public.cuentas_autorizadas where lower(email) = lower(new.email);
 
+  if v_rol is null and upper(coalesce(new.raw_user_meta_data ->> 'tipo_cuenta', '')) = 'EMPRENDEDORA' then
+    v_rol := 'EMPRENDEDORA';
+  end if;
   v_rol := coalesce(v_rol, 'VISITANTE');
   v_nombre := coalesce(nullif(new.raw_user_meta_data ->> 'nombre', ''), v_nombre, split_part(new.email, '@', 1));
 
   if v_rol = 'EMPRENDEDORA' then
+    if v_tienda is not null then
+      update public.tiendas
+         set owner_id = new.id
+       where id = v_tienda and (owner_id is null or owner_id = new.id);
+      if not found then v_tienda := null; end if;
+    end if;
     if v_tienda is null then
-      v_tienda := 'tienda_' || replace(left(new.id::text, 13), '-', '');
-      insert into public.tiendas (id, owner_id, nombre, rubro, sector, bio)
-      values (v_tienda, new.id, v_nombre, 'General y Artesanías', 'Alerce',
-              'Emprendimiento local de Alerce. Consulta por WhatsApp.')
+      v_tienda := 'tienda_' || replace(new.id::text, '-', '');
+      insert into public.tiendas (id, owner_id, nombre, rubro, sector, bio, whatsapp)
+      values (
+        v_tienda,
+        new.id,
+        v_nombre,
+        coalesce(nullif(new.raw_user_meta_data ->> 'rubro', ''), 'Comercio y servicios'),
+        coalesce(nullif(new.raw_user_meta_data ->> 'sector', ''), 'Alerce'),
+        'Emprendimiento local de Alerce.',
+        coalesce(nullif(new.raw_user_meta_data ->> 'whatsapp', ''), '')
+      )
       on conflict (id) do nothing;
-    else
-      update public.tiendas set owner_id = new.id where id = v_tienda and owner_id is null;
     end if;
   else
     v_tienda := null;
@@ -180,6 +195,42 @@ $$;
 
 revoke all on function public.actualizar_mi_perfil(text, text) from public;
 grant execute on function public.actualizar_mi_perfil(text, text) to authenticated;
+
+-- Una persona con cuenta compradora puede abrir su propia tienda desde Mi perfil.
+-- La función impide crear una segunda tienda o cambiar una cuenta ADMIN.
+create or replace function public.crear_mi_tienda(p_nombre text)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_tienda text;
+  v_rol text;
+begin
+  if v_uid is null then raise exception 'Inicia sesión para crear tu tienda.'; end if;
+  if nullif(btrim(p_nombre), '') is null then raise exception 'Escribe el nombre de tu tienda.'; end if;
+
+  select rol, tienda_id into v_rol, v_tienda from public.perfiles where id = v_uid;
+  if not found then raise exception 'No encontramos tu perfil.'; end if;
+  if v_rol = 'ADMIN' then raise exception 'La cuenta de administración no puede abrir una tienda.'; end if;
+  if v_tienda is not null then return; end if;
+
+  v_tienda := 'tienda_' || replace(v_uid::text, '-', '');
+  insert into public.tiendas as tienda (id, owner_id, nombre, rubro, sector, bio)
+  values (v_tienda, v_uid, btrim(p_nombre), 'Comercio y servicios', 'Alerce', 'Emprendimiento local de Alerce.')
+  on conflict (id) do update set owner_id = excluded.owner_id
+  where tienda.owner_id = excluded.owner_id;
+
+  if not exists (select 1 from public.tiendas where id = v_tienda and owner_id = v_uid) then
+    raise exception 'No se pudo crear una tienda propia.';
+  end if;
+
+  update public.perfiles
+     set rol = 'EMPRENDEDORA', tienda_id = v_tienda, nombre = btrim(p_nombre)
+   where id = v_uid;
+end;
+$$;
+
+revoke all on function public.crear_mi_tienda(text) from public;
+grant execute on function public.crear_mi_tienda(text) to authenticated;
 
 -- ---------- 3. Seguridad por fila (RLS) ----------
 

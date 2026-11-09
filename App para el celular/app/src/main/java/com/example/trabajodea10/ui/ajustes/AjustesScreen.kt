@@ -29,12 +29,15 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -111,7 +114,7 @@ fun PantallaAjustes(
             when (rol) {
                 Rol.ADMIN -> PerfilAdmin(avisar)
                 Rol.EMPRENDEDORA -> PerfilEmprendedora(nav, avisar)
-                Rol.VISITANTE -> PerfilVisitante(avisar)
+                Rol.VISITANTE -> PerfilVisitante(nav, avisar)
                 null -> Unit
             }
 
@@ -429,10 +432,13 @@ private fun FilaNavegacion(
 }
 
 @Composable
-private fun PerfilVisitante(avisar: (String) -> Unit) {
+private fun PerfilVisitante(nav: ControladorNavegacion, avisar: (String) -> Unit) {
     val contexto = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var subiendoFoto by remember { mutableStateOf(false) }
+    var mostrarCrearTienda by remember { mutableStateOf(false) }
+    var nombreTienda by remember { mutableStateOf("") }
+    var creandoTienda by remember { mutableStateOf(false) }
 
     val selectorFoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
@@ -449,37 +455,38 @@ private fun PerfilVisitante(avisar: (String) -> Unit) {
     val nombre = if (SesionManager.nombreUsuarioActual.isNotBlank()) SesionManager.nombreUsuarioActual else "Comprador"
     val email = SesionManager.emailActual ?: "Sin correo registrado"
 
-    Tarjeta {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AvatarUsuario(
-                    nombre = nombre,
-                    color = 0xFF6B7FB3,
-                    fotoUrl = SesionManager.fotoPerfilUrl,
-                    tamano = 56
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        text = email,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextoSecundario
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Tarjeta {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AvatarUsuario(
+                        nombre = nombre,
+                        color = 0xFF6B7FB3,
+                        fotoUrl = SesionManager.fotoPerfilUrl,
+                        tamano = 56
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = email,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextoSecundario
+                        )
+                    }
+                    ChipEstado(
+                        texto = "Comprador",
+                        color = com.example.trabajodea10.ui.componentes.ColorEstado(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     )
                 }
-                ChipEstado(
-                    texto = "Comprador",
-                    color = com.example.trabajodea10.ui.componentes.ColorEstado(
-                        MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                )
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
             OutlinedButton(
                 onClick = { selectorFoto.launch("image/*") },
                 enabled = !subiendoFoto,
@@ -497,7 +504,63 @@ private fun PerfilVisitante(avisar: (String) -> Unit) {
                     Text("Cambiar foto de perfil", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = NegroApple)
                 }
             }
+            }
         }
+
+        OutlinedButton(
+            onClick = { mostrarCrearTienda = true },
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, NegroApple),
+            modifier = Modifier.fillMaxWidth().height(50.dp)
+        ) {
+            Icon(Icons.Filled.Store, contentDescription = null, tint = NegroApple)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Crear mi tienda y empezar a vender", fontWeight = FontWeight.SemiBold, color = NegroApple)
+        }
+    }
+
+    if (mostrarCrearTienda) {
+        AlertDialog(
+            onDismissRequest = { if (!creandoTienda) mostrarCrearTienda = false },
+            title = { Text("Crear mi tienda", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Con tu tienda podrás agregar productos, precios y fotos. Luego podrás completar sus datos desde la pestaña Tienda.")
+                    OutlinedTextField(
+                        value = nombreTienda,
+                        onValueChange = { nombreTienda = it },
+                        label = { Text("Nombre de la tienda") },
+                        singleLine = true,
+                        enabled = !creandoTienda,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = nombreTienda.isNotBlank() && !creandoTienda,
+                    onClick = {
+                        creandoTienda = true
+                        coroutineScope.launch {
+                            val resultado = SesionManager.crearTiendaParaUsuario(nombreTienda)
+                            creandoTienda = false
+                            resultado.onSuccess { rol ->
+                                mostrarCrearTienda = false
+                                nav.iniciarSesion(rol)
+                                avisar("Tienda creada. Ya puedes agregar tus productos.")
+                            }.onFailure { error ->
+                                avisar(error.message ?: "No se pudo crear tu tienda.")
+                            }
+                        }
+                    }
+                ) { Text(if (creandoTienda) "Creando…" else "Crear tienda") }
+            },
+            dismissButton = {
+                TextButton(enabled = !creandoTienda, onClick = { mostrarCrearTienda = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

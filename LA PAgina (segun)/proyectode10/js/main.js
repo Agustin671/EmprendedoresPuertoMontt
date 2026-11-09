@@ -3373,6 +3373,7 @@
         options: {
           data: {
             nombre: nombre,
+            tipo_cuenta: "EMPRENDEDORA",
             rubro: rubro,
             sector: sector,
             whatsapp: whatsapp

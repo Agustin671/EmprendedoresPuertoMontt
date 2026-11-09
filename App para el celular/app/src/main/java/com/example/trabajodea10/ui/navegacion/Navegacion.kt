@@ -117,7 +117,7 @@ class ControladorNavegacion(rutaInicial: Ruta = Ruta.Login) {
         TramaStore.iniciarSesion(rol)
         val destino = when (rol) {
             Rol.ADMIN -> Ruta.AdminInicio
-            Rol.EMPRENDEDORA -> Ruta.EmpTienda
+            Rol.EMPRENDEDORA -> Ruta.EmpInicio
             Rol.VISITANTE -> Ruta.VisProductos
         }
         if (pila.isNotEmpty()) {

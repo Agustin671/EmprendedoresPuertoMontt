@@ -13,7 +13,9 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@alerce.app'),
   ('00000000-0000-0000-0000-00000000000b', 'donamarta@alerce.app'),
   ('00000000-0000-0000-0000-00000000000c', 'barberia@alerce.app'),
-  ('00000000-0000-0000-0000-00000000000d', 'vecina@gmail.com');
+  ('00000000-0000-0000-0000-00000000000d', 'vecina@gmail.com'),
+  ('00000000-0000-0000-0000-00000000000f', 'vendedora@gmail.com', '{"tipo_cuenta":"EMPRENDEDORA","nombre":"Tienda Nueva"}'),
+  ('00000000-0000-0000-0000-000000000010', 'intento-admin@gmail.com', '{"tipo_cuenta":"ADMIN","nombre":"Cuenta de prueba"}');
 
 create temp table resultados (caso text, ok boolean);
 grant all on resultados to authenticated, anon;
@@ -46,10 +48,15 @@ insert into resultados select 'Admin queda como ADMIN', rol = 'ADMIN' from perfi
 insert into resultados select 'Doña Marta queda como EMPRENDEDORA con su tienda', rol = 'EMPRENDEDORA' and tienda_id = 't_minimarket_rosa' from perfiles where email = 'donamarta@alerce.app';
 insert into resultados select 'Correo no autorizado queda como VISITANTE', rol = 'VISITANTE' and tienda_id is null from perfiles where email = 'vecina@gmail.com';
 insert into resultados select 'La tienda de Marta queda a su nombre', owner_id = '00000000-0000-0000-0000-00000000000b' from tiendas where id = 't_minimarket_rosa';
+insert into resultados select 'Registro vendedor crea tienda propia', p.rol = 'EMPRENDEDORA' and t.owner_id = p.id
+  from perfiles p join tiendas t on t.id = p.tienda_id where p.email = 'vendedora@gmail.com';
+insert into resultados select 'Metadatos no pueden crear una cuenta ADMIN', rol = 'VISITANTE' and tienda_id is null
+  from perfiles where email = 'intento-admin@gmail.com';
 
 \set M '''00000000-0000-0000-0000-00000000000b'''
 \set A '''00000000-0000-0000-0000-00000000000a'''
 \set V '''00000000-0000-0000-0000-00000000000d'''
+\set S '''00000000-0000-0000-0000-00000000000f'''
 
 select pg_temp.probar('Marta edita su tienda', :M, $$update tiendas set bio = 'Pan amasado' where id = 't_minimarket_rosa'$$, true);
 select pg_temp.probar('Marta NO edita la tienda de otra', :M, $$update tiendas set bio = 'x' where id = 't_barberia_alerce'$$, false);
@@ -59,6 +66,8 @@ select pg_temp.probar('Marta ve su producto no publicado', :M, $$select 1 from p
 select pg_temp.probar('Visitante NO ve productos no publicados', :V, $$select 1 from productos where id = 'pm1'$$, false);
 select pg_temp.probar('Visitante ve productos publicados', :V, $$select 1 from productos where publicado$$, true);
 select pg_temp.probar('Visitante NO crea productos', :V, $$insert into productos (id, tienda_id, nombre) values ('pv', 't_minimarket_rosa', 'X')$$, false);
+select pg_temp.probar('Vendedora nueva crea producto en su tienda', :S, $$insert into productos (id, tienda_id, nombre) select 'ps1', 'tienda_' || replace(auth.uid()::text, '-', ''), 'Mi producto'$$, true);
+select pg_temp.probar('Vendedora nueva NO crea producto en otra tienda', :S, $$insert into productos (id, tienda_id, nombre) values ('ps2', 't_minimarket_rosa', 'X')$$, false);
 select pg_temp.probar('Sin sesión se ven las tiendas', null, $$select 1 from tiendas$$, true);
 select pg_temp.probar('Sin sesión NO se modifica nada', null, $$update tiendas set bio = 'x'$$, false);
 select pg_temp.probar('Marta registra una venta', :M, $$insert into ventas (id, tienda_id, total) values ('v1', 't_minimarket_rosa', 2500)$$, true);
