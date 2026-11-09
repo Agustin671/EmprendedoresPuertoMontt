@@ -52,7 +52,8 @@ data class Perfil(
     val email: String,
     val nombre: String,
     val rol: Rol,
-    val tiendaId: String?
+    val tiendaId: String?,
+    val fotoUrl: String? = null
 )
 
 object PerfilRepositorio {
@@ -66,7 +67,24 @@ object PerfilRepositorio {
             email = o.textoO("email", sesion.email),
             nombre = o.textoO("nombre"),
             rol = runCatching { Rol.valueOf(o.textoO("rol", "VISITANTE")) }.getOrDefault(Rol.VISITANTE),
-            tiendaId = o.texto("tienda_id")
+            tiendaId = o.texto("tienda_id"),
+            fotoUrl = o.texto("foto_url")
+        )
+    }
+
+    /**
+     * La propia persona cambia su nombre o su foto. La función del servidor
+     * solo toca esas dos columnas: el rol, el correo y la tienda no se pueden
+     * cambiar desde la app ni desde la web (RN-01).
+     */
+    suspend fun actualizarMiPerfil(nombre: String? = null, fotoUrl: String? = null) {
+        val cuerpo = buildJsonObject {
+            nombre?.let { put("p_nombre", it) }
+            fotoUrl?.let { put("p_foto_url", it) }
+        }.toString()
+        ClienteSupabase.pedir(
+            "POST", "/rest/v1/rpc/actualizar_mi_perfil",
+            cuerpoJson = cuerpo
         )
     }
 }
@@ -105,6 +123,7 @@ object TiendaRepositorio {
             instagram = o.textoO("instagram"),
             colorPortada = o.largo("color_portada") ?: 0xFF5C315B,
             colorLogo = o.largo("color_logo") ?: 0xFF2E7D5B,
+            logoUrl = o.texto("logo_url"),
             necesidades = NecesidadesTienda(
                 tieneStock = n("tieneStock", true),
                 tieneAgendamiento = n("tieneAgendamiento", false),
@@ -125,6 +144,7 @@ object TiendaRepositorio {
         put("instagram", t.instagram)
         put("color_portada", t.colorPortada)
         put("color_logo", t.colorLogo)
+        put("logo_url", t.logoUrl?.takeIf { it.startsWith("http") })
         put("necesidades", buildJsonObject {
             put("tieneStock", t.necesidades.tieneStock)
             put("tieneAgendamiento", t.necesidades.tieneAgendamiento)

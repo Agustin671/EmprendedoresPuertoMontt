@@ -73,6 +73,19 @@ select pg_temp.probar('Marta NO crea ferias (RN-02)', :M, $$insert into ferias (
 select pg_temp.probar('Marta sube foto en su carpeta', :M, $$insert into storage.objects (bucket_id, name) values ('productos', '00000000-0000-0000-0000-00000000000b/pm1.jpg')$$, true);
 select pg_temp.probar('Marta NO sube foto en carpeta ajena', :M, $$insert into storage.objects (bucket_id, name) values ('productos', '00000000-0000-0000-0000-00000000000c/x.jpg')$$, false);
 
+-- Fotos de perfil y logo del negocio
+select pg_temp.probar('Marta cambia su foto con la función', :M, $$select public.actualizar_mi_perfil(null, 'https://ejemplo.cl/fotos/marta.jpg')$$, true);
+insert into resultados select 'La foto de Marta quedó guardada', foto_url = 'https://ejemplo.cl/fotos/marta.jpg' from perfiles where email = 'donamarta@alerce.app';
+select pg_temp.probar('Marta NO cambia su perfil directamente', :M, $$update perfiles set nombre = 'X' where id = auth.uid()$$, false);
+select pg_temp.probar('Compradora cambia su foto con la función', :V, $$select public.actualizar_mi_perfil(null, 'https://ejemplo.cl/fotos/vecina.jpg')$$, true);
+insert into resultados select 'La función NO cambió el rol de Marta', rol = 'EMPRENDEDORA' from perfiles where email = 'donamarta@alerce.app';
+insert into resultados select 'La función NO cambió la foto de otra persona', foto_url is null from perfiles where email = 'barberia@alerce.app';
+select pg_temp.probar('Marta sube su foto de perfil a su carpeta', :M, $$insert into storage.objects (bucket_id, name) values ('perfiles', '00000000-0000-0000-0000-00000000000b/perfil.jpg')$$, true);
+select pg_temp.probar('Marta NO sube foto de perfil a carpeta ajena', :M, $$insert into storage.objects (bucket_id, name) values ('perfiles', '00000000-0000-0000-0000-00000000000c/perfil.jpg')$$, false);
+select pg_temp.probar('Marta cambia el logo de su tienda', :M, $$update tiendas set logo_url = 'https://ejemplo.cl/fotos/logo.jpg' where id = 't_minimarket_rosa'$$, true);
+insert into resultados select 'El logo de Marta quedó guardado', logo_url = 'https://ejemplo.cl/fotos/logo.jpg' from tiendas where id = 't_minimarket_rosa';
+select pg_temp.probar('Marta NO cambia el logo de otra tienda', :M, $$update tiendas set logo_url = 'https://ejemplo.cl/fotos/x.jpg' where id = 't_barberia_alerce'$$, false);
+
 -- Emprendedora nueva autorizada por el admin: al registrarse obtiene tienda propia
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000e', 'nueva@alerce.app');
 insert into resultados select 'Emprendedora nueva recibe tienda propia', p.rol = 'EMPRENDEDORA' and t.owner_id = p.id

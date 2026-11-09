@@ -28,8 +28,11 @@ create table if not exists public.perfiles (
   nombre     text,
   rol        text not null default 'VISITANTE' check (rol in ('ADMIN', 'EMPRENDEDORA', 'VISITANTE')),
   tienda_id  text,
+  foto_url   text,
   creado_en  timestamptz not null default now()
 );
+-- Bases ya creadas: agrega la foto de perfil sin borrar datos.
+alter table public.perfiles add column if not exists foto_url text;
 
 create table if not exists public.asociaciones (
   id        text primary key,
@@ -49,10 +52,13 @@ create table if not exists public.tiendas (
   instagram       text default '',
   color_portada   bigint,
   color_logo      bigint,
+  logo_url        text,
   necesidades     jsonb not null default '{}'::jsonb,
   mostrar_precios boolean not null default true,
   actualizado_en  timestamptz not null default now()
 );
+-- Bases ya creadas: agrega el logo del negocio sin borrar datos.
+alter table public.tiendas add column if not exists logo_url text;
 
 create table if not exists public.productos (
   id             text primary key,
@@ -158,6 +164,22 @@ drop trigger if exists al_crear_usuario on auth.users;
 create trigger al_crear_usuario
   after insert on auth.users
   for each row execute function public.al_crear_usuario();
+
+-- Cada persona puede cambiar SOLO su nombre y su foto. No puede tocar rol,
+-- correo ni tienda (RN-01): la función ignora esos datos.
+create or replace function public.actualizar_mi_perfil(
+  p_nombre text default null,
+  p_foto_url text default null
+)
+returns void language sql security definer set search_path = public as $$
+  update public.perfiles
+     set nombre   = coalesce(nullif(btrim(p_nombre), ''), nombre),
+         foto_url = coalesce(p_foto_url, foto_url)
+   where id = auth.uid();
+$$;
+
+revoke all on function public.actualizar_mi_perfil(text, text) from public;
+grant execute on function public.actualizar_mi_perfil(text, text) to authenticated;
 
 -- ---------- 3. Seguridad por fila (RLS) ----------
 
@@ -270,3 +292,25 @@ drop policy if exists fotos_borrar on storage.objects;
 create policy fotos_borrar on storage.objects
   for delete to authenticated
   using (bucket_id = 'productos' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Bucket público "perfiles": foto de cada usuaria (compradora o emprendedora).
+-- Igual que las fotos de productos, cada persona escribe solo en su carpeta uid/.
+insert into storage.buckets (id, name, public)
+values ('perfiles', 'perfiles', true)
+on conflict (id) do nothing;
+
+drop policy if exists perfiles_foto_ver on storage.objects;
+create policy perfiles_foto_ver on storage.objects
+  for select using (bucket_id = 'perfiles');
+drop policy if exists perfiles_foto_subir on storage.objects;
+create policy perfiles_foto_subir on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'perfiles' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists perfiles_foto_reemplazar on storage.objects;
+create policy perfiles_foto_reemplazar on storage.objects
+  for update to authenticated
+  using (bucket_id = 'perfiles' and (storage.foldername(name))[1] = auth.uid()::text);
+drop policy if exists perfiles_foto_borrar on storage.objects;
+create policy perfiles_foto_borrar on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'perfiles' and (storage.foldername(name))[1] = auth.uid()::text);

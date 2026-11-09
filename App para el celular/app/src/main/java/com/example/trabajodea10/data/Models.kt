@@ -183,6 +183,7 @@ data class Tienda(
     val instagram: String = "@tienda.alerce",
     val colorPortada: Long = 0xFF5C315B,
     val colorLogo: Long = 0xFF2E7D5B,
+    val logoUrl: String? = null,
     val necesidades: NecesidadesTienda = NecesidadesTienda()
 ) {
     fun toMap(): Map<String, Any> = mapOf(
@@ -195,6 +196,7 @@ data class Tienda(
         "instagram" to instagram,
         "colorPortada" to colorPortada,
         "colorLogo" to colorLogo,
+        "logoUrl" to (logoUrl ?: ""),
         "necesidades" to necesidades.toMap()
     )
 
@@ -212,6 +214,7 @@ data class Tienda(
                 instagram = (map["instagram"] as? String) ?: "",
                 colorPortada = (map["colorPortada"] as? Number)?.toLong() ?: 0xFF5C315B,
                 colorLogo = (map["colorLogo"] as? Number)?.toLong() ?: 0xFF2E7D5B,
+                logoUrl = (map["logoUrl"] as? String)?.takeIf { it.isNotBlank() },
                 necesidades = NecesidadesTienda.fromMap(necMap)
             )
         }

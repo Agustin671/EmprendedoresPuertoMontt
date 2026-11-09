@@ -1,4 +1,4 @@
-﻿name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -23,6 +23,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generar config.js desde secrets
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          CONFIG_FILE="./LA PAgina (segun)/proyectode10/js/config.js"
+          node -e 'const fs=require("fs"); const cfg={supabase:{url:process.env.SUPABASE_URL||"",anonKey:process.env.SUPABASE_ANON_KEY||""}}; fs.writeFileSync(process.argv[1], "window.__CONFIG__ = "+JSON.stringify(cfg)+";\n")' "$CONFIG_FILE"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

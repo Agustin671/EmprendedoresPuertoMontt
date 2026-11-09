@@ -1,5 +1,7 @@
 package com.example.trabajodea10.data
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -32,6 +34,8 @@ object SesionManager {
     private const val DATO_NOMBRE = "nombre"
     private const val DATO_ROL = "rol"
     private const val DATO_HUELLA = "huella_activada"
+    private const val DATO_FOTO = "foto_perfil"
+    private const val DATO_HUELLA_OFRECIDA = "huella_ofrecida"
 
     data class UsuarioSesion(val id: String, val email: String)
 
@@ -43,6 +47,10 @@ object SesionManager {
     val emailActual: String? get() = ClienteSupabase.sesion?.email
 
     var nombreUsuarioActual by mutableStateOf(ClienteSupabase.leerDato(DATO_NOMBRE) ?: "")
+        private set
+
+    /** Foto de perfil guardada (URL pública de Storage), para mostrarla al instante. */
+    var fotoPerfilUrl by mutableStateOf(ClienteSupabase.leerDato(DATO_FOTO) ?: "")
         private set
 
     val nombreUsuarioDemo: String get() = nombreUsuarioActual
@@ -147,7 +155,13 @@ object SesionManager {
         prepararSesion()
     }.onFailure { Log.w(TAG, "Registro fallido: ${it.message}") }
 
-    /** Hay una sesión guardada y la emprendedora activó la huella. */
+    /** Envía el correo con el enlace para crear una contraseña nueva. */
+    suspend fun recuperarContrasena(correo: String): Result<Unit> = runCatching {
+        if (correo.isBlank()) throw ErrorSupabase(0, "Escribe tu correo electrónico.")
+        ClienteSupabase.recuperarContrasena(correo)
+    }.onFailure { Log.w(TAG, "No se pudo enviar el correo de recuperación: ${it.message}") }
+
+    /** Hay una sesión guardada y la persona activó la huella. */
     fun huellaDisponible(): Boolean =
         ClienteSupabase.sesion != null && ClienteSupabase.leerDato(DATO_HUELLA) == "si"
 
@@ -155,6 +169,14 @@ object SesionManager {
 
     fun activarHuella(activar: Boolean) {
         ClienteSupabase.guardarDato(DATO_HUELLA, if (activar) "si" else null)
+        if (activar) ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, "si")
+    }
+
+    /** Para no preguntar por la huella en cada ingreso si la persona dijo que no. */
+    fun huellaYaOfrecida(): Boolean = ClienteSupabase.leerDato(DATO_HUELLA_OFRECIDA) == "si"
+
+    fun marcarHuellaOfrecida() {
+        ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, "si")
     }
 
     /** Después de validar la huella con el sistema: renueva la sesión guardada y entra. */
@@ -180,8 +202,10 @@ object SesionManager {
         val perfil = PerfilRepositorio.miPerfil()
         nombreUsuarioActual = perfil.nombre
         rolUsuarioActual = perfil.rol
+        fotoPerfilUrl = perfil.fotoUrl.orEmpty()
         ClienteSupabase.guardarDato(DATO_NOMBRE, perfil.nombre)
         ClienteSupabase.guardarDato(DATO_ROL, perfil.rol.name)
+        ClienteSupabase.guardarDato(DATO_FOTO, perfil.fotoUrl)
 
         if (perfil.rol == Rol.EMPRENDEDORA && perfil.tiendaId != null) {
             traerMiTienda(perfil.tiendaId)
@@ -222,7 +246,10 @@ object SesionManager {
             ClienteSupabase.cerrarSesion()
             ClienteSupabase.guardarDato(DATO_ROL, null)
             ClienteSupabase.guardarDato(DATO_NOMBRE, null)
+            ClienteSupabase.guardarDato(DATO_FOTO, null)
+            ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, null)
             nombreUsuarioActual = ""
+            fotoPerfilUrl = ""
             rolUsuarioActual = null
         }
         TramaStore.cerrarSesion()
@@ -272,4 +299,23 @@ object SesionManager {
         if (!ok) Sincronizador.tiendaPendiente()
         return ok
     }
+
+    /** Cambia la foto de perfil de quien tiene la sesión. */
+    suspend fun subirFotoPerfil(contexto: Context, uri: Uri): Result<Unit> = runCatching {
+        val url = FotoProductoStore.subirAvatar(contexto, uri)
+            ?: throw ErrorSupabase(0, "No se pudo leer la foto elegida.")
+        PerfilRepositorio.actualizarMiPerfil(fotoUrl = url)
+        fotoPerfilUrl = url
+        ClienteSupabase.guardarDato(DATO_FOTO, url)
+    }.onFailure { Log.w(TAG, "No se pudo cambiar la foto de perfil: ${it.message}") }
+
+    /** Cambia el logo del negocio de la emprendedora con sesión. */
+    suspend fun subirLogo(contexto: Context, uri: Uri): Result<Unit> = runCatching {
+        val tienda = TramaStore.tienda
+        if (tienda.id.isBlank()) throw ErrorSupabase(0, "Primero inicia sesión como emprendedora.")
+        val url = FotoProductoStore.subirLogo(contexto, uri, tienda.id)
+            ?: throw ErrorSupabase(0, "No se pudo leer la imagen elegida.")
+        guardarTienda(tienda.copy(logoUrl = url))
+        Unit
+    }.onFailure { Log.w(TAG, "No se pudo cambiar el logo: ${it.message}") }
 }

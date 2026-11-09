@@ -11,12 +11,61 @@
   // CONEXIÓN OFICIAL SUPABASE CLOUD (INSTANCIA ALERCE I7)
   // Backend oficial para Programación Android 2026-2 & Web
   // ============================================================
-  var SUPABASE_URL = "https://supabase-alerceis7.codepulse.cl";
-  var SUPABASE_ANON_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc5MzIwMDQ0MCwiZXhwIjo0OTQ4ODc0MDQwLCJyb2xlIjoiYW5vbiJ9.pA-zUw0JkxwxGKrRB3GfDPEtTE1K3eQGYBQp6v1HyUE";
+  var CFG = (typeof window !== "undefined" && window.__CONFIG__) ? window.__CONFIG__ : {};
+  var CFG_SUPA = CFG.supabase || (CFG.SUPABASE_URL ? { url: CFG.SUPABASE_URL, anonKey: CFG.SUPABASE_ANON_KEY } : {});
+  var SUPABASE_URL = CFG_SUPA.url || "";
+  var SUPABASE_ANON_KEY = CFG_SUPA.anonKey || "";
+  var BUCKET_FOTOS = "productos";
+  var BUCKET_PERFILES = "perfiles";
+
+  function subirArchivoSupabase(bucket, ruta, archivo) {
+    if (!supabaseClient || !supabaseClient.storage) {
+      return Promise.reject(new Error("Supabase Storage no está disponible"));
+    }
+    return comprimirImagen(archivo).then(function (jpeg) {
+      return supabaseClient.storage.from(bucket).upload(ruta, jpeg, {
+        upsert: true,
+        cacheControl: "3600",
+        contentType: "image/jpeg"
+      });
+    }).then(function(res) {
+      if (res.error) throw res.error;
+      var pub = supabaseClient.storage.from(bucket).getPublicUrl(ruta);
+      return pub && pub.data ? pub.data.publicUrl : "";
+    });
+  }
+
+  function comprimirImagen(archivo) {
+    return new Promise(function (resolve, reject) {
+      if (!archivo || !archivo.type || archivo.type.indexOf("image/") !== 0) {
+        reject(new Error("Elige un archivo de imagen válido."));
+        return;
+      }
+      var imagen = new Image();
+      var url = URL.createObjectURL(archivo);
+      imagen.onload = function () {
+        URL.revokeObjectURL(url);
+        var escala = Math.min(1, 1280 / Math.max(imagen.naturalWidth, imagen.naturalHeight));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(imagen.naturalWidth * escala));
+        canvas.height = Math.max(1, Math.round(imagen.naturalHeight * escala));
+        canvas.getContext("2d").drawImage(imagen, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error("No se pudo preparar la imagen."));
+        }, "image/jpeg", 0.8);
+      };
+      imagen.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("No se pudo abrir la imagen elegida."));
+      };
+      imagen.src = url;
+    });
+  }
   var supabaseClient = null;
 
   try {
-    if (typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window !== "undefined" && window.supabase && window.supabase.createClient) {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       console.log("✅ Supabase Client conectado exitosamente a instancia oficial Alerce i7:", SUPABASE_URL);
     }
@@ -41,14 +90,7 @@
   // ============================================================
   // CONEXIÓN OFICIAL FIREBASE WEB (AUTH, FIRESTORE, STORAGE)
   // ============================================================
-  var firebaseConfig = {
-    apiKey: "AIzaSyBmxcinIPVJB-AKgHQQ9iEp3p6-uRS58oI",
-    authDomain: "alercei7.firebaseapp.com",
-    projectId: "alercei7",
-    storageBucket: "alercei7.firebasestorage.app",
-    messagingSenderId: "60295127775",
-    appId: "1:60295127775:web:4e6ec2188b21076f01ff6a"
-  };
+  var firebaseConfig = CFG.firebase || CFG.FIREBASE || null;
 
   var firebaseApp = null;
   var firebaseAuth = null;
@@ -56,7 +98,7 @@
   var firebaseStorage = null;
 
   try {
-    if (typeof firebase !== "undefined") {
+    if (firebaseConfig && typeof firebase !== "undefined") {
       if (!firebase.apps || !firebase.apps.length) {
         firebaseApp = firebase.initializeApp(firebaseConfig);
       } else {
@@ -821,7 +863,11 @@
       // Cuerpo de la tarjeta
       html += '  <div class="tarjeta-cuerpo">';
       html += '    <div class="tarjeta-perfil-fila">';
-      html += '      <div class="avatar-circulo" style="background-color: ' + tienda.colorLogo + ';">' + tienda.nombre.charAt(0).toUpperCase() + '</div>';
+      if (tienda.logoUrl) {
+        html += '      <img class="avatar-circulo" src="' + escaparHtml(tienda.logoUrl) + '" alt="" style="object-fit: cover;">';
+      } else {
+        html += '      <div class="avatar-circulo" style="background-color: ' + tienda.colorLogo + ';">' + tienda.nombre.charAt(0).toUpperCase() + '</div>';
+      }
       html += '      <div class="tarjeta-titulos">';
       html += '        <h3 class="tarjeta-nombre">' + escaparHtml(tienda.nombre) + '</h3>';
       html += '        <p class="tarjeta-sub">' + escaparHtml(tienda.rubro) + ' · ' + escaparHtml(tienda.sector) + '</p>';
@@ -903,8 +949,13 @@
     var btnWhatsapp = document.getElementById("btn-modal-tienda-whatsapp");
 
     if (avatar) {
-      avatar.textContent = tienda.nombre.charAt(0).toUpperCase();
-      avatar.style.backgroundColor = tienda.colorLogo;
+      avatar.style.backgroundColor = tienda.logoUrl ? "transparent" : tienda.colorLogo;
+      if (tienda.logoUrl) {
+        avatar.innerHTML = '<img src="' + escaparHtml(tienda.logoUrl) + '" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+      } else {
+        avatar.innerHTML = "";
+        avatar.textContent = tienda.nombre.charAt(0).toUpperCase();
+      }
     }
     if (titulo) titulo.textContent = tienda.nombre;
     if (rubroSector) rubroSector.textContent = tienda.rubro + " · " + tienda.sector;
@@ -2472,7 +2523,6 @@
     renderizarTiendasMarketplace();
     renderizarAsociaciones();
     configurarObservadorAuthSupabase();
-    configurarObservadorAuthFirebase();
     cargarTiendasDesdeSupabase();
     cargarProductosDesdeSupabase();
     cargarFeriasDesdeSupabase();
@@ -2887,6 +2937,7 @@
           instagram: t.instagram || "",
           colorPortada: normalizarColorHex(t.color_portada, "#1A202C"),
           colorLogo: normalizarColorHex(t.color_logo, "#2B6CB0"),
+          logoUrl: t.logo_url || "",
           necesidades: nec || {
             tieneStock: true,
             tieneAgendamiento: false,
@@ -3009,6 +3060,38 @@
   function configurarObservadorAuthSupabase() {
     if (!supabaseClient || !supabaseClient.auth) return;
     try {
+      if (typeof window !== "undefined" && window.location.search && window.location.search.indexOf("recuperar=1") !== -1) {
+        setTimeout(function () {
+          abrirModal("modal-cambiar-clave");
+        }, 600);
+      }
+
+      supabaseClient.auth.getSession().then(function (resp) {
+        var session = resp.data ? resp.data.session : null;
+        if (session && session.user) {
+          procesarUsuarioSupabase(session.user);
+        }
+      }).catch(function (e) { console.warn("Aviso sesión Supabase:", e); });
+
+      supabaseClient.auth.onAuthStateChange(function (event, session) {
+        if (event === "PASSWORD_RECOVERY") {
+          abrirModal("modal-cambiar-clave");
+          return;
+        }
+        if (session && session.user) {
+          procesarUsuarioSupabase(session.user);
+        } else if (event === "SIGNED_OUT") {
+          cerrarSesionWebLocal();
+        }
+      });
+    } catch (e) {
+      console.warn("Aviso listener Supabase Auth:", e);
+    }
+  }
+
+  function __legacy_configurarObservadorAuthSupabase() {
+    if (!supabaseClient || !supabaseClient.auth) return;
+    try {
       supabaseClient.auth.getSession().then(function (resp) {
         var session = resp.data ? resp.data.session : null;
         if (session && session.user) {
@@ -3034,22 +3117,46 @@
     if (!user) return;
     var meta = user.user_metadata || {};
     var email = user.email || "";
-    var emailLower = email.toLowerCase().trim();
-    var nombre = meta.nombre || user.displayName || email.split("@")[0] || "Usuario";
-    var rol = meta.rol || "Comprador";
+    var nombreFallback = meta.nombre || user.displayName || email.split("@")[0] || "Usuario";
 
-    if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app") {
-      entrarModoDonaRosa();
-      return;
-    }
+    // RN-01: el rol y la tienda solo se aceptan desde el perfil creado por el servidor.
+    supabaseClient.from("perfiles").select("nombre, rol, tienda_id, foto_url").eq("id", user.id).maybeSingle().then(function (res) {
+      if (res.error) throw res.error;
+      var p = res.data || {};
+      var nombre = (p && p.nombre) ? p.nombre : nombreFallback;
+      var rol = p.rol === "ADMIN" || p.rol === "EMPRENDEDORA" ? p.rol : "VISITANTE";
+      var tiendaId = rol === "EMPRENDEDORA" && p.tienda_id ? p.tienda_id : null;
+      var fotoUrl = (p && p.foto_url) ? p.foto_url : null;
 
-    if (meta.tienda_id) {
-      estado.tiendaEmprendedoraId = meta.tienda_id;
-      estadoPOS.tiendaId = meta.tienda_id;
-    }
+      estado.usuario = {
+        id: user.id,
+        email: email,
+        nombre: nombre,
+        rol: rol,
+        tiendaId: tiendaId,
+        fotoUrl: fotoUrl
+      };
 
-    aplicarUsuarioLocal(nombre, rol === "EMPRENDEDORA" ? "Emprendedor/a" : (rol === "ADMIN" ? "Administrador" : "Comprador"));
-    actualizarUIControlesSegunRol();
+      if (tiendaId) {
+        estado.tiendaEmprendedoraId = tiendaId;
+        estadoPOS.tiendaId = tiendaId;
+      } else {
+        estado.tiendaEmprendedoraId = null;
+        estadoPOS.tiendaId = null;
+      }
+
+      var rolEtiqueta = (rol === "ADMIN") ? "Administrador" : (rol === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador");
+      aplicarUsuarioLocal(nombre, rolEtiqueta, fotoUrl);
+      actualizarUIControlesSegunRol();
+      if (rol === "ADMIN") entrarModoAdmin();
+    }).catch(function (err) {
+      console.warn("Aviso leyendo perfil de Supabase:", err);
+      estado.usuario = { id: user.id, email: email, nombre: nombreFallback, rol: "VISITANTE", tiendaId: null, fotoUrl: "" };
+      estado.tiendaEmprendedoraId = null;
+      estadoPOS.tiendaId = null;
+      aplicarUsuarioLocal(nombreFallback, "Comprador", null);
+      actualizarUIControlesSegunRol();
+    });
   }
 
   // Sincronización en vivo con Cloud Firestore (compatibilidad de respaldo)
@@ -3217,6 +3324,150 @@
     var inpWsp = document.getElementById("reg-emp-whatsapp");
     var inpEmail = document.getElementById("reg-emp-email");
     var inpPass = document.getElementById("reg-emp-password");
+    var inpAvatar = document.getElementById("reg-emp-avatar");
+    var inpLogo = document.getElementById("reg-emp-logo");
+    var errorDiv = document.getElementById("reg-emp-aviso-error");
+    var exitoDiv = document.getElementById("reg-emp-aviso-exito");
+    var btnSubmit = document.getElementById("btn-submit-reg-emp");
+
+    var nombre = inpNombre ? inpNombre.value.trim() : "";
+    var rubro = selectRubro ? selectRubro.value : "Abarrotes y Alimentos";
+    var sector = selectSector ? selectSector.value : "Alerce Histórico";
+    var whatsapp = inpWsp ? inpWsp.value.trim() : "";
+    var email = inpEmail ? inpEmail.value.trim().toLowerCase() : "";
+    var pass = inpPass ? inpPass.value : "";
+    var archivoAvatar = (inpAvatar && inpAvatar.files && inpAvatar.files[0]) ? inpAvatar.files[0] : null;
+    var archivoLogo = (inpLogo && inpLogo.files && inpLogo.files[0]) ? inpLogo.files[0] : null;
+
+    function mostrarErrorReg(msg) {
+      if (errorDiv) {
+        errorDiv.textContent = msg;
+        errorDiv.style.display = "block";
+      }
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento";
+      }
+    }
+
+    if (!nombre) {
+      mostrarErrorReg("Por favor ingresa el nombre de tu emprendimiento o tu nombre.");
+      return;
+    }
+    if (!email || !pass || pass.length < 6) {
+      mostrarErrorReg("Por favor ingresa un correo válido y una contraseña de al menos 6 caracteres.");
+      return;
+    }
+
+    if (errorDiv) errorDiv.style.display = "none";
+    if (exitoDiv) exitoDiv.style.display = "none";
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Registrando tu cuenta...";
+    }
+
+    if (supabaseClient && supabaseClient.auth) {
+      supabaseClient.auth.signUp({
+        email: email,
+        password: pass,
+        options: {
+          data: {
+            nombre: nombre,
+            rubro: rubro,
+            sector: sector,
+            whatsapp: whatsapp
+          }
+        }
+      }).then(function (res) {
+        if (res.error) throw res.error;
+        var user = res.data ? res.data.user : null;
+        if (!user) throw new Error("No se pudo obtener el usuario registrado.");
+        if (!res.data || !res.data.session) {
+          throw new Error("Cuenta creada. Revisa la configuración de Supabase: la confirmación de correo debe estar desactivada para entrar de inmediato.");
+        }
+
+        var cargaAvatar = archivoAvatar
+          ? subirArchivoSupabase(BUCKET_PERFILES, user.id + "/avatar_" + Date.now() + ".jpg", archivoAvatar)
+          : Promise.resolve(null);
+
+        cargaAvatar.catch(function (eAvatar) {
+          console.warn("Aviso subiendo foto de perfil:", eAvatar);
+          mostrarToast("La cuenta se creó; no se pudo subir la foto. Puedes intentarlo desde Mi Perfil.");
+          return null;
+        }).then(function (fotoUrl) {
+          return supabaseClient.rpc("actualizar_mi_perfil", {
+            p_nombre: nombre,
+            p_foto_url: fotoUrl || null
+          }).then(function (resPerfil) {
+            if (resPerfil.error) throw resPerfil.error;
+            return supabaseClient.from("perfiles").select("rol, tienda_id, nombre, foto_url").eq("id", user.id).maybeSingle();
+          });
+        }).then(function (resPerfil) {
+          if (resPerfil.error) throw resPerfil.error;
+          var perfil = resPerfil.data || {};
+          var rol = perfil.rol === "EMPRENDEDORA" || perfil.rol === "ADMIN" ? perfil.rol : "VISITANTE";
+          var tiendaId = rol === "EMPRENDEDORA" ? perfil.tienda_id : null;
+          var fotoUrl = perfil.foto_url || "";
+
+          if (!tiendaId) {
+            estado.usuario = { id: user.id, email: email, nombre: nombre, rol: "VISITANTE", tiendaId: null, fotoUrl: fotoUrl };
+            estado.tiendaEmprendedoraId = null;
+            estadoPOS.tiendaId = null;
+            aplicarUsuarioLocal(nombre, "Comprador", fotoUrl);
+            cerrarModal("modal-registro-emprendedor");
+            alert("Tu cuenta ha sido creada como compradora. Para abrir una tienda, el administrador debe autorizar primero tu correo.");
+            return;
+          }
+
+          var cargaLogo = archivoLogo
+            ? subirArchivoSupabase("productos", user.id + "/logo_tienda_" + tiendaId + "_" + Date.now() + ".jpg", archivoLogo)
+            : Promise.resolve(null);
+          return cargaLogo.then(function (logoUrl) {
+            var datosTienda = { nombre: nombre, rubro: rubro, sector: sector, whatsapp: whatsapp };
+            if (logoUrl) datosTienda.logo_url = logoUrl;
+            return supabaseClient.from("tiendas").update(datosTienda).eq("id", tiendaId).select("id").then(function (resTienda) {
+              if (resTienda.error) throw resTienda.error;
+              if (!resTienda.data || !resTienda.data.length) throw new Error("El servidor no confirmó la actualización de la tienda autorizada.");
+              estado.tiendaEmprendedoraId = tiendaId;
+              estadoPOS.tiendaId = tiendaId;
+              estado.usuario = { id: user.id, email: email, nombre: nombre, rol: "EMPRENDEDORA", tiendaId: tiendaId, fotoUrl: fotoUrl };
+              aplicarUsuarioLocal(nombre, "Emprendedor/a", fotoUrl);
+              cargarTiendasDesdeSupabase();
+              actualizarDashboardEmprendedora();
+              cerrarModal("modal-registro-emprendedor");
+              mostrarToast("¡Cuenta creada! Tu negocio autorizado ya tiene su ficha y su imagen.");
+            });
+          }).catch(function (eTienda) {
+            console.warn("No se pudo guardar la tienda/logo:", eTienda);
+            estado.usuario = { id: user.id, email: email, nombre: nombre, rol: "EMPRENDEDORA", tiendaId: tiendaId, fotoUrl: fotoUrl };
+            estado.tiendaEmprendedoraId = tiendaId;
+            estadoPOS.tiendaId = tiendaId;
+            aplicarUsuarioLocal(nombre, "Emprendedor/a", fotoUrl);
+            mostrarErrorReg("La cuenta está creada, pero no se pudo guardar el logo o los datos del negocio. Puedes volver a intentarlo desde Mi Tienda.");
+          });
+        }).catch(function (ePerfil) {
+          console.warn("No se pudo completar el perfil inicial:", ePerfil);
+          mostrarErrorReg("La cuenta se creó, pero no se pudo leer el perfil autorizado. Inicia sesión nuevamente o pide ayuda al administrador.");
+        }).then(function () {
+          if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "🚀 Registrar mi Emprendimiento"; }
+        });
+      }).catch(function (err) {
+        console.warn("Aviso Supabase SignUp:", err);
+        mostrarErrorReg("Error al registrar cuenta: " + (err.message || err));
+      });
+      return;
+    }
+
+    mostrarErrorReg("El servicio de cuentas no está configurado. Intenta más tarde.");
+  }
+
+  function __legacy_registrarEmprendedorModal() {
+    var inpNombre = document.getElementById("reg-emp-nombre");
+    var selectRubro = document.getElementById("reg-emp-rubro");
+    var selectSector = document.getElementById("reg-emp-sector");
+    var inpWsp = document.getElementById("reg-emp-whatsapp");
+    var inpEmail = document.getElementById("reg-emp-email");
+    var inpPass = document.getElementById("reg-emp-password");
     var errorDiv = document.getElementById("reg-emp-aviso-error");
     var exitoDiv = document.getElementById("reg-emp-aviso-exito");
     var btnSubmit = document.getElementById("btn-submit-reg-emp");
@@ -3344,99 +3595,22 @@
         completarRegistro();
       }).catch(function (err) {
         console.warn("Aviso Supabase SignUp:", err);
-        if (firebaseAuth) {
-          firebaseAuth.createUserWithEmailAndPassword(email, pass).then(function () {
-            completarRegistro();
-          }).catch(function (errFb) {
-            mostrarErrorReg("Error registrando cuenta: " + (err.message || errFb.message));
-          });
-        } else {
-          completarRegistro();
-        }
+        mostrarErrorReg("No se pudo registrar la cuenta. Intenta nuevamente: " + (err.message || err));
       });
       return;
     }
 
-    completarRegistro();
+    mostrarErrorReg("El servicio de cuentas no está configurado. Intenta más tarde.");
   }
 
   function intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit) {
-    if (!firebaseAuth) {
-      aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
-      if (btnSubmit) {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrar mi Emprendimiento" : "Iniciar Sesión";
-      }
-      cerrarModal("modal-auth-web");
-      mostrarToast("¡Bienvenido! Sesión iniciada.");
-      return;
+    if (errorDiv) {
+      errorDiv.textContent = "El acceso con Firebase ya no está habilitado. Configura Supabase para iniciar sesión.";
+      errorDiv.style.display = "block";
     }
-
-    if (estadoAuthWeb.modoRegistro) {
-      firebaseAuth.createUserWithEmailAndPassword(email, pass)
-        .then(function (cred) {
-          var user = cred.user;
-          return user.updateProfile({ displayName: nombre }).then(function () {
-            if (firebaseFirestore) {
-              firebaseFirestore.collection("usuarios").doc(user.uid).set({
-                uid: user.uid,
-                email: email,
-                nombre: nombre,
-                rol: estadoAuthWeb.rolSeleccionado,
-                fechaRegistro: Date.now()
-              }).catch(function (e) { console.warn("Aviso Firestore:", e); });
-            }
-            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.textContent = "Registrarme en Supabase";
-            }
-            cerrarModal("modal-auth-web");
-            mostrarToast("¡Cuenta creada exitosamente!");
-          });
-        })
-        .catch(function (err) {
-          if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Registrarme en Supabase";
-          }
-          if (errorDiv) {
-            errorDiv.textContent = "Error: " + (err.message || err);
-            errorDiv.style.display = "block";
-          }
-        });
-    } else {
-      firebaseAuth.signInWithEmailAndPassword(email, pass)
-        .then(function (cred) {
-          var user = cred.user;
-          var nombreDetectado = user.displayName || email.split("@")[0];
-          aplicarUsuarioLocal(nombreDetectado, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
-          if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Iniciar Sesión";
-          }
-          cerrarModal("modal-auth-web");
-          mostrarToast("¡Sesión iniciada con éxito!");
-        })
-        .catch(function (err) {
-          var emailLower = email.toLowerCase().trim();
-          if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.textContent = "Iniciar Sesión";
-            }
-            entrarModoDonaRosa();
-            return;
-          }
-          if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Iniciar Sesión";
-          }
-          if (errorDiv) {
-            errorDiv.textContent = "Error: " + (err.message || "Credenciales incorrectas");
-            errorDiv.style.display = "block";
-          }
-        });
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = estadoAuthWeb.modoRegistro ? "Registrarme en Supabase" : "Iniciar Sesión";
     }
   }
 
@@ -3461,11 +3635,6 @@
         mostrarErrorAuth("🚫 Tu cuenta ha sido desactivada por el administrador de la plataforma (Requisito W09). Comunícate con la administración.");
         return;
       }
-    }
-
-    if (estadoAuthWeb.rolSeleccionado === "ADMIN" || email === "admin@alerce.app") {
-      entrarModoAdmin();
-      return;
     }
 
     if (!email || !pass) {
@@ -3499,8 +3668,7 @@
           password: pass,
           options: {
             data: {
-              nombre: nombre,
-              rol: estadoAuthWeb.rolSeleccionado
+              nombre: nombre
             }
           }
         }).then(function (res) {
@@ -3512,16 +3680,22 @@
             throw res.error;
           }
           var user = res.data ? res.data.user : null;
-          if (user) {
-            procesarUsuarioSupabase(user);
-          } else {
-            aplicarUsuarioLocal(nombre, estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
+          if (!user) throw new Error("No se pudo obtener el usuario registrado.");
+          var session = res.data ? res.data.session : null;
+          if (!session) {
+            if (errorDiv) {
+              errorDiv.textContent = "Cuenta creada. Confirma tu correo para iniciar sesión.";
+              errorDiv.style.display = "block";
+            }
+            return;
           }
+          procesarUsuarioSupabase(user);
           cerrarModal("modal-auth-web");
           mostrarToast("¡Cuenta creada exitosamente!");
         }).catch(function (err) {
-          console.warn("Aviso Supabase SignUp, probando fallback:", err);
-          intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
+          console.warn("Aviso Supabase SignUp:", err);
+          if (errorDiv) { errorDiv.textContent = err.message || "No se pudo crear la cuenta."; errorDiv.style.display = "block"; }
+          if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Registrarme en Supabase"; }
         });
         return;
       } else {
@@ -3537,31 +3711,21 @@
             throw res.error;
           }
           var user = res.data ? res.data.user : null;
-          if (user) {
-            procesarUsuarioSupabase(user);
-          } else {
-            aplicarUsuarioLocal(nombre || email.split("@")[0], estadoAuthWeb.rolSeleccionado === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador/a");
-          }
+          if (!user) throw new Error("El servicio no devolvió un usuario de sesión válido.");
+          procesarUsuarioSupabase(user);
           cerrarModal("modal-auth-web");
           mostrarToast("¡Sesión iniciada con éxito!");
         }).catch(function (err) {
-          var emailLower = email.toLowerCase().trim();
-          if (emailLower === "donarosa@alerce.app" || emailLower === "donamarta@alerce.app" || emailLower === "rosa@alerce.app" || emailLower === "marta@alerce.app") {
-            if (btnSubmit) {
-              btnSubmit.disabled = false;
-              btnSubmit.textContent = "Iniciar Sesión";
-            }
-            entrarModoDonaRosa();
-            return;
-          }
-          console.warn("Aviso Supabase SignIn, probando fallback:", err);
-          intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
+          console.warn("Aviso Supabase SignIn:", err);
+          if (errorDiv) { errorDiv.textContent = err.message || "No se pudo iniciar sesión."; errorDiv.style.display = "block"; }
+          if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Iniciar Sesión"; }
         });
         return;
       }
     }
 
-    intentarFallbackFirebase(email, pass, nombre, errorDiv, btnSubmit);
+    if (errorDiv) { errorDiv.textContent = "El servicio de cuentas no está configurado. Intenta más tarde."; errorDiv.style.display = "block"; }
+    if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Iniciar Sesión"; }
   }
 
   function autocompletarCredenciales(email, pass) {
@@ -3576,6 +3740,10 @@
   }
 
   function entrarModoDev(tiendaId) {
+    if (!esUsuarioEmprendedora() || estado.usuario.tiendaId !== tiendaId) {
+      mostrarToast("Inicia sesión con la cuenta autorizada para esta tienda.");
+      return;
+    }
     if (tiendaId === "t_minimarket_rosa") {
       entrarModoDonaRosa();
       return;
@@ -3588,20 +3756,18 @@
       }
     }
     var nombre = tienda ? tienda.nombre : "Minimarket Doña Rosa";
-    estado.tiendaEmprendedoraId = tiendaId;
-    estadoPOS.tiendaId = tiendaId;
-    aplicarUsuarioLocal(nombre, "Emprendedor/a (Prueba)");
     cerrarModal("modal-auth-web");
-    mostrarToast("Entrando como " + nombre + " (Modo Emprendedor/a)");
+    mostrarToast("Sesión activa para " + nombre + ".");
   }
 
   function entrarModoDonaRosa() {
-    aplicarUsuarioLocal("Minimarket Doña Rosa", "Emprendedor/a (Minimarket)");
-    estado.tiendaEmprendedoraId = "t_minimarket_rosa";
-    estadoPOS.tiendaId = "t_minimarket_rosa";
-    cerrarModal("modal-auth-web");
+    if (!esUsuarioEmprendedora()) {
+      mostrarToast("Inicia sesión con un correo autorizado por la administración para gestionar una tienda.");
+      return;
+    }
+    // Conserva la tienda asociada por el servidor; este acceso antiguo ya no cambia la identidad.
     actualizarDashboardEmprendedora();
-    mostrarToast("¡Bienvenida Doña Rosa! Modo Emprendedor/a activado con todas las funciones de la app Android.");
+    mostrarToast("Se abrió el panel de tu tienda autorizada.");
   }
 
   function esUsuarioEmprendedora() {
@@ -3609,7 +3775,8 @@
       return false;
     }
     var rol = (estado.usuario.rol || "").toLowerCase();
-    return rol.indexOf("emprendedor") !== -1 || rol.indexOf("admin") !== -1;
+    return rol.indexOf("emprendedor") !== -1 && Boolean(estado.usuario.tiendaId) &&
+      estado.usuario.tiendaId === estado.tiendaEmprendedoraId;
   }
 
   function actualizarUIControlesSegunRol() {
@@ -3646,10 +3813,47 @@
     abrirModalAuth();
   }
 
-  function aplicarUsuarioLocal(nombre, rol) {
+  function inicialesDeNombre(nombre) {
+    var partes = String(nombre || "").trim().split(/\s+/).filter(function (p) { return p.length > 0; });
+    if (!partes.length) return "U";
+    return partes.slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join("");
+  }
+
+  function actualizarAvatarHeader(nombre, fotoUrl) {
+    var caja = document.getElementById("avatar-usuario-header");
+    var img = document.getElementById("avatar-img-usuario");
+    var iniciales = document.getElementById("avatar-iniciales-usuario");
+    var hayUsuario = nombre && nombre !== "Visitante";
+    if (caja) caja.style.display = hayUsuario ? "inline-flex" : "none";
+    if (!hayUsuario) {
+      if (img) { img.style.display = "none"; img.removeAttribute("src"); }
+      if (iniciales) { iniciales.style.display = "inline-block"; iniciales.textContent = "U"; }
+      return;
+    }
+    if (iniciales) iniciales.textContent = inicialesDeNombre(nombre);
+    if (img) {
+      img.onerror = function () {
+        img.style.display = "none";
+        if (iniciales) iniciales.style.display = "inline-block";
+      };
+      if (fotoUrl) {
+        img.src = fotoUrl;
+        img.style.display = "block";
+        if (iniciales) iniciales.style.display = "none";
+      } else {
+        img.style.display = "none";
+        img.removeAttribute("src");
+        if (iniciales) iniciales.style.display = "inline-block";
+      }
+    }
+  }
+
+  function aplicarUsuarioLocal(nombre, rol, fotoUrl) {
     estado.usuario = estado.usuario || {};
     estado.usuario.nombre = nombre;
     estado.usuario.rol = rol;
+    if (typeof fotoUrl !== "undefined") estado.usuario.fotoUrl = fotoUrl || "";
+    actualizarAvatarHeader(nombre, estado.usuario.fotoUrl);
     var tag = document.getElementById("tag-nombre-usuario");
     var saludo = document.getElementById("saludo-usuario-cabecera");
     if (tag) {
@@ -3669,6 +3873,14 @@
     actualizarUIControlesSegunRol();
   }
 
+  function cerrarSesionWebLocal() {
+    estado.tiendaEmprendedoraId = null;
+    estadoPOS.tiendaId = null;
+    estado.usuario = { nombre: "Visitante", rol: "Visitante", fotoUrl: "" };
+    aplicarUsuarioLocal("Visitante", "Visitante", "");
+    actualizarUIControlesSegunRol();
+  }
+
   function cerrarSesionWeb() {
     if (supabaseClient && supabaseClient.auth) {
       try { supabaseClient.auth.signOut(); } catch (e) {}
@@ -3676,8 +3888,7 @@
     if (firebaseAuth) {
       try { firebaseAuth.signOut(); } catch (e) {}
     }
-    estado.tiendaEmprendedoraId = null;
-    aplicarUsuarioLocal("Visitante", "Visitante");
+    cerrarSesionWebLocal();
     mostrarToast("Sesión cerrada");
   }
 
@@ -3718,111 +3929,19 @@
 
   function obtenerTiendaUsuarioActivo() {
     var user = estado.usuario || {};
-    var email = (user.email || "").toLowerCase().trim();
-    var nombre = (user.nombre || "").trim();
-
-    // 1. Si tenemos tiendaId explícito en estado, buscarla en TIENDAS
-    if (estado.tiendaEmprendedoraId) {
-      var t = TIENDAS.find(function (it) { return it.id === estado.tiendaEmprendedoraId; });
-      if (t) return t;
-    }
-
-    // 2. Si el email coincide con alguna cuenta conocida en ESTADO_ADMIN
-    if (typeof ESTADO_ADMIN !== "undefined" && ESTADO_ADMIN.cuentasEmprendedoras) {
-      var c = ESTADO_ADMIN.cuentasEmprendedoras.find(function (cta) {
-        return cta.email && cta.email.toLowerCase() === email;
-      });
-      if (c && c.tiendaId) {
-        estado.tiendaEmprendedoraId = c.tiendaId;
-        var tC = TIENDAS.find(function (it) { return it.id === c.tiendaId; });
-        if (tC) return tC;
-      }
-    }
-
-    // 3. Buscar por email de prueba directo
-    if (email === "barberia@alerce.app") {
-      estado.tiendaEmprendedoraId = "t_barberia_alerce";
-      return TIENDAS.find(function (t) { return t.id === "t_barberia_alerce"; }) || TIENDAS[0];
-    }
-    if (email === "tejidos@alerce.app") {
-      estado.tiendaEmprendedoraId = "t_tejidos_austral";
-      return TIENDAS.find(function (t) { return t.id === "t_tejidos_austral"; }) || TIENDAS[2] || TIENDAS[0];
-    }
-    if (email === "reposteria@alerce.app") {
-      estado.tiendaEmprendedoraId = "t_reposteria_surena";
-      return TIENDAS.find(function (t) { return t.id === "t_reposteria_surena"; }) || TIENDAS[3] || TIENDAS[0];
-    }
-    if (email === "donarosa@alerce.app" || email === "donamarta@alerce.app" || nombre === "Minimarket Doña Rosa" || nombre === "Doña Rosa") {
-      estado.tiendaEmprendedoraId = "t_minimarket_rosa";
-      return TIENDAS.find(function (t) { return t.id === "t_minimarket_rosa"; }) || TIENDAS[1];
-    }
-
-    // 4. Buscar en TIENDAS alguna tienda cuyo nombre coincida con el nombre del usuario
-    if (nombre && nombre !== "Visitante" && nombre !== "Usuario" && nombre !== "Comprador") {
-      var tNombre = TIENDAS.find(function (it) {
-        return it.nombre && it.nombre.toLowerCase().trim() === nombre.toLowerCase().trim();
-      });
-      if (tNombre) {
-        estado.tiendaEmprendedoraId = tNombre.id;
-        return tNombre;
-      }
-    }
-
-    // 5. Buscar en tiendas guardadas en localStorage
-    try {
-      var customTiendas = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
-      if (customTiendas && customTiendas.length) {
-        var tLocal = customTiendas.find(function (it) {
-          return (it.ownerEmail && it.ownerEmail === email) ||
-                 (it.nombre && it.nombre.toLowerCase() === nombre.toLowerCase());
-        });
-        if (tLocal) {
-          estado.tiendaEmprendedoraId = tLocal.id;
-          if (!TIENDAS.some(function(x){ return x.id === tLocal.id; })) {
-            TIENDAS.unshift(tLocal);
-          }
-          return tLocal;
-        }
-      }
-    } catch(e) {}
-
-    // 6. Si el usuario está registrado con su propio nombre (ej: "Punto 3D"), crearle su tienda propia
-    // ¡Nunca jamás asignarle Doña Rosa a otra persona!
-    if (nombre && nombre !== "Visitante" && nombre !== "Usuario" && nombre !== "Comprador") {
-      var slug = "t_" + nombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 24);
-      var tiendaPropia = {
-        id: slug,
-        nombre: nombre,
-        rubro: "Emprendimiento Local",
-        sector: "Alerce",
-        bio: "Emprendimiento de " + nombre + " en Alerce.",
-        whatsapp: "+56991234567",
-        ownerEmail: email,
-        colorPortada: "#1A202C",
-        colorLogo: "#2B6CB0",
-        necesidades: { tieneStock: true, tieneAgendamiento: false, tieneVentaPorWhatsApp: true, tieneProductosAPedido: false, participaEnFerias: true, tieneForoComunidad: true }
-      };
-      estado.tiendaEmprendedoraId = slug;
-      if (!TIENDAS.some(function(x){ return x.id === slug; })) {
-        TIENDAS.unshift(tiendaPropia);
-      }
-      try {
-        var saved = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
-        if (!saved.some(function(x){ return x.id === slug; })) {
-          saved.unshift(tiendaPropia);
-          localStorage.setItem("trama_tiendas_custom", JSON.stringify(saved));
-        }
-      } catch(e) {}
-      return tiendaPropia;
-    }
-
-    // Solo si no hay usuario identificado, devolver la primera tienda
-    return TIENDAS[0] || { id: "t_comercio", nombre: "Mi Emprendimiento", rubro: "Comercio", sector: "Alerce" };
+    var tieneRolEmprendedora = user.rol === "EMPRENDEDORA" || String(user.rol || "").toLowerCase().indexOf("emprendedor") !== -1;
+    if (!tieneRolEmprendedora || !user.tiendaId || estado.tiendaEmprendedoraId !== user.tiendaId) return null;
+    return TIENDAS.find(function (it) { return it.id === user.tiendaId; }) || null;
   }
 
 
     function actualizarDashboardEmprendedora() {
     var tienda = obtenerTiendaUsuarioActivo();
+    if (!tienda) {
+      estado.tiendaEmprendedoraId = null;
+      estadoPOS.tiendaId = null;
+      return;
+    }
     var tiendaId = tienda.id;
     estado.tiendaEmprendedoraId = tiendaId;
     estadoPOS.tiendaId = tiendaId;
@@ -3913,6 +4032,10 @@
     if (!cont) return;
 
     var tienda = obtenerTiendaUsuarioActivo();
+    if (!tienda) {
+      cont.textContent = "Tu cuenta todavía no tiene una tienda autorizada.";
+      return;
+    }
     var tiendaId = tienda.id;
     var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
 
@@ -4477,6 +4600,10 @@
   }
 
     function entrarModoAdmin() {
+    if (!esUsuarioAdmin()) {
+      mostrarToast("Inicia sesión con una cuenta administradora autorizada.");
+      return;
+    }
     aplicarUsuarioLocal("Administración Alerce", "Administrador");
     estado.usuario = estado.usuario || {};
     estado.usuario.rol = "Administrador";
@@ -5280,21 +5407,248 @@
     tbody.innerHTML = html;
   }
 
+  function mostrarAviso(id, mensaje) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = mensaje || "";
+    el.style.display = mensaje ? "block" : "none";
+  }
+
   function recuperarContrasenaWeb() {
     var inpEmail = document.getElementById("auth-inp-email");
     var emailInicial = inpEmail ? inpEmail.value.trim() : "";
-    var email = prompt("Ingresa el correo electrónico de tu cuenta para recuperar la contraseña (W27):", emailInicial);
-    if (!email || !email.trim()) return;
+    var campo = document.getElementById("recuperar-email");
+    if (campo && emailInicial) campo.value = emailInicial;
+    mostrarAviso("recuperar-aviso-error", "");
+    mostrarAviso("recuperar-aviso-exito", "");
+    cerrarModal("modal-auth-web");
+    abrirModal("modal-recuperar-contrasena");
+  }
 
-    email = email.trim().toLowerCase();
-    if (supabaseClient && supabaseClient.auth) {
-      supabaseClient.auth.resetPasswordForEmail(email).then(function(res) {
-        if (res.error) console.warn("Aviso Supabase resetPassword:", res.error);
-      }).catch(function(e){ console.warn("Aviso:", e); });
+  function enviarEnlaceRecuperacion() {
+    var campo = document.getElementById("recuperar-email");
+    var email = campo ? campo.value.trim().toLowerCase() : "";
+    var btn = document.getElementById("btn-enviar-recuperacion");
+    mostrarAviso("recuperar-aviso-error", "");
+    mostrarAviso("recuperar-aviso-exito", "");
+
+    if (!email || email.indexOf("@") === -1) {
+      mostrarAviso("recuperar-aviso-error", "Escribe un correo electrónico válido.");
+      return;
+    }
+    if (!supabaseClient || !supabaseClient.auth) {
+      mostrarAviso("recuperar-aviso-error", "No se pudo conectar con el servicio de correo. Intenta más tarde.");
+      return;
     }
 
-    alert("📧 Enlace de restablecimiento enviado a " + email + ". Revisa tu bandeja de entrada para cambiar tu contraseña.");
-    mostrarToast("📧 Solicitud de recuperación procesada para " + email);
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando enlace..."; }
+    var redireccion = window.location.origin + window.location.pathname + "?recuperar=1";
+
+    supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: redireccion }).then(function (res) {
+      if (res && res.error) throw res.error;
+      mostrarAviso("recuperar-aviso-exito", "Si el correo está registrado, recibirás un enlace para crear una nueva contraseña. Revisa también tu carpeta de spam.");
+      mostrarToast("📧 Solicitud de recuperación enviada.");
+    }).catch(function (e) {
+      mostrarAviso("recuperar-aviso-error", "No se pudo enviar el enlace: " + (e.message || e));
+    }).then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = "✉️ Enviar enlace de recuperación"; }
+    });
+  }
+
+  function guardarNuevaClave() {
+    var campo1 = document.getElementById("nueva-clave-input");
+    var campo2 = document.getElementById("nueva-clave-confirmar");
+    var btn = document.getElementById("btn-guardar-nueva-clave");
+    var clave1 = campo1 ? campo1.value : "";
+    var clave2 = campo2 ? campo2.value : "";
+    mostrarAviso("cambiar-clave-aviso-error", "");
+    mostrarAviso("cambiar-clave-aviso-exito", "");
+
+    if (!clave1 || clave1.length < 6) {
+      mostrarAviso("cambiar-clave-aviso-error", "La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+    if (clave1 !== clave2) {
+      mostrarAviso("cambiar-clave-aviso-error", "Las contraseñas no coinciden.");
+      return;
+    }
+    if (!supabaseClient || !supabaseClient.auth) {
+      mostrarAviso("cambiar-clave-aviso-error", "No se pudo conectar con el servicio de autenticación.");
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = "Guardando contraseña..."; }
+    supabaseClient.auth.updateUser({ password: clave1 }).then(function (res) {
+      if (res && res.error) throw res.error;
+      return supabaseClient.auth.signOut();
+    }).then(function (res) {
+      if (res && res.error) throw res.error;
+      mostrarAviso("cambiar-clave-aviso-exito", "Contraseña actualizada. Ya puedes usar tu nueva clave.");
+      mostrarToast("🔒 Contraseña actualizada correctamente.");
+      if (campo1) campo1.value = "";
+      if (campo2) campo2.value = "";
+      try {
+        var limpia = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, limpia);
+      } catch (e) {}
+      setTimeout(function () {
+        cerrarModal("modal-cambiar-clave");
+        abrirModalAuthNormal();
+      }, 1400);
+    }).catch(function (e) {
+      mostrarAviso("cambiar-clave-aviso-error", "No se pudo cambiar la contraseña: " + (e.message || e));
+    }).then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = "🔒 Guardar nueva contraseña"; }
+    });
+  }
+
+  function etiquetaRol(rol) {
+    var valor = String(rol || "").toUpperCase();
+    if (valor.indexOf("ADMIN") !== -1) return "Administrador";
+    if (valor.indexOf("EMPREND") !== -1) return "Emprendedor/a";
+    return "Comprador";
+  }
+
+  function pintarAvatarPreview(idCaja, idImg, idIniciales, nombre, fotoUrl) {
+    var caja = document.getElementById(idCaja);
+    var img = document.getElementById(idImg);
+    var iniciales = document.getElementById(idIniciales);
+    if (caja) caja.style.backgroundColor = "#cbd5e1";
+    if (iniciales) iniciales.textContent = inicialesDeNombre(nombre);
+    if (!img) return;
+    img.onerror = function () {
+      img.style.display = "none";
+      if (iniciales) iniciales.style.display = "inline-block";
+    };
+    if (fotoUrl) {
+      img.src = fotoUrl;
+      img.style.display = "block";
+      if (iniciales) iniciales.style.display = "none";
+    } else {
+      img.style.display = "none";
+      img.removeAttribute("src");
+      if (iniciales) iniciales.style.display = "inline-block";
+    }
+  }
+
+  function cargarPerfilEnModal() {
+    var u = estado.usuario || {};
+    var nombre = u.nombre || "Usuario";
+    var email = u.email || "";
+    var tiendaId = u.tiendaId || estado.tiendaEmprendedoraId || null;
+    var tienda = tiendaId ? TIENDAS.find(function (t) { return t.id === tiendaId; }) : null;
+
+    var nombreEl = document.getElementById("perfil-info-nombre");
+    var emailEl = document.getElementById("perfil-info-email");
+    var rolEl = document.getElementById("perfil-info-rol-badge");
+    var inputNombre = document.getElementById("perfil-input-nombre");
+    if (nombreEl) nombreEl.textContent = nombre;
+    if (emailEl) emailEl.textContent = email || "Sin correo registrado";
+    if (rolEl) rolEl.textContent = etiquetaRol(u.rol);
+    if (inputNombre) inputNombre.value = nombre;
+
+    pintarAvatarPreview("perfil-avatar-preview", "perfil-img-avatar", "perfil-iniciales-avatar", nombre, u.fotoUrl);
+
+    var seccionTienda = document.getElementById("perfil-seccion-tienda");
+    if (seccionTienda) seccionTienda.style.display = tienda ? "flex" : "none";
+    if (tienda) {
+      var nombreTienda = document.getElementById("perfil-tienda-nombre");
+      if (nombreTienda) nombreTienda.textContent = tienda.nombre;
+      pintarAvatarPreview("perfil-logo-preview", "perfil-img-logo", "perfil-iniciales-logo", tienda.nombre, tienda.logoUrl);
+    }
+
+    var inputAvatar = document.getElementById("perfil-input-avatar");
+    var inputLogo = document.getElementById("perfil-input-logo");
+    if (inputAvatar) inputAvatar.value = "";
+    if (inputLogo) inputLogo.value = "";
+    mostrarAviso("perfil-aviso-error", "");
+    mostrarAviso("perfil-aviso-exito", "");
+  }
+
+  function gestionarClickUsuarioHeader() {
+    var u = estado.usuario || {};
+    if (u.nombre && u.nombre !== "Visitante") {
+      cargarPerfilEnModal();
+      abrirModal("modal-mi-perfil");
+    } else {
+      abrirModalAuthNormal();
+    }
+  }
+
+  function guardarCambiosMiPerfil() {
+    var u = estado.usuario || {};
+    var btn = document.getElementById("btn-guardar-perfil");
+    var inputNombre = document.getElementById("perfil-input-nombre");
+    var inputAvatar = document.getElementById("perfil-input-avatar");
+    var inputLogo = document.getElementById("perfil-input-logo");
+    var nombre = inputNombre ? inputNombre.value.trim() : "";
+    var archivoAvatar = (inputAvatar && inputAvatar.files && inputAvatar.files[0]) ? inputAvatar.files[0] : null;
+    var archivoLogo = (inputLogo && inputLogo.files && inputLogo.files[0]) ? inputLogo.files[0] : null;
+    var tiendaId = u.tiendaId || estado.tiendaEmprendedoraId || null;
+
+    mostrarAviso("perfil-aviso-error", "");
+    mostrarAviso("perfil-aviso-exito", "");
+
+    if (!nombre) {
+      mostrarAviso("perfil-aviso-error", "Escribe tu nombre.");
+      return;
+    }
+    if (!u.id) {
+      mostrarAviso("perfil-aviso-error", "Vuelve a iniciar sesión para guardar los cambios.");
+      return;
+    }
+    if (!supabaseClient || !supabaseClient.auth) {
+      mostrarAviso("perfil-aviso-error", "No se pudo conectar con el servicio de cuentas.");
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.textContent = "Guardando cambios..."; }
+
+    function subirAvatarSiCorresponde() {
+      if (!archivoAvatar) return Promise.resolve(u.fotoUrl || "");
+      var ext = (archivoAvatar.name.split(".").pop() || "jpg").toLowerCase();
+      var ruta = u.id + "/avatar_" + Date.now() + "." + ext;
+      return subirArchivoSupabase(BUCKET_PERFILES, ruta, archivoAvatar);
+    }
+
+    function actualizarLogoSiCorresponde() {
+      if (!archivoLogo || !tiendaId) return Promise.resolve(null);
+      var ext = (archivoLogo.name.split(".").pop() || "jpg").toLowerCase();
+      var ruta = u.id + "/logo_tienda_" + tiendaId + "_" + Date.now() + "." + ext;
+      return subirArchivoSupabase(BUCKET_FOTOS, ruta, archivoLogo).then(function (urlLogo) {
+        return supabaseClient.from("tiendas").update({ logo_url: urlLogo }).eq("id", tiendaId).then(function (resTienda) {
+          if (resTienda && resTienda.error) throw resTienda.error;
+          return urlLogo;
+        });
+      });
+    }
+
+    Promise.all([subirAvatarSiCorresponde(), actualizarLogoSiCorresponde()]).then(function (resultados) {
+      var fotoUrl = resultados[0] || "";
+      var logoUrl = resultados[1] || null;
+      return supabaseClient.rpc("actualizar_mi_perfil", {
+        p_nombre: nombre,
+        p_foto_url: fotoUrl || null
+      }).then(function (resPerfil) {
+        if (resPerfil && resPerfil.error) throw resPerfil.error;
+        var etiqueta = etiquetaRol(u.rol);
+        estado.usuario.nombre = nombre;
+        estado.usuario.fotoUrl = fotoUrl;
+        aplicarUsuarioLocal(nombre, etiqueta, fotoUrl);
+        if (logoUrl && tiendaId) {
+          var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; });
+          if (tienda) tienda.logoUrl = logoUrl;
+          renderizarTiendasMarketplace();
+        }
+        cargarPerfilEnModal();
+        mostrarAviso("perfil-aviso-exito", "Perfil actualizado correctamente.");
+        mostrarToast("✅ Perfil actualizado.");
+      });
+    }).catch(function (e) {
+      mostrarAviso("perfil-aviso-error", "No se pudieron guardar los cambios: " + (e.message || e));
+    }).then(function () {
+      if (btn) { btn.disabled = false; btn.textContent = "💾 Guardar Cambios"; }
+    });
   }
 
   function iniciarSesionGoogleWeb() {
@@ -5368,43 +5722,114 @@
     var inpNom = document.getElementById("reg-usuario-nombre");
     var inpMail = document.getElementById("reg-usuario-email");
     var inpPass = document.getElementById("reg-usuario-password");
+    var inpAvatar = document.getElementById("reg-usuario-avatar");
     var errDiv = document.getElementById("reg-usuario-aviso-error");
     var okDiv = document.getElementById("reg-usuario-aviso-exito");
+    var btn = document.getElementById("btn-submit-reg-usuario");
 
     var nombre = inpNom ? inpNom.value.trim() : "";
     var email = inpMail ? inpMail.value.trim().toLowerCase() : "";
     var pass = inpPass ? inpPass.value : "";
+    var archivoAvatar = (inpAvatar && inpAvatar.files && inpAvatar.files[0]) ? inpAvatar.files[0] : null;
+
+    function mostrarError(msg) {
+      if (errDiv) { errDiv.textContent = msg; errDiv.style.display = "block"; }
+      if (okDiv) okDiv.style.display = "none";
+      if (btn) { btn.disabled = false; btn.textContent = "Crear mi Cuenta de Usuario"; }
+    }
 
     if (!nombre || !email || !pass) {
-      if (errDiv) { errDiv.textContent = "Por favor completa todos los campos obligatorios."; errDiv.style.display = "block"; }
+      mostrarError("Por favor completa todos los campos obligatorios.");
+      return;
+    }
+    if (email.indexOf("@") === -1) {
+      mostrarError("Escribe un correo electrónico válido.");
       return;
     }
     if (pass.length < 6) {
-      if (errDiv) { errDiv.textContent = "La contraseña debe tener al menos 6 caracteres."; errDiv.style.display = "block"; }
+      mostrarError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
-    if (supabaseClient && supabaseClient.auth) {
-      supabaseClient.auth.signUp({
-        email: email,
-        password: pass,
-        options: { data: { nombre: nombre, rol: "VISITANTE" } }
-      }).then(function(res) {
-        if (res.error) {
-          console.warn("Supabase signUp normal aviso:", res.error);
-        }
-      }).catch(function(e){ console.warn("Supabase aviso:", e); });
+    if (errDiv) errDiv.style.display = "none";
+    if (okDiv) okDiv.style.display = "none";
+    if (btn) { btn.disabled = true; btn.textContent = "Creando tu cuenta..."; }
+
+    if (!supabaseClient || !supabaseClient.auth) {
+      mostrarError("El servicio de cuentas no está configurado. Intenta más tarde.");
+      return;
     }
 
-    aplicarUsuarioLocal(nombre, "Comprador");
-    if (okDiv) {
-      okDiv.textContent = "¡Cuenta creada con éxito! Bienvenido(a) a la comunidad.";
-      okDiv.style.display = "block";
-    }
-    setTimeout(function() {
-      cerrarModal("modal-auth-web");
-      mostrarToast("🎉 ¡Bienvenido(a) " + nombre + "! Cuenta creada con éxito.");
-    }, 900);
+    supabaseClient.auth.signUp({
+      email: email,
+      password: pass,
+      options: { data: { nombre: nombre } }
+    }).then(function (res) {
+      if (res && res.error) throw res.error;
+      var user = res.data ? res.data.user : null;
+      if (!user) throw new Error("No se pudo obtener el usuario registrado.");
+      var session = res.data ? res.data.session : null;
+
+      if (!session) {
+        if (okDiv) {
+          okDiv.textContent = "Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.";
+          okDiv.style.display = "block";
+        }
+        if (btn) { btn.disabled = false; btn.textContent = "Crear mi Cuenta de Usuario"; }
+        return;
+      }
+
+      setTimeout(function () {
+        var subida = archivoAvatar
+          ? (function () {
+              var ruta = user.id + "/avatar_" + Date.now() + ".jpg";
+              return subirArchivoSupabase(BUCKET_PERFILES, ruta, archivoAvatar);
+            })()
+          : Promise.resolve("");
+
+        subida.then(function (fotoUrl) {
+          return supabaseClient.rpc("actualizar_mi_perfil", {
+            p_nombre: nombre,
+            p_foto_url: fotoUrl || null
+          }).then(function (resPerfil) {
+            if (resPerfil && resPerfil.error) throw resPerfil.error;
+            return fotoUrl;
+          });
+        }).catch(function (e) {
+          console.warn("Aviso guardando foto de perfil:", e);
+          return "";
+        }).then(function (fotoUrl) {
+          return supabaseClient.from("perfiles").select("rol, tienda_id").eq("id", user.id).maybeSingle().then(function (resPerfil) {
+            if (resPerfil.error) throw resPerfil.error;
+            var perfil = resPerfil.data || {};
+            var rol = perfil.rol === "ADMIN" || perfil.rol === "EMPRENDEDORA" ? perfil.rol : "VISITANTE";
+            var tiendaId = rol === "EMPRENDEDORA" ? perfil.tienda_id : null;
+            estado.usuario = { id: user.id, nombre: nombre, email: email, rol: rol, tiendaId: tiendaId, fotoUrl: fotoUrl || "" };
+            estado.tiendaEmprendedoraId = tiendaId || null;
+            estadoPOS.tiendaId = tiendaId || null;
+            aplicarUsuarioLocal(nombre, etiquetaRol(rol), fotoUrl || "");
+            if (rol === "ADMIN") entrarModoAdmin();
+            if (rol === "EMPRENDEDORA" && tiendaId) {
+              cargarTiendasDesdeSupabase();
+              actualizarDashboardEmprendedora();
+            }
+          }).then(function () {
+            if (okDiv) {
+              okDiv.textContent = "¡Cuenta creada con éxito! Bienvenido(a) a la comunidad.";
+              okDiv.style.display = "block";
+            }
+            setTimeout(function () {
+              cerrarModal("modal-auth-web");
+              mostrarToast("🎉 ¡Bienvenido(a) " + nombre + "! Cuenta creada con éxito.");
+            }, 900);
+          });        }).then(function () {
+          if (btn) { btn.disabled = false; btn.textContent = "Crear mi Cuenta de Usuario"; }
+        });
+      }, 600);
+    }).catch(function (e) {
+      console.warn("Aviso Supabase signUp normal:", e);
+      mostrarError("No se pudo crear la cuenta: " + (e.message || e));
+    });
   }
 
 
@@ -5511,6 +5936,10 @@
     abrirFormCrearAdmin: abrirFormCrearAdmin,
     toggleEstadoAdmin: toggleEstadoAdmin,
     recuperarContrasenaWeb: recuperarContrasenaWeb,
+    enviarEnlaceRecuperacion: enviarEnlaceRecuperacion,
+    guardarNuevaClave: guardarNuevaClave,
+    gestionarClickUsuarioHeader: gestionarClickUsuarioHeader,
+    guardarCambiosMiPerfil: guardarCambiosMiPerfil,
     iniciarSesionGoogleWeb: iniciarSesionGoogleWeb,
     abrirModalRegistroEmprendedor: abrirModalRegistroEmprendedor,
     abrirModalAuthNormal: abrirModalAuthNormal,

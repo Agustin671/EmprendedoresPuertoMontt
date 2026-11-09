@@ -114,11 +114,19 @@
         </button>
 
         <!-- Indicador de Usuario y Cierre de Sesión -->
-        <span class="tag-usuario" id="tag-nombre-usuario" onclick="TramaWeb.abrirModalAuthNormal()" style="cursor: pointer;" title="Iniciar sesión o registrarte como usuario">Inicio de Sesión / Registro</span>
+        <div id="contenedor-usuario-header" style="display: inline-flex; align-items: center; gap: 8px;">
+          <div id="btn-mi-perfil-header" onclick="TramaWeb.gestionarClickUsuarioHeader()" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; border-radius: 999px; transition: background .15s ease;" title="Ver mi perfil / Iniciar sesión">
+            <div id="avatar-usuario-header" style="display: none; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #e2e8f0; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #1e293b; border: 1.5px solid #cbd5e1; flex-shrink: 0;">
+              <img id="avatar-img-usuario" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+              <span id="avatar-iniciales-usuario" style="display: inline-block;">U</span>
+            </div>
+            <span class="tag-usuario" id="tag-nombre-usuario">Inicio de Sesión / Registro</span>
+          </div>
         
-        <button type="button" class="btn-circular" id="btn-logout" title="Cerrar sesión" aria-label="Cerrar sesión" style="display: none;">
-          🚪
-        </button>
+          <button type="button" class="btn-circular" id="btn-logout" onclick="TramaWeb.cerrarSesionWeb()" title="Cerrar sesión" aria-label="Cerrar sesión" style="display: none;">
+            🚪
+          </button>
+        </div>
       </div>
     </div>
 
@@ -172,9 +180,6 @@
           </div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="btn-accion-pill btn-negro" style="height: 38px; font-size: 12.5px; font-weight: 800; padding: 0 16px; background: #c53030; border-color: #c53030; box-shadow: 0 2px 8px rgba(197, 48, 48, 0.25);" onclick="TramaWeb.entrarModoDonaRosa()">
-            🥖 Entrar como Doña Rosa
-          </button>
           <button type="button" class="btn-accion-pill" style="height: 38px; font-size: 12px; padding: 0 14px; background: #ffffff;" onclick="TramaWeb.abrirModalAuthEmprendedora()">
             Acceso con otra cuenta
           </button>
@@ -1619,20 +1624,22 @@
           <input type="password" id="reg-emp-password" class="input-fb-market" placeholder="••••••••">
         </div>
 
+        <div>
+          <label class="label-fb-market">Foto de perfil (opcional, JPG/PNG)</label>
+          <input type="file" id="reg-emp-avatar" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Logo del negocio (opcional, JPG/PNG)</label>
+          <input type="file" id="reg-emp-logo" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
+        </div>
+
         <div id="reg-emp-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
         <div id="reg-emp-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
 
         <button type="button" id="btn-submit-reg-emp" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px; font-weight: 800; background: #059669; border-color: #059669;" onclick="TramaWeb.registrarEmprendedorModal()">
           🚀 Registrar mi Emprendimiento
         </button>
-
-        <!-- Acceso Rápido Modo Prueba (Doña Rosa) -->
-        <div style="background: #f8fafc; border: 1px dashed var(--gris-borde); border-radius: 8px; padding: 10px; font-size: 11.5px; text-align: center;">
-          <span style="color: var(--gris-texto);">¿Deseas probar la plataforma de emprendedor inmediatamente?</span><br>
-          <button type="button" class="btn-accion-pill btn-negro" style="height: 32px; font-size: 11.5px; margin-top: 6px; background: #c53030; border-color: #c53030;" onclick="TramaWeb.cerrarModal('modal-registro-emprendedor'); TramaWeb.entrarModoDonaRosa();">
-            🥖 Entrar en Modo Emprendedor como Doña Rosa
-          </button>
-        </div>
 
         <div style="text-align: center; margin-top: 2px;">
           <button type="button" style="background: none; border: none; font-size: 12.5px; color: var(--negro-apple); font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.cerrarModal('modal-registro-emprendedor'); TramaWeb.abrirModalAuthNormal();">
@@ -1737,10 +1744,15 @@
             <input type="password" id="reg-usuario-password" class="input-fb-market" placeholder="Mínimo 6 caracteres">
           </div>
 
+          <div>
+            <label class="label-fb-market">Foto de perfil (opcional, JPG/PNG)</label>
+            <input type="file" id="reg-usuario-avatar" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
+          </div>
+
           <div id="reg-usuario-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
           <div id="reg-usuario-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
 
-          <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px; font-weight: 800; background: #2563eb; border-color: #2563eb;" onclick="TramaWeb.registrarUsuarioNormalModal()">
+          <button type="button" id="btn-submit-reg-usuario" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px; font-weight: 800; background: #2563eb; border-color: #2563eb;" onclick="TramaWeb.registrarUsuarioNormalModal()">
             Crear mi Cuenta de Usuario
           </button>
         </div>
@@ -1755,6 +1767,153 @@
     </div>
   </div>
 
+
+  <!-- ============================================================
+       MODAL: RECUPERACIÓN DE CONTRASEÑA (W27)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-recuperar-contrasena" role="dialog" aria-modal="true" aria-labelledby="modal-recuperar-titulo" style="display: none;">
+    <div class="modal-panel-editorial" style="max-width: 420px; width: 92%;">
+      <div class="modal-cabecera">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 1px;">Seguridad de Cuenta</span>
+          <h2 id="modal-recuperar-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">
+            Recuperar Contraseña
+          </h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-recuperar-contrasena')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <p style="font-size: 12.5px; color: var(--gris-texto); line-height: 1.5; margin: 0;">
+          Escribe el correo electrónico asociado a tu cuenta. Te enviaremos un enlace oficial de Supabase para definir una nueva contraseña.
+        </p>
+        <div>
+          <label class="label-fb-market">Correo electrónico</label>
+          <input type="email" id="recuperar-email" class="input-fb-market" placeholder="tu-correo@gmail.com">
+        </div>
+        <div id="recuperar-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
+        <div id="recuperar-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+        <button type="button" id="btn-enviar-recuperacion" class="btn-accion-pill btn-negro" style="height: 42px; width: 100%; justify-content: center; font-size: 13px; font-weight: 800;" onclick="TramaWeb.enviarEnlaceRecuperacion()">
+          ✉️ Enviar enlace de recuperación
+        </button>
+        <div style="text-align: center; margin-top: 2px;">
+          <button type="button" style="background: none; border: none; font-size: 12px; color: #2563eb; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.cerrarModal('modal-recuperar-contrasena'); TramaWeb.abrirModalAuthNormal();">
+            Volver al inicio de sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: DEFINIR NUEVA CONTRASEÑA (PASSWORD RECOVERY)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-cambiar-clave" role="dialog" aria-modal="true" aria-labelledby="modal-cambiar-clave-titulo" style="display: none;">
+    <div class="modal-panel-editorial" style="max-width: 420px; width: 92%;">
+      <div class="modal-cabecera">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 1px;">Recuperación de Acceso</span>
+          <h2 id="modal-cambiar-clave-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">
+            Definir Nueva Contraseña
+          </h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-cambiar-clave')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-cuerpo" style="gap: 14px;">
+        <p style="font-size: 12.5px; color: var(--gris-texto); line-height: 1.5; margin: 0;">
+          Ingresa tu nueva contraseña para restablecer el acceso a tu cuenta.
+        </p>
+        <div>
+          <label class="label-fb-market">Nueva contraseña (mínimo 6 caracteres)</label>
+          <input type="password" id="nueva-clave-input" class="input-fb-market" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div>
+          <label class="label-fb-market">Confirma tu nueva contraseña</label>
+          <input type="password" id="nueva-clave-confirmar" class="input-fb-market" placeholder="Repite la contraseña">
+        </div>
+        <div id="cambiar-clave-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
+        <div id="cambiar-clave-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+        <button type="button" id="btn-guardar-nueva-clave" class="btn-accion-pill btn-negro" style="height: 42px; width: 100%; justify-content: center; font-size: 13px; font-weight: 800; background: #16a34a; border-color: #16a34a;" onclick="TramaWeb.guardarNuevaClave()">
+          🔒 Guardar nueva contraseña
+        </button>
+        <div style="text-align: center; margin-top: 4px;">
+          <button type="button" style="background: none; border: none; font-size: 11.5px; color: #64748b; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.cerrarModal('modal-cambiar-clave'); TramaWeb.recuperarContrasenaWeb();">
+            ¿El enlace venció o falló? Pedir otro enlace
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: MI PERFIL (AVATAR, NOMBRE Y LOGO)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-mi-perfil" role="dialog" aria-modal="true" aria-labelledby="modal-perfil-titulo" style="display: none;">
+    <div class="modal-panel-editorial" style="max-width: 460px; width: 92%;">
+      <div class="modal-cabecera">
+        <div>
+          <span style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 1px;">Cuenta de Usuario</span>
+          <h2 id="modal-perfil-titulo" style="font-size: 18px; font-weight: 800; color: var(--negro-apple); margin: 2px 0 0 0;">
+            Mi Perfil
+          </h2>
+        </div>
+        <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-mi-perfil')" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-cuerpo" style="gap: 14px; max-height: calc(85vh - 70px); overflow-y: auto;">
+        <!-- Cabecera de foto y datos -->
+        <div style="display: flex; align-items: center; gap: 14px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid var(--gris-borde);">
+          <div id="perfil-avatar-preview" style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; color: #334155; flex-shrink: 0; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <img id="perfil-img-avatar" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <span id="perfil-iniciales-avatar">U</span>
+          </div>
+          <div>
+            <div id="perfil-info-nombre" style="font-size: 14.5px; font-weight: 800; color: var(--negro-apple);">Usuario</div>
+            <div id="perfil-info-email" style="font-size: 12px; color: var(--gris-texto);">correo@ejemplo.com</div>
+            <span id="perfil-info-rol-badge" style="display: inline-block; margin-top: 4px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #e0f2fe; color: #0369a1;">Comprador</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="label-fb-market">Tu Nombre</label>
+          <input type="text" id="perfil-input-nombre" class="input-fb-market" placeholder="Tu nombre">
+        </div>
+
+        <div>
+          <label class="label-fb-market">Cambiar Foto de Perfil (JPG/PNG)</label>
+          <input type="file" id="perfil-input-avatar" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
+        </div>
+
+        <!-- Sección de Tienda (Solo Emprendedoras con tienda asignada) -->
+        <div id="perfil-seccion-tienda" style="display: none; flex-direction: column; gap: 10px; padding: 12px; background: #fdf2f8; border-radius: 10px; border: 1px solid #fbcfe8;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="perfil-logo-preview" style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: #374151; flex-shrink: 0; border: 1.5px solid #fff;">
+              <img id="perfil-img-logo" src="" alt="Logo" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+              <span id="perfil-iniciales-logo">🏪</span>
+            </div>
+            <div>
+              <strong id="perfil-tienda-nombre" style="font-size: 13px; color: #831843;">Mi Negocio</strong>
+              <div style="font-size: 11px; color: #9d174d;">Logo visible en la vitrina y marketplace</div>
+            </div>
+          </div>
+          <div>
+            <label class="label-fb-market" style="color: #831843;">Cambiar Logo del Negocio (JPG/PNG)</label>
+            <input type="file" id="perfil-input-logo" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
+          </div>
+        </div>
+
+        <div id="perfil-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
+        <div id="perfil-aviso-exito" style="display: none; padding: 8px 12px; background: #d1fae5; border-radius: 6px; color: #059669; font-size: 12px; font-weight: 600;"></div>
+
+        <button type="button" id="btn-guardar-perfil" class="btn-accion-pill btn-negro" style="height: 42px; width: 100%; justify-content: center; font-size: 13px; font-weight: 800;" onclick="TramaWeb.guardarCambiosMiPerfil()">
+          💾 Guardar Cambios
+        </button>
+
+        <button type="button" class="btn-accion-pill" style="height: 38px; width: 100%; justify-content: center; font-size: 12px; color: #dc2626; border-color: #fecaca; background: #fff;" onclick="TramaWeb.cerrarModal('modal-mi-perfil'); TramaWeb.cerrarSesionWeb();">
+          🚪 Cerrar Sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Script Supabase SDK Oficial (Backend Instancia Alerce i7) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1764,8 +1923,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 
+  <!-- Configuración oficial Supabase y Firebase (generado en deploy o local) -->
+  <script src="js/config.js"></script>
+
   <!-- Scripts -->
   <script src="js/qrcode.min.js"></script>
-  <script src="js/main.js?v=20261104_p2"></script>
+  <script src="js/main.js?v=20261108_fotos"></script>
 </body>
 </html>

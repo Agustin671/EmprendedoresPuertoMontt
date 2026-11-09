@@ -1,5 +1,9 @@
 package com.example.trabajodea10.ui.auth
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -96,10 +100,76 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     // Después de entrar con contraseña: ofrecer activar la huella para la próxima vez
     var rolPorConfirmarHuella by remember { mutableStateOf<Rol?>(null) }
     var huellaDisponible by remember { mutableStateOf(SesionManager.huellaDisponible()) }
+    // Recuperación de contraseña y fotos opcionales del registro
+    var mostrarRecuperacion by remember { mutableStateOf(false) }
+    var correoRecuperacion by remember { mutableStateOf("") }
+    var enviandoRecuperacion by remember { mutableStateOf(false) }
+    var fotoPerfilUri by remember { mutableStateOf<Uri?>(null) }
+    var logoNegocioUri by remember { mutableStateOf<Uri?>(null) }
+
+    val selectorFotoPerfil = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        fotoPerfilUri = uri
+    }
+    val selectorLogo = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        logoNegocioUri = uri
+    }
+
+    if (mostrarRecuperacion) {
+        AlertDialog(
+            onDismissRequest = { if (!enviandoRecuperacion) mostrarRecuperacion = false },
+            title = { Text("Recuperar contraseña", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        "Escribe el correo con el que te registraste. Te enviaremos un enlace para crear una contraseña nueva.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario
+                    )
+                    OutlinedTextField(
+                        value = correoRecuperacion,
+                        onValueChange = { correoRecuperacion = it },
+                        label = { Text("Correo electrónico") },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null, tint = GrisTexto) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        "Revisa también la carpeta de spam.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GrisTexto
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !enviandoRecuperacion,
+                    onClick = {
+                        enviandoRecuperacion = true
+                        coroutineScope.launch {
+                            val res = SesionManager.recuperarContrasena(correoRecuperacion)
+                            enviandoRecuperacion = false
+                            res.onSuccess {
+                                mostrarRecuperacion = false
+                                mensajeExito = "Si el correo está registrado, recibirás un enlace para crear una contraseña nueva. Revisa tu correo y la carpeta de spam."
+                            }.onFailure { mensajeError = it.message }
+                        }
+                    }
+                ) {
+                    Text(if (enviandoRecuperacion) "Enviando..." else "Enviar enlace", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarRecuperacion = false }) { Text("Cancelar") }
+            }
+        )
+    }
 
     rolPorConfirmarHuella?.let { rolObtenido ->
         AlertDialog(
             onDismissRequest = {
+                SesionManager.marcarHuellaOfrecida()
                 rolPorConfirmarHuella = null
                 nav.iniciarSesion(rolObtenido)
             },
@@ -115,6 +185,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
             },
             dismissButton = {
                 TextButton(onClick = {
+                    SesionManager.marcarHuellaOfrecida()
                     rolPorConfirmarHuella = null
                     nav.iniciarSesion(rolObtenido)
                 }) { Text("Ahora no") }
@@ -343,6 +414,34 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.fillMaxWidth()
                         )
+
+                        OutlinedButton(
+                            onClick = { selectorFotoPerfil.launch("image/*") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            Text(
+                                text = if (fotoPerfilUri == null) "Elegir foto de perfil (opcional)" else "Foto de perfil elegida",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                color = NegroApple
+                            )
+                        }
+
+                        if (pestanaModo == 0) {
+                            OutlinedButton(
+                                onClick = { selectorLogo.launch("image/*") },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth().height(48.dp)
+                            ) {
+                                Text(
+                                    text = if (logoNegocioUri == null) "Elegir logo del negocio (opcional)" else "Logo del negocio elegido",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = NegroApple
+                                )
+                            }
+                        }
                     }
 
                     OutlinedTextField(
@@ -368,6 +467,25 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (!esModoRegistro) {
+                        TextButton(
+                            onClick = {
+                                correoRecuperacion = correo
+                                mostrarRecuperacion = true
+                                mensajeError = null
+                                mensajeExito = null
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text(
+                                "¿Olvidaste tu contraseña?",
+                                color = NegroApple,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
 
                     mensajeError?.let {
                         Text(
@@ -413,14 +531,31 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                 }
                                 cargando = false
                                 res.onSuccess { rolObtenido ->
-                                    if (esPestanaEmprendedora && rolObtenido == Rol.VISITANTE) {
-                                        // RN-01: solo el administrador registra emprendedoras.
-                                        mensajeError = "Este correo no está registrado como emprendedora. " +
-                                            "Pide al administrador que te registre, o entra en la pestaña de comprador."
-                                        return@onSuccess
+                                    // Fotos elegidas en el registro (opcionales). Si algo falla,
+                                    // la cuenta ya quedó creada y no se bloquea el ingreso.
+                                    if (esModoRegistro) {
+                                        fotoPerfilUri?.let { uri ->
+                                            runCatching { SesionManager.subirFotoPerfil(contexto, uri) }
+                                                .onFailure { Toast.makeText(contexto, "La cuenta se creó, pero no se pudo subir la foto de perfil.", Toast.LENGTH_LONG).show() }
+                                        }
+                                        if (esPestanaEmprendedora && rolObtenido == Rol.EMPRENDEDORA) {
+                                            logoNegocioUri?.let { uri ->
+                                                runCatching { SesionManager.subirLogo(contexto, uri) }
+                                                    .onFailure { Toast.makeText(contexto, "La cuenta se creó, pero no se pudo subir el logo.", Toast.LENGTH_LONG).show() }
+                                            }
+                                        }
                                     }
-                                    val ofrecerHuella = rolObtenido == Rol.EMPRENDEDORA &&
-                                        puedeUsarBiometria && !SesionManager.huellaActivada()
+                                    if (esPestanaEmprendedora && rolObtenido == Rol.VISITANTE) {
+                                        // RN-01: solo el administrador autoriza emprendedoras.
+                                        Toast.makeText(
+                                            contexto,
+                                            "Tu cuenta se creó como comprador. Pide al administrador que te autorice como emprendedora.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        }
+                                    val ofrecerHuella = puedeUsarBiometria &&
+                                        !SesionManager.huellaActivada() &&
+                                        !SesionManager.huellaYaOfrecida()
                                     if (ofrecerHuella) {
                                         rolPorConfirmarHuella = rolObtenido
                                     } else {
@@ -450,7 +585,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         }
                     }
 
-                    if (pestanaModo == 0 && puedeUsarBiometria && huellaDisponible) {
+                    if (puedeUsarBiometria && huellaDisponible) {
                         OutlinedButton(
                             onClick = {
                                 if (activity == null) {

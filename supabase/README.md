@@ -1,16 +1,18 @@
 # Backend Supabase — alerceshopin (Grupo ALERCEIS7)
 
-La app Android usa la instancia Supabase del grupo para cuentas (Auth), datos (tablas con RLS) y fotos (Storage).
+La app Android y la web usan Supabase para cuentas (Auth), datos (tablas con RLS) y fotos (Storage).
 
 ## Puesta en marcha (una vez)
 
 1. Entra a Studio de la instancia del grupo → **SQL Editor**.
-2. Pega y ejecuta `01_esquema.sql` (tablas, reglas de seguridad, bucket de fotos).
+2. Pega y ejecuta `01_esquema.sql` (tablas, reglas de seguridad y buckets).
 3. Pega y ejecuta `02_datos_prueba.sql` (datos ficticios: 4 tiendas de Alerce, sus productos y cuentas autorizadas).
-4. En la carpeta `App para el celular/`, copia `supabase.properties.ejemplo` como `supabase.properties` y completa la URL y la **anon key** (nunca la `service_role`). Ese archivo está en `.gitignore`: no se sube al repositorio (RNF-SEG-03).
-5. Compila la app. Si `supabase.properties` falta, la app funciona solo con datos de ejemplo y lo avisa.
+4. Ejecuta `03_migracion_fotos.sql` para configurar el bucket de perfiles y la función segura de actualización de nombre/foto (es idempotente).
+5. En `App para el celular/`, copia `supabase.properties.ejemplo` como `supabase.properties` y completa URL y **anon key** (nunca `service_role`). El archivo está en `.gitignore`.
+6. Configura los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions para generar la configuración web.
+7. En Supabase Auth, desactiva confirmación de correo si el registro debe iniciar sesión inmediatamente. Sin `supabase.properties`, la app funciona con datos de ejemplo.
 
-Los dos scripts se pueden volver a ejecutar sin romper nada.
+Los scripts SQL se pueden volver a ejecutar sin romper nada.
 
 ## Cuentas de prueba
 
@@ -31,8 +33,8 @@ Cualquier otro correo queda como **comprador**. Cuando el administrador da de al
 | Tabla | Para qué | Quién lee | Quién escribe |
 |---|---|---|---|
 | `cuentas_autorizadas` | Correos que el admin autoriza como emprendedora o admin | Admin | Admin |
-| `perfiles` | Un perfil por cuenta: nombre, rol y tienda (lo crea un trigger al registrarse) | La propia persona y el admin | Admin (cambio de rol) |
-| `tiendas` | Ficha pública de cada emprendimiento | Todos, sin sesión | Su dueña (`owner_id`) o el admin |
+| `perfiles` | Un perfil por cuenta: nombre, rol, tienda y foto (lo crea un trigger al registrarse) | La propia persona y el admin | Admin (cambio de rol); la propia persona cambia nombre y foto con la función `actualizar_mi_perfil` |
+| `tiendas` | Ficha pública de cada emprendimiento, con logo | Todos, sin sesión | Su dueña (`owner_id`) o el admin |
 | `productos` | Catálogo; `variantes` es una lista `[{id, nombre, stock}]` | Publicados: todos. No publicados: solo la dueña | Su dueña |
 | `ventas` | Historial privado de ventas (`items` en JSON) | Solo la dueña — **ni el admin** (RN-10) | Su dueña |
 | `asociaciones` | Agrupaciones de emprendedoras | Todos | Admin (RN-04) |
@@ -42,7 +44,7 @@ Relaciones: `perfiles.id = auth.users.id`; `tiendas.owner_id → auth.users`; `p
 
 Índices: `productos(tienda_id)` para el catálogo de cada tienda; `ventas(tienda_id, fecha desc)` para el historial ordenado.
 
-Fotos: bucket público `productos`. Cada usuaria solo puede subir dentro de su carpeta `uid/…`. La app comprime las fotos antes de subirlas (lado mayor 1280 px, JPEG 80 %, RNF-REN-01).
+Fotos: buckets públicos `productos` (fotos de productos y logo del negocio) y `perfiles` (foto de cada usuaria). Cada persona solo puede subir dentro de su carpeta `uid/…`. La app comprime las fotos antes de subirlas (lado mayor 1280 px, JPEG 80 %, RNF-REN-01).
 
 ## Sin señal (RNF-REN-02, RNF-DAT-03)
 
@@ -50,7 +52,7 @@ Todo cambio se guarda primero en el celular y queda en una cola «por subir» (`
 
 ## Pruebas de reglas de seguridad (RNF-SEG-04)
 
-`pruebas_rls.sql` prueba 26 casos por perfil (admin, emprendedora, comprador y sin sesión), incluidos los rechazos esperados. Se ejecuta en un **Postgres local**, nunca en la instancia del curso:
+`pruebas_rls.sql` prueba 37 casos por perfil (admin, emprendedora, comprador y sin sesión), incluidos los rechazos esperados. Se ejecuta en un **Postgres local**, nunca en la instancia del curso:
 
 ```bash
 psql -h localhost -U postgres -c "create database prueba_alerce"
@@ -60,4 +62,4 @@ psql -h localhost -U postgres -d prueba_alerce -f 02_datos_prueba.sql
 psql -h localhost -U postgres -d prueba_alerce -f pruebas_rls.sql     # imprime OK / FALLA por caso
 ```
 
-Resultado actual: **26 de 26 casos correctos**.
+Resultado esperado: cada caso debe imprimir `OK`. No se ha ejecutado esta batería en esta entrega; no uses el resultado histórico como verificación del esquema actual.

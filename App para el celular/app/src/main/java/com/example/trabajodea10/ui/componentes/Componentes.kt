@@ -487,6 +487,62 @@ fun AvatarIniciales(
     }
 }
 
+/** Avatar con foto real (Coil). Si no hay foto, muestra las iniciales como respaldo. */
+@Composable
+fun AvatarUsuario(
+    nombre: String,
+    color: Long,
+    fotoUrl: String?,
+    modifier: Modifier = Modifier,
+    tamano: Int = 44
+) {
+    val iniciales = nombre.split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .map { it.first().uppercaseChar() }
+        .joinToString("")
+    Box(
+        modifier = modifier
+            .size(tamano.dp)
+            .clip(CircleShape)
+            .background(Color(color)),
+        contentAlignment = Alignment.Center
+    ) {
+        val foto = fotoUrl?.trim().orEmpty()
+        if (foto.isNotEmpty()) {
+            SubcomposeAsyncImage(
+                model = modeloFoto(foto),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                loading = {
+                    Text(
+                        text = iniciales,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = (tamano / 2.6).sp
+                    )
+                },
+                error = {
+                    Text(
+                        text = iniciales,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = (tamano / 2.6).sp
+                    )
+                }
+            )
+        } else {
+            Text(
+                text = iniciales,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = (tamano / 2.6).sp
+            )
+        }
+    }
+}
+
 @Composable
 fun TituloSeccion(
     texto: String,

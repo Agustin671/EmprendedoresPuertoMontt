@@ -21,3 +21,7 @@ google-services.json
 
 # Credenciales de Supabase (RNF-SEG-03): nunca se suben al repositorio
 supabase.properties
+
+# Configuración web con claves de Supabase y Firebase (RNF-SEG-03)
+**/js/config.js
+!**/js/config.ejemplo.js

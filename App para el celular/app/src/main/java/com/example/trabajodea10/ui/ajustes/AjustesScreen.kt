@@ -1,5 +1,10 @@
 package com.example.trabajodea10.ui.ajustes
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricManager
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,23 +23,38 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.fragment.app.FragmentActivity
 import com.example.trabajodea10.data.SesionManager
 import com.example.trabajodea10.data.Rol
 import com.example.trabajodea10.data.TramaStore
-import com.example.trabajodea10.ui.componentes.AvatarIniciales
+import com.example.trabajodea10.ui.auth.autenticarConHuella
+import com.example.trabajodea10.ui.auth.autenticadoresHuella
+import com.example.trabajodea10.ui.componentes.AvatarUsuario
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.BotonSecundario
 import com.example.trabajodea10.ui.componentes.BotonesTamanoTexto
@@ -48,9 +68,11 @@ import com.example.trabajodea10.ui.componentes.colorDeCuenta
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.theme.LineaSuave
+import com.example.trabajodea10.ui.theme.NegroApple
 import com.example.trabajodea10.ui.theme.RojoError
 import com.example.trabajodea10.ui.theme.SuperficieVariante
 import com.example.trabajodea10.ui.theme.TextoSecundario
+import kotlinx.coroutines.launch
 
 @Composable
 fun PantallaAjustes(
@@ -59,6 +81,13 @@ fun PantallaAjustes(
 ) {
     val rol = TramaStore.rol
     val puedeVolver = nav.pila.size > 1
+    val contextoHuella = LocalContext.current
+    val actividadHuella = contextoHuella as? FragmentActivity
+    var huellaActiva by remember { mutableStateOf(SesionManager.huellaActivada()) }
+    val biometriaDisponible = remember {
+        BiometricManager.from(contextoHuella).canAuthenticate(autenticadoresHuella()) ==
+            BiometricManager.BIOMETRIC_SUCCESS
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         BarraSuperior(
@@ -66,7 +95,7 @@ fun PantallaAjustes(
             subtitulo = when (rol) {
                 Rol.ADMIN -> "Configuración central"
                 Rol.EMPRENDEDORA -> "Perfil, tienda y notificaciones"
-                Rol.VISITANTE -> "Tamaño de texto y ayuda"
+                Rol.VISITANTE -> "Perfil y preferencias"
                 null -> ""
             },
             onVolver = if (puedeVolver) ({ nav.volver() }) else null
@@ -80,10 +109,51 @@ fun PantallaAjustes(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             when (rol) {
-                Rol.ADMIN -> PerfilAdmin()
-                Rol.EMPRENDEDORA -> PerfilEmprendedora(nav)
-                Rol.VISITANTE -> PerfilVisitante()
+                Rol.ADMIN -> PerfilAdmin(avisar)
+                Rol.EMPRENDEDORA -> PerfilEmprendedora(nav, avisar)
+                Rol.VISITANTE -> PerfilVisitante(avisar)
                 null -> Unit
+            }
+
+            // Seguridad: huella disponible para todas las personas con cuenta
+            TituloSeccion(texto = "Seguridad y acceso")
+            Tarjeta {
+                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    FilaSwitch(
+                        titulo = "Ingresar con huella",
+                        descripcion = "Usa el lector de huella o biometría del celular para iniciar sesión rápido",
+                        checked = huellaActiva,
+                        onCheckedChange = { activado ->
+                            if (!activado) {
+                                SesionManager.activarHuella(false)
+                                huellaActiva = false
+                                avisar("Huella desactivada.")
+                            } else if (SesionManager.emailActual == null) {
+                                huellaActiva = false
+                                avisar("Inicia sesión con tu correo y contraseña para activar la huella.")
+                            } else if (!biometriaDisponible || actividadHuella == null) {
+                                huellaActiva = false
+                                avisar("Este celular no tiene huella o biometría disponible.")
+                            } else {
+                                autenticarConHuella(
+                                    activity = actividadHuella,
+                                    onExito = {
+                                        SesionManager.activarHuella(true)
+                                        huellaActiva = true
+                                        avisar("Huella activada para los próximos inicios de sesión.")
+                                    },
+                                    onError = { error ->
+                                        huellaActiva = SesionManager.huellaActivada()
+                                        avisar(error)
+                                    },
+                                    onCancelar = {
+                                        huellaActiva = SesionManager.huellaActivada()
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
             }
 
             if (rol == Rol.ADMIN) {
@@ -114,57 +184,204 @@ fun PantallaAjustes(
 }
 
 @Composable
-private fun PerfilAdmin() {
+private fun PerfilAdmin(avisar: (String) -> Unit) {
+    val contexto = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var subiendoFoto by remember { mutableStateOf(false) }
+
+    val selectorFoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            subiendoFoto = true
+            coroutineScope.launch {
+                val res = SesionManager.subirFotoPerfil(contexto, uri)
+                subiendoFoto = false
+                res.onSuccess { avisar("Foto de perfil actualizada.") }
+                    .onFailure { avisar(it.message ?: "No se pudo cambiar la foto.") }
+            }
+        }
+    }
+
     val nombre = if (SesionManager.nombreUsuarioActual.isNotBlank()) SesionManager.nombreUsuarioActual else "Administrador"
     val email = SesionManager.emailActual ?: "admin@alerce.app"
+
     Tarjeta {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AvatarIniciales(nombre = nombre, color = 0xFF111111, tamano = 52)
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = email,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextoSecundario
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nombre = nombre,
+                    color = 0xFF111111,
+                    fotoUrl = SesionManager.fotoPerfilUrl,
+                    tamano = 56
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario
+                    )
+                }
+                ChipEstado(
+                    texto = "Super Admin",
+                    color = com.example.trabajodea10.ui.componentes.ColorEstado(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 )
             }
-            ChipEstado(
-                texto = "Super Admin",
-                color = com.example.trabajodea10.ui.componentes.ColorEstado(
-                    MaterialTheme.colorScheme.primaryContainer,
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+            OutlinedButton(
+                onClick = { selectorFoto.launch("image/*") },
+                enabled = !subiendoFoto,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, NegroApple),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (subiendoFoto) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = NegroApple)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guardando foto...", fontSize = 13.sp, color = NegroApple)
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = NegroApple, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cambiar foto de perfil", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = NegroApple)
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun PerfilEmprendedora(nav: ControladorNavegacion) {
+private fun PerfilEmprendedora(nav: ControladorNavegacion, avisar: (String) -> Unit) {
+    val contexto = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var subiendoFoto by remember { mutableStateOf(false) }
+    var subiendoLogo by remember { mutableStateOf(false) }
+
+    val selectorFoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            subiendoFoto = true
+            coroutineScope.launch {
+                val res = SesionManager.subirFotoPerfil(contexto, uri)
+                subiendoFoto = false
+                res.onSuccess { avisar("Foto de perfil actualizada.") }
+                    .onFailure { avisar(it.message ?: "No se pudo cambiar la foto.") }
+            }
+        }
+    }
+
+    val selectorLogo = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            subiendoLogo = true
+            coroutineScope.launch {
+                val res = SesionManager.subirLogo(contexto, uri)
+                subiendoLogo = false
+                res.onSuccess { avisar("Logo del negocio actualizado.") }
+                    .onFailure { avisar(it.message ?: "No se pudo cambiar el logo.") }
+            }
+        }
+    }
+
     val emprendedora = TramaStore.emprendedoraActual
+    val nombre = if (SesionManager.nombreUsuarioActual.isNotBlank()) SesionManager.nombreUsuarioActual else emprendedora.nombre
+    val tienda = TramaStore.tienda
+
+    // Perfil personal
     Tarjeta {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AvatarIniciales(nombre = emprendedora.nombre, color = emprendedora.color, tamano = 52)
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(emprendedora.nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = TramaStore.tienda.nombre,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextoSecundario
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nombre = nombre,
+                    color = emprendedora.color,
+                    fotoUrl = SesionManager.fotoPerfilUrl,
+                    tamano = 56
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = SesionManager.emailActual ?: tienda.nombre,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario
+                    )
+                }
+                ChipEstado(
+                    texto = emprendedora.estado.etiqueta,
+                    color = colorDeCuenta(emprendedora.estado)
                 )
             }
-            ChipEstado(
-                texto = emprendedora.estado.etiqueta,
-                color = colorDeCuenta(emprendedora.estado)
-            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+            OutlinedButton(
+                onClick = { selectorFoto.launch("image/*") },
+                enabled = !subiendoFoto,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, NegroApple),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (subiendoFoto) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = NegroApple)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guardando foto...", fontSize = 13.sp, color = NegroApple)
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = NegroApple, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cambiar foto de perfil", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = NegroApple)
+                }
+            }
+        }
+    }
+
+    // Logo y vitrina del negocio
+    Tarjeta {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nombre = tienda.nombre,
+                    color = tienda.colorLogo,
+                    fotoUrl = tienda.logoUrl,
+                    tamano = 56
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(tienda.nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "Logo público del negocio",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            OutlinedButton(
+                onClick = { selectorLogo.launch("image/*") },
+                enabled = !subiendoLogo,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, NegroApple),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (subiendoLogo) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = NegroApple)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guardando logo...", fontSize = 13.sp, color = NegroApple)
+                } else {
+                    Icon(Icons.Filled.Image, contentDescription = null, tint = NegroApple, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cambiar logo del negocio", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = NegroApple)
+                }
+            }
         }
     }
 
@@ -208,6 +425,79 @@ private fun FilaNavegacion(
             Text(descripcion, style = MaterialTheme.typography.bodySmall, color = TextoSecundario)
         }
         Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = TextoSecundario)
+    }
+}
+
+@Composable
+private fun PerfilVisitante(avisar: (String) -> Unit) {
+    val contexto = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var subiendoFoto by remember { mutableStateOf(false) }
+
+    val selectorFoto = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            subiendoFoto = true
+            coroutineScope.launch {
+                val res = SesionManager.subirFotoPerfil(contexto, uri)
+                subiendoFoto = false
+                res.onSuccess { avisar("Foto de perfil actualizada.") }
+                    .onFailure { avisar(it.message ?: "No se pudo cambiar la foto.") }
+            }
+        }
+    }
+
+    val nombre = if (SesionManager.nombreUsuarioActual.isNotBlank()) SesionManager.nombreUsuarioActual else "Comprador"
+    val email = SesionManager.emailActual ?: "Sin correo registrado"
+
+    Tarjeta {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nombre = nombre,
+                    color = 0xFF6B7FB3,
+                    fotoUrl = SesionManager.fotoPerfilUrl,
+                    tamano = 56
+                )
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(nombre, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = email,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextoSecundario
+                    )
+                }
+                ChipEstado(
+                    texto = "Comprador",
+                    color = com.example.trabajodea10.ui.componentes.ColorEstado(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            OutlinedButton(
+                onClick = { selectorFoto.launch("image/*") },
+                enabled = !subiendoFoto,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, NegroApple),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (subiendoFoto) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = NegroApple)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Guardando foto...", fontSize = 13.sp, color = NegroApple)
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = NegroApple, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Cambiar foto de perfil", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = NegroApple)
+                }
+            }
+        }
     }
 }
 
@@ -289,34 +579,6 @@ private fun AjustesNotificaciones() {
                 descripcion = "Envía un resumen los lunes",
                 checked = prefs.resumenVentas,
                 onCheckedChange = { TramaStore.guardarPrefs(prefs.copy(resumenVentas = it)) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun PerfilVisitante() {
-    Tarjeta {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AvatarIniciales(nombre = "Invitada", color = 0xFF6B7FB3, tamano = 52)
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Visitante", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "Recorré las ferias y productos sin cuenta",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextoSecundario
-                )
-            }
-            ChipEstado(
-                texto = "Público",
-                color = com.example.trabajodea10.ui.componentes.ColorEstado(
-                    MaterialTheme.colorScheme.primaryContainer,
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                )
             )
         }
     }

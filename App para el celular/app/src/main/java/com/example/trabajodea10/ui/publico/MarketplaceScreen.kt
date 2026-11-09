@@ -20,10 +20,12 @@ import com.example.trabajodea10.data.RespuestaForo
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.formatearMoneda
 import com.example.trabajodea10.data.nombreDiaLegible
+import com.example.trabajodea10.ui.componentes.AvatarUsuario
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
 import com.example.trabajodea10.ui.componentes.FotoProducto
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
+import com.example.trabajodea10.ui.navegacion.Ruta
 import com.example.trabajodea10.ui.theme.VerdeContenedor
 import com.example.trabajodea10.ui.theme.VerdeOk
 import androidx.compose.ui.text.input.KeyboardType
@@ -190,6 +192,24 @@ fun PantallaMarketplace(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (nav != null && SesionManager.emailActual != null) {
+                            Surface(
+                                shape = CircleShape,
+                                border = BorderStroke(1.dp, GrisBorde),
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .clickable { nav.irA(Ruta.Ajustes) }
+                            ) {
+                                AvatarUsuario(
+                                    nombre = SesionManager.nombreUsuarioActual,
+                                    color = 0xFF6B7FB3,
+                                    fotoUrl = SesionManager.fotoPerfilUrl,
+                                    tamano = 38
+                                )
+                            }
+                        }
+
                         // Botón circular para refrescar (sin texto "Firestore")
                         Surface(
                             shape = CircleShape,
@@ -205,7 +225,7 @@ fun PantallaMarketplace(
                                         sembrando = false
                                         avisar?.invoke(
                                             if (SesionManager.mensajeError == null) "Vitrina actualizada"
-                                            else "Sin conexión: se muestran datos guardados"
+                                             else "Sin conexión: se muestran datos guardados"
                                         )
                                     }
                                 }
@@ -475,20 +495,12 @@ private fun TarjetaTiendaMarketplace(
 
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color(tienda.colorLogo),
-                        modifier = Modifier.size(46.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = tienda.nombre.firstOrNull()?.uppercase() ?: "T",
-                                color = Color.White,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 20.sp
-                            )
-                        }
-                    }
+                    AvatarUsuario(
+                        nombre = tienda.nombre,
+                        color = tienda.colorLogo,
+                        fotoUrl = tienda.logoUrl,
+                        tamano = 46
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -671,20 +683,12 @@ private fun DialogoDetalleTienda(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = CircleShape,
-                    color = Color(tienda.colorLogo),
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = tienda.nombre.firstOrNull()?.uppercase() ?: "T",
-                            color = Color.White,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 17.sp
-                        )
-                    }
-                }
+                AvatarUsuario(
+                    nombre = tienda.nombre,
+                    color = tienda.colorLogo,
+                    fotoUrl = tienda.logoUrl,
+                    tamano = 38
+                )
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(tienda.nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = NegroApple)
@@ -785,141 +789,141 @@ private fun DialogoDetalleTienda(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                    Text(
-                        text = "Productos en Vitrina (${productos.size}):",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = NegroApple
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(50.dp),
-                        color = GrisChip
-                    ) {
                         Text(
-                            text = "Catálogo Directo",
-                            fontSize = 10.sp,
+                            text = "Productos en Vitrina (${productos.size}):",
                             fontWeight = FontWeight.Bold,
-                            color = NegroApple,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            fontSize = 14.sp,
+                            color = NegroApple
                         )
+                        Surface(
+                            shape = RoundedCornerShape(50.dp),
+                            color = GrisChip
+                        ) {
+                            Text(
+                                text = "Catálogo Directo",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = NegroApple,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
                     }
-                }
 
-                if (productos.isEmpty()) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = GrisChip,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Esta tienda aún no tiene productos publicados en vitrina. Puedes consultar por WhatsApp.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GrisTexto,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        productos.forEach { producto ->
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = BlancoPuro,
-                                border = BorderStroke(1.dp, GrisBorde),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    FotoProducto(
-                                        fotoUrl = producto.fotoUrl,
-                                        colorRespaldo = producto.colorFoto,
-                                        inicial = producto.nombre,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(120.dp),
-                                        forma = RoundedCornerShape(10.dp),
-                                        tamanoInicial = 38.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.Top
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = producto.nombre,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 14.sp,
-                                                color = NegroApple
-                                            )
-                                            Spacer(modifier = Modifier.height(2.dp))
-                                            Text(
-                                                text = formatearMoneda(producto.precio),
-                                                fontWeight = FontWeight.Black,
-                                                fontSize = 15.sp,
-                                                color = RojoAlerce
-                                            )
-                                        }
-
-                                        Surface(
-                                            shape = RoundedCornerShape(50.dp),
-                                            color = if (producto.stockTotal > 0) VerdeContenedor else RojoAlerceContenedor
+                    if (productos.isEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = GrisChip,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Esta tienda aún no tiene productos publicados en vitrina. Puedes consultar por WhatsApp.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = GrisTexto,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            productos.forEach { producto ->
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = BlancoPuro,
+                                    border = BorderStroke(1.dp, GrisBorde),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        FotoProducto(
+                                            fotoUrl = producto.fotoUrl,
+                                            colorRespaldo = producto.colorFoto,
+                                            inicial = producto.nombre,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(120.dp),
+                                            forma = RoundedCornerShape(10.dp),
+                                            tamanoInicial = 38.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.Top
                                         ) {
-                                            Text(
-                                                text = if (producto.stockTotal > 0) "Stock Disponible" else "A Pedido",
-                                                color = if (producto.stockTotal > 0) VerdeOk else RojoAlerce,
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                    }
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = producto.nombre,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = NegroApple
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = formatearMoneda(producto.precio),
+                                                    fontWeight = FontWeight.Black,
+                                                    fontSize = 15.sp,
+                                                    color = RojoAlerce
+                                                )
+                                            }
 
-                                    if (producto.variantes.isNotEmpty() && producto.variantes.firstOrNull()?.nombre != "Único") {
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            producto.variantes.take(2).forEach { v ->
-                                                Surface(
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    color = GrisChip
-                                                ) {
-                                                    Text(
-                                                        text = v.nombre,
-                                                        fontSize = 10.sp,
-                                                        color = GrisTexto,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                    )
+                                            Surface(
+                                                shape = RoundedCornerShape(50.dp),
+                                                color = if (producto.stockTotal > 0) VerdeContenedor else RojoAlerceContenedor
+                                            ) {
+                                                Text(
+                                                    text = if (producto.stockTotal > 0) "Stock Disponible" else "A Pedido",
+                                                    color = if (producto.stockTotal > 0) VerdeOk else RojoAlerce,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+
+                                        if (producto.variantes.isNotEmpty() && producto.variantes.firstOrNull()?.nombre != "Único") {
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                producto.variantes.take(2).forEach { v ->
+                                                    Surface(
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        color = GrisChip
+                                                    ) {
+                                                        Text(
+                                                            text = v.nombre,
+                                                            fontSize = 10.sp,
+                                                            color = GrisTexto,
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
 
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
 
-                                    // Botón para pedir directamente este producto
-                                    OutlinedButton(
-                                        onClick = {
-                                            abrirWhatsApp(
-                                                context,
-                                                tienda.whatsapp,
-                                                "Hola ${tienda.nombre}! Me interesa comprar '${producto.nombre}' (${formatearMoneda(producto.precio)}) que vi en tu vitrina de Alerce Emprende."
+                                        // Botón para pedir directamente este producto
+                                        OutlinedButton(
+                                            onClick = {
+                                                abrirWhatsApp(
+                                                    context,
+                                                    tienda.whatsapp,
+                                                    "Hola ${tienda.nombre}! Me interesa comprar '${producto.nombre}' (${formatearMoneda(producto.precio)}) que vi en tu vitrina de Alerce Emprende."
+                                                )
+                                            },
+                                            shape = RoundedCornerShape(50.dp),
+                                            border = BorderStroke(1.dp, NegroApple),
+                                            modifier = Modifier.fillMaxWidth().height(36.dp)
+                                        ) {
+                                            Text(
+                                                text = "Pedir este producto por WhatsApp",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = NegroApple
                                             )
-                                        },
-                                        shape = RoundedCornerShape(50.dp),
-                                        border = BorderStroke(1.dp, NegroApple),
-                                        modifier = Modifier.fillMaxWidth().height(36.dp)
-                                    ) {
-                                        Text(
-                                            text = "Pedir este producto por WhatsApp",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = NegroApple
-                                        )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
                 }
 
                 if (tienda.necesidades.tieneForoComunidad && pestanaDetalle == 1) {

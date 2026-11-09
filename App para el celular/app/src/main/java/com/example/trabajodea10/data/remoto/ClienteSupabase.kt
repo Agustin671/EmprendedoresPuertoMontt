@@ -27,6 +27,10 @@ object ConfigSupabase {
     val anonKey: String get() = BuildConfig.SUPABASE_ANON_KEY.trim()
     val configurado: Boolean get() = url.startsWith("https://") && anonKey.isNotBlank()
     const val BUCKET_FOTOS = "productos"
+    const val BUCKET_PERFILES = "perfiles"
+
+    /** Página web que recibe el enlace del correo y permite escribir la clave nueva. */
+    const val URL_RECUPERACION = "https://agustin671.github.io/EmprendedoresPuertoMontt/?recuperar=1"
 }
 
 /** Error de la API con un mensaje ya traducido para mostrar a la usuaria. */
@@ -166,6 +170,8 @@ object ClienteSupabase {
             "password should be at least" in minus -> "La contraseña debe tener al menos 6 caracteres."
             "unable to validate email" in minus || "invalid email" in minus -> "Revisa que el correo esté bien escrito."
             "email not confirmed" in minus -> "Falta confirmar el correo."
+            "rate limit" in minus || "too many requests" in minus ->
+                "Se enviaron demasiados correos. Espera unos minutos e intenta de nuevo."
             "row-level security" in minus || codigo == 403 -> "No tienes permiso para hacer este cambio."
             codigo >= 500 -> "El servidor no respondió bien. Intenta en un momento."
             else -> original
@@ -236,6 +242,18 @@ object ClienteSupabase {
         }
     }
 
+    /**
+     * Envía el correo de recuperación a la dirección escrita. El enlace abre
+     * la página web, donde la persona define su nueva contraseña.
+     */
+    suspend fun recuperarContrasena(email: String, urlDestino: String = ConfigSupabase.URL_RECUPERACION) {
+        val cuerpo = buildJsonObject {
+            put("email", email.trim())
+            put("redirect_to", urlDestino)
+        }.toString()
+        pedir("POST", "/auth/v1/recover", cuerpoJson = cuerpo, conToken = false)
+    }
+
     /** Cierra la sesión en el servidor y borra los tokens del celular. */
     suspend fun cerrarSesion() {
         if (sesion != null) {
@@ -247,14 +265,18 @@ object ClienteSupabase {
     // ---------------------------------------------------------------- Storage
 
     /** Sube una foto (ya comprimida) y devuelve su URL pública. */
-    suspend fun subirFoto(ruta: String, bytes: ByteArray): String {
+    suspend fun subirFoto(
+        ruta: String,
+        bytes: ByteArray,
+        bucket: String = ConfigSupabase.BUCKET_FOTOS
+    ): String {
         pedir(
             "POST",
-            "/storage/v1/object/${ConfigSupabase.BUCKET_FOTOS}/$ruta",
+            "/storage/v1/object/$bucket/$ruta",
             bytes = bytes,
             tipoBytes = "image/jpeg",
             cabeceras = mapOf("x-upsert" to "true")
         )
-        return "${ConfigSupabase.url}/storage/v1/object/public/${ConfigSupabase.BUCKET_FOTOS}/$ruta"
+        return "${ConfigSupabase.url}/storage/v1/object/public/$bucket/$ruta"
     }
 }

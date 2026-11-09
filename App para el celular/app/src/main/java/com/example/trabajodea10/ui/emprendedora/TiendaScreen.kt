@@ -1,5 +1,10 @@
 package com.example.trabajodea10.ui.emprendedora
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -57,19 +62,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
 import com.example.trabajodea10.data.NecesidadesTienda
 import com.example.trabajodea10.data.PublicacionForo
 import com.example.trabajodea10.data.RespuestaForo
-import androidx.compose.foundation.BorderStroke
-import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.SesionManager
+import com.example.trabajodea10.data.Tienda
 import com.example.trabajodea10.data.TramaStore
 import com.example.trabajodea10.data.nombreDiaLegible
+import com.example.trabajodea10.ui.componentes.AvatarUsuario
 import com.example.trabajodea10.ui.componentes.BarraSuperior
 import com.example.trabajodea10.ui.componentes.CampoTexto
 import com.example.trabajodea10.ui.componentes.ContenedorChips
@@ -77,8 +81,8 @@ import com.example.trabajodea10.ui.componentes.Tarjeta
 import com.example.trabajodea10.ui.componentes.TituloSeccion
 import com.example.trabajodea10.ui.navegacion.ControladorNavegacion
 import com.example.trabajodea10.ui.navegacion.Ruta
-import com.example.trabajodea10.ui.publico.urlTienda
 import com.example.trabajodea10.ui.publico.compartirPorWhatsApp
+import com.example.trabajodea10.ui.publico.urlTienda
 import com.example.trabajodea10.ui.theme.Berenjena
 import com.example.trabajodea10.ui.theme.BerenjenaContenedor
 import com.example.trabajodea10.ui.theme.BerenjenaOscuro
@@ -112,7 +116,6 @@ fun PantallaTienda(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    // Buscar si ya existe tienda cargada o usar la de TramaStore
     val tiendaBase = SesionManager.tiendas.firstOrNull { it.id == TramaStore.tienda.id } ?: TramaStore.tienda
 
     var nombre by remember { mutableStateOf(tiendaBase.nombre) }
@@ -123,6 +126,24 @@ fun PantallaTienda(
     var instagram by remember { mutableStateOf(tiendaBase.instagram) }
     var colorPortada by remember { mutableStateOf(tiendaBase.colorPortada) }
     var colorLogo by remember { mutableStateOf(tiendaBase.colorLogo) }
+    var logoUrl by remember { mutableStateOf(tiendaBase.logoUrl) }
+    var subiendoLogo by remember { mutableStateOf(false) }
+
+    val selectorLogo = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        if (uri != null) {
+            subiendoLogo = true
+            coroutineScope.launch {
+                val res = SesionManager.subirLogo(context, uri)
+                subiendoLogo = false
+                res.onSuccess {
+                    logoUrl = TramaStore.tienda.logoUrl
+                    avisar("Logo del negocio actualizado.")
+                }.onFailure {
+                    avisar(it.message ?: "No se pudo subir el logo.")
+                }
+            }
+        }
+    }
 
     // Switches de "Selección de Necesidades"
     var tieneAgendamiento by remember { mutableStateOf(tiendaBase.necesidades.tieneAgendamiento) }
@@ -135,7 +156,7 @@ fun PantallaTienda(
     var guardando by remember { mutableStateOf(false) }
 
     val tiendaActualizada = remember(
-        nombre, rubro, sector, bio, whatsapp, instagram, colorPortada, colorLogo,
+        nombre, rubro, sector, bio, whatsapp, instagram, colorPortada, colorLogo, logoUrl,
         tieneAgendamiento, tieneStock, tieneProductosAPedido, tieneVentaPorWhatsApp,
         participaEnFerias, tieneForoComunidad
     ) {
@@ -149,6 +170,7 @@ fun PantallaTienda(
             instagram = instagram.trim(),
             colorPortada = colorPortada,
             colorLogo = colorLogo,
+            logoUrl = logoUrl,
             necesidades = NecesidadesTienda(
                 tieneStock = tieneStock,
                 tieneAgendamiento = tieneAgendamiento,
@@ -369,6 +391,30 @@ fun PantallaTienda(
                 }
             }
 
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedButton(
+                onClick = { selectorLogo.launch("image/*") },
+                enabled = !subiendoLogo,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, NegroApple),
+                modifier = Modifier.fillMaxWidth().height(48.dp)
+            ) {
+                if (subiendoLogo) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = NegroApple)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Subiendo logo...", fontSize = 13.sp, color = NegroApple)
+                } else {
+                    Icon(Icons.Filled.Store, contentDescription = null, tint = NegroApple, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        if (logoUrl.isNullOrBlank()) "Subir logo del negocio (opcional)" else "Cambiar logo del negocio",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = NegroApple
+                    )
+                }
+            }
+
             // VISTA PREVIA EN VIVO
             TituloSeccion(texto = "4. VISTA PREVIA PÚBLICA (EN TIEMPO REAL)")
             Text(
@@ -401,17 +447,12 @@ fun PantallaTienda(
                     }
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = CircleShape, color = colorSeguro(colorLogo, RojoAlerce), modifier = Modifier.size(42.dp)) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    val letraInicial = remember(nombre) { (nombre.trim().firstOrNull() ?: 'T').uppercaseChar().toString() }
-                                    Text(
-                                        text = letraInicial,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
-                                    )
-                                }
-                            }
+                            AvatarUsuario(
+                                nombre = nombre,
+                                color = colorLogo,
+                                fotoUrl = logoUrl,
+                                tamano = 42
+                            )
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(nombre, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -1250,9 +1291,3 @@ private fun SeccionGestionForo(
         }
     }
 }
-
-
-
-
-
-

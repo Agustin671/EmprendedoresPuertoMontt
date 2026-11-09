@@ -106,56 +106,30 @@ const aHex = n => "#" + (Number(n) & 0xFFFFFF).toString(16).padStart(6, "0").toU
 const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 ```
 
-## 5. Qué está hecho (al 3-nov-2026)
+## 5. Qué está hecho (al 8-nov-2026)
 
-- App conectada a Supabase: login/registro, roles del servidor, huella, tienda, productos, ventas, fotos, cola sin señal.
-- Esquema SQL con RLS + 26 pruebas por perfil que pasan (`supabase/pruebas_rls.sql`).
-- Mejoras de uso: "Mis productos" solo muestra los de la propia tienda; botón "Se acabó" con Deshacer; dictado por voz en nombre y descripción; guardado automático de productos nuevos; "¿Cuántos tienes?" (antes se forzaba a 15 unidades); confirmación antes de borrar; letra al 100 % por defecto; vocabulario simple; QR y enlace por tienda (`?tienda=ID`).
-- Web: abre la ficha de una tienda si la URL trae `?tienda=ID`; el QR y "Copiar enlace" usan la URL real de GitHub Pages.
+- App conectada a Supabase: inicio y registro con roles decididos por el servidor (`cuentas_autorizadas`), perfil con foto, recuperación de contraseña y acceso biométrico opcional que usa BiometricPrompt con credencial del dispositivo como alternativa.
+- Las personas autorizadas como emprendedoras reciben su tienda desde el servidor; el alta no concede ese rol por los metadatos enviados por el cliente.
+- Esquema base `supabase/01_esquema.sql` y migración `supabase/03_migracion_fotos.sql`: fotos de perfil, logo de tienda, bucket `perfiles` con escritura limitada a la carpeta del usuario y función `actualizar_mi_perfil` (solo nombre/foto).
+- Las fotos web y móvil se comprimen antes de subir; perfiles y fichas de negocio muestran sus imágenes cuando están disponibles.
+- Web conectada a Supabase por `js/config.js`, generado en despliegue con `SUPABASE_URL` y `SUPABASE_ANON_KEY` de GitHub Actions. La clave pública queda expuesta en el cliente por diseño; RLS es el control de acceso. No incluir secretos en el repositorio.
+- Mejoras de uso: “Mis productos” solo muestra los de la propia tienda; botón “Se acabó” con Deshacer; dictado por voz en nombre y descripción; guardado automático de productos nuevos; “¿Cuántos tienes?”; confirmación antes de borrar; QR y enlace por tienda (`?tienda=ID`).
 
-## 6. Qué falta
+## 6. Qué falta / configuración externa
 
-1. **Conectar la web a Supabase** (sección 7). Es lo siguiente.
-2. Ferias en el servidor: las tablas `ferias` y `participaciones` existen, pero la app y la web aún usan datos locales (Entrega 7).
-3. Ingreso de compradores con Google en la app (RN-07).
-4. Seguidores y avisos de feria (Entrega 7).
-5. Borrar `data/FirebaseManager.kt` (vacío).
+1. En Supabase, ejecutar `03_migracion_fotos.sql` después de `01_esquema.sql` en una base ya creada. Para una base nueva, ejecutar `01_esquema.sql` y luego la migración.
+2. En Supabase Auth, desactivar la confirmación de correo si se requiere entrar inmediatamente después del registro; si permanece activa, el flujo informa que se debe confirmar el correo.
+3. Configurar los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions y `supabase.properties` local para conectar web y Android a la instancia. Sin esa configuración solo se pueden compilar y usar pantallas sin servicios remotos.
+4. Ferias en el servidor: las tablas `ferias` y `participaciones` existen, pero la app y la web aún usan datos locales (Entrega 7).
+5. Ingreso de compradores con Google en la app (RN-07), seguidores y avisos de feria (Entrega 7).
+6. Borrar `data/FirebaseManager.kt` (vacío), cuando se realice limpieza del código antiguo.
 
-## 7. Tarea: conectar la web con Supabase
+## 7. Conexión web a Supabase
 
-**Objetivo:** que la web lea y escriba las mismas tablas que la app, para que ambas muestren lo mismo.
-
-**Pasos sugeridos**
-
-1. **Configuración sin credenciales en el repo.**
-   - Crear `LA PAgina (segun)/proyectode10/js/config.ejemplo.js` con `window.SUPABASE_URL = ""; window.SUPABASE_ANON_KEY = "";` y agregar `js/config.js` al `.gitignore`.
-   - En GitHub: *Settings → Secrets and variables → Actions* → crear `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
-   - En `.github/workflows/deploy-pages.yml`, antes de "Upload artifact":
-     ```yaml
-           - name: Crear config de Supabase
-             run: |
-               printf 'window.SUPABASE_URL = "%s";\nwindow.SUPABASE_ANON_KEY = "%s";\n' \
-                 "${{ secrets.SUPABASE_URL }}" "${{ secrets.SUPABASE_ANON_KEY }}" \
-                 > "./LA PAgina (segun)/proyectode10/js/config.js"
-     ```
-   - Ojo: la anon key igual queda visible en la página publicada (es inevitable en un cliente web; la seguridad la dan las reglas RLS). Confirmar con el profesor.
-2. **Cliente**: en `index.html` cargar `config.js` y supabase-js por CDN con versión fija (ej. `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js`) en vez de los 4 scripts de Firebase. Crear el cliente con `supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)`.
-3. **Capa de datos**: crear `js/datos.js` con funciones `listarTiendas()`, `listarProductosPublicados()`, `productosDeTienda(id)`, `guardarProducto(p)`, `actualizarTienda(t)`, `registrarVenta(v, tiendaId)`, `subirFoto(file, productoId)`, `ingresar(email, clave)`, `registrar(email, clave, nombre)`, `miPerfil()`, `cerrarSesion()`. Ahí va la conversión de formatos de la sección 4. `main.js` solo llama a estas funciones.
-4. **Reemplazar en `main.js`** (buscar `firebaseFirestore.` y `firebaseAuth.`):
-   - `cargarProductosDesdeFirestore()` → `listarTiendas()` + `listarProductosPublicados()`. Las listas fijas `TIENDAS` / `PRODUCTOS_BASE` quedan solo como respaldo sin conexión.
-   - Publicar producto (`…collection("productos").doc(…).set`) → `guardarProducto()`, con `tienda_id` de la emprendedora con sesión, `publicado: true` y la foto subida a Storage (comprimir antes, RNF-REN-01).
-   - Venta del POS (`…collection("ventas").add`) → `registrarVenta()`, que también descuenta stock en `variantes` del producto.
-   - Guardar tienda (`collection("tiendas").doc(id).set(…, {merge:true})`) → `actualizarTienda()` (UPDATE por `id`, no upsert).
-   - Login y registro (`createUserWithEmailAndPassword`, `signInWithEmailAndPassword`, `onAuthStateChanged`, colección `usuarios`) → `supabase.auth.signUp({ email, password, options: { data: { nombre } } })`, `signInWithPassword`, `onAuthStateChange`; el rol se lee de la tabla `perfiles`, **no** se escribe desde la web.
-   - Dejar de guardar productos y tiendas en `localStorage` (`trama_productos_custom`, `trama_productos_completo`, `trama_tiendas_completo`). El carrito y los favoritos sí pueden seguir en localStorage.
-5. **Probar**:
-   - Sin sesión, la web muestra las 4 tiendas y solo los productos publicados.
-   - Entrar como `donamarta@alerce.app` y cambiar un precio en la web → el cambio aparece en la app al recargar la vitrina, y al revés.
-   - Intentar editar otra tienda → debe fallar (RLS).
-
+La web inicializa Supabase solo cuando `js/config.js` define URL y anon key. El workflow escribe ese archivo desde los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY`; el archivo generado está ignorado por Git. La clave anon se sirve al navegador, por lo que todas las operaciones deben quedar protegidas por RLS. El rol se lee desde `perfiles`; nunca se decide a partir de metadatos editables por el cliente. Las imágenes se suben a los buckets `productos` y `perfiles`, bajo la carpeta del ID autenticado.
 ## 8. Probar las reglas de seguridad
 
-En un Postgres local (no en la instancia del curso); los comandos están en `supabase/README.md`. Resultado esperado: `26 de 26 casos correctos`. Si cambias `01_esquema.sql`, vuelve a correrlas y agrega casos para lo nuevo.
+En un Postgres local (no en la instancia del curso); los comandos están en `supabase/README.md`. Resultado esperado: cada caso imprime `OK`. La batería tiene 37 casos documentados; vuelve a ejecutarla al modificar el esquema. Si cambias `01_esquema.sql`, vuelve a correrlas y agrega casos para lo nuevo.
 
 ## 9. Trampas conocidas
 

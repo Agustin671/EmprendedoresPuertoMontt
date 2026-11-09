@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Settings
@@ -74,7 +75,8 @@ fun itemsSegunRol(rol: Rol): List<ItemNavegacion> = when (rol) {
     Rol.VISITANTE -> listOf(
         ItemNavegacion(Ruta.VisProductos, "Marketplace", Icons.Filled.Store),
         ItemNavegacion(Ruta.VisInicio, "Ferias", Icons.Filled.CalendarMonth),
-        ItemNavegacion(Ruta.VisAyuda, "Ayuda", Icons.Filled.Phone)
+        ItemNavegacion(Ruta.VisAyuda, "Ayuda", Icons.Filled.Phone),
+        ItemNavegacion(Ruta.Ajustes, "Mi perfil", Icons.Filled.Person)
     )
 }
 
