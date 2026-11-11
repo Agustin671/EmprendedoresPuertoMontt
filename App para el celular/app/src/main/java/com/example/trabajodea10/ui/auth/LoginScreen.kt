@@ -349,7 +349,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         color = TextoSecundario
                     )
 
-                    if (pestanaModo == 0 && !esModoRegistro) {
+                    // Credenciales de prueba: solo en el APK de depuración, nunca en producción.
+                    if (BuildConfig.DEBUG && pestanaModo == 0 && !esModoRegistro) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = Color(0xFFF8F9FA),

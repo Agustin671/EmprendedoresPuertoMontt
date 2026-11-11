@@ -9,6 +9,7 @@ La app Android y la web usan Supabase para cuentas (Auth), datos (tablas con RLS
 3. Pega y ejecuta `02_datos_prueba.sql` (datos ficticios: 4 tiendas de Alerce, sus productos y cuentas autorizadas).
 4. Ejecuta `03_migracion_fotos.sql` para configurar el bucket de perfiles y la función segura de actualización de nombre/foto (es idempotente).
 5. Ejecuta `04_registro_vendedores.sql` para que cualquier persona pueda crear una cuenta de emprendedora, recibir su tienda y convertir una cuenta compradora existente en tienda propia.
+5b. Ejecuta `05_catalogo_ventas.sql` (Entrega 5): catálogo completo, reglas públicas en RLS, `guardar_producto()` y `registrar_venta()` atómica. Antes, corre `diagnostico_solo_lectura.sql` y respalda: ver `docs/entrega5/administrador.md`. En una base real **no** ejecutes `02_datos_prueba.sql`.
 6. En `App para el celular/`, copia `supabase.properties.ejemplo` como `supabase.properties` y completa URL y **anon key** (nunca `service_role`). El archivo está en `.gitignore`.
 7. Configura los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions para generar la configuración web.
 8. En Supabase Auth, desactiva confirmación de correo si el registro debe iniciar sesión inmediatamente. Sin `supabase.properties`, la app funciona con datos de ejemplo.
@@ -36,8 +37,9 @@ Cualquier otro correo se crea como **comprador**, salvo que la persona elija “
 | `cuentas_autorizadas` | Correos que el admin autoriza como emprendedora o admin | Admin | Admin |
 | `perfiles` | Un perfil por cuenta: nombre, rol, tienda y foto (lo crea un trigger al registrarse) | La propia persona y el admin | Admin (cambio de rol); la propia persona cambia nombre y foto con la función `actualizar_mi_perfil` |
 | `tiendas` | Ficha pública de cada emprendimiento, con logo | Todos, sin sesión | Su dueña (`owner_id`) o el admin |
-| `productos` | Catálogo; `variantes` es una lista `[{id, nombre, stock}]` | Publicados: todos. No publicados: solo la dueña | Su dueña |
-| `ventas` | Historial privado de ventas (`items` en JSON) | Solo la dueña — **ni el admin** (RN-10) | Su dueña |
+| `productos` | Catálogo; `variantes` es `[{id, nombre, stock, precio, foto_url}]`; modalidad, conteo, al agotarse, disponibilidad y pieza única (05) | Lo que permite `estado_publico_producto`: todos. El resto: solo la dueña | Su dueña, con `guardar_producto()` para cantidades |
+| `ventas` | Historial privado de ventas (`items` en JSON) | Solo la dueña — **ni el admin** (RN-10) | Solo `registrar_venta()` (05) |
+| `tipos_producto` | Tipos y campos específicos (los define el admin) | Todos | Admin |
 | `asociaciones` | Agrupaciones de emprendedoras | Todos | Admin (RN-04) |
 | `ferias`, `participaciones` | Ferias e invitaciones | Todos | Admin; la emprendedora responde su invitación (RN-02, RN-03) |
 
@@ -53,14 +55,11 @@ Todo cambio se guarda primero en el celular y queda en una cola «por subir» (`
 
 ## Pruebas de reglas de seguridad (RNF-SEG-04)
 
-`pruebas_rls.sql` prueba los permisos por perfil, incluido el registro abierto de vendedoras, la creación de productos en la tienda propia y los rechazos de acceso cruzado. Se ejecuta en un **Postgres local**, nunca en la instancia del curso:
+Las pruebas se ejecutan en un **PostgreSQL local y desechable**, nunca en la instancia del curso. Desde la raíz del repositorio:
 
 ```bash
-psql -h localhost -U postgres -c "create database prueba_alerce"
-psql -h localhost -U postgres -d prueba_alerce -f stub_local.sql      # simula auth/storage de Supabase
-psql -h localhost -U postgres -d prueba_alerce -f 01_esquema.sql
-psql -h localhost -U postgres -d prueba_alerce -f 02_datos_prueba.sql
-psql -h localhost -U postgres -d prueba_alerce -f pruebas_rls.sql     # imprime OK / FALLA por caso
+npm install
+npm run test:sql
 ```
 
-Resultado esperado: cada caso debe imprimir `OK`. No se ha ejecutado esta batería en esta entrega; no uses el resultado histórico como verificación del esquema actual.
+Levanta PostgreSQL 17 (y 15 si está en `.herramientas/pg15`), aplica `stub_local.sql`, 01, 02, 03, 04 y 05 (instalación limpia y actualización desde el esquema anterior) y ejecuta `pruebas_rls.sql`, las pruebas de Entrega 5, la concurrencia con conexiones independientes, el diagnóstico y `05_revertir.sql`. Resultado del 11-nov-2026: 392 de 392 casos correctos en PG15 y PG17. Detalle en `docs/desarrollo-y-pruebas.md`.

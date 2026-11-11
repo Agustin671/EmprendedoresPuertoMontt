@@ -77,6 +77,22 @@ async function actualizacion(pg, r) {
     const migr = (await c.query("select nombre from migraciones_aplicadas")).rows.map(x => x.nombre);
     r.igual("Queda registrada la migración", migr, ["05_catalogo_ventas"]);
     await pruebasEntrega5(c, r);
+
+    // Diagnóstico de solo lectura: se ejecuta completo sin errores ni cambios.
+    const conteo = async () => (await c.query("select (select count(*) from productos)::int p, (select count(*) from ventas)::int v, md5(string_agg(id || variantes::text, '|' order by id)) h from productos")).rows[0];
+    const antesDiag = await conteo();
+    await ejecutarArchivo(c, "supabase/diagnostico_solo_lectura.sql");
+    r.igual("El diagnóstico no modifica datos", await conteo(), antesDiag);
+
+    // Reversión parcial: conserva datos y devuelve el camino antiguo.
+    await ejecutarArchivo(c, "supabase/05_revertir.sql");
+    r.igual("La reversión conserva productos, ventas y cantidades", await conteo(), antesDiag);
+    await como(c, UID.marta, "insert into ventas (id, tienda_id, total, items) values ('v_tras_revertir', 't_minimarket_rosa', 1, '[]')");
+    r.ok("Tras revertir, el APK 1.2 vuelve a poder subir ventas", true);
+    // Volver a aplicar 05 sobre la base revertida (con datos) funciona.
+    await ejecutarArchivo(c, "supabase/05_catalogo_ventas.sql");
+    const otra = await como(c, UID.marta, "select public.registrar_venta('{\"id\":\"v_reaplicada\",\"items\":[{\"productoId\":\"p_mini_1\",\"varianteId\":\"v_min1\",\"cantidad\":1}]}'::jsonb) r");
+    r.igual("05 se puede volver a aplicar después de revertir", otra.rows[0].r.estado, "REGISTRADA");
   } finally {
     await c.end();
   }
