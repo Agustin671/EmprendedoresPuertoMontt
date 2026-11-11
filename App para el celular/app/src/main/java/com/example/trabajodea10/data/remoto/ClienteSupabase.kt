@@ -33,8 +33,15 @@ object ConfigSupabase {
     const val URL_RECUPERACION = "https://agustin671.github.io/EmprendedoresPuertoMontt/?recuperar=1"
 }
 
-/** Error de la API con un mensaje ya traducido para mostrar a la usuaria. */
-class ErrorSupabase(val codigo: Int, mensaje: String) : IOException(mensaje)
+/**
+ * Error de la API con un mensaje ya traducido para mostrar a la usuaria.
+ * [crudo] conserva el mensaje original del servidor (por ejemplo STOCK_INSUFICIENTE)
+ * y [detalle] el campo details, para decidir si es un conflicto o un fallo de red.
+ */
+class ErrorSupabase(val codigo: Int, mensaje: String, val crudo: String = mensaje, val detalle: String? = null) : IOException(mensaje) {
+    /** El servidor rechazó la operación por una regla (no se arregla reintentando). */
+    val esRechazoDeRegla: Boolean get() = codigo in 400..499 && codigo != 401 && codigo != 408 && codigo != 429
+}
 
 data class SesionSupabase(
     val accessToken: String,
@@ -151,7 +158,11 @@ object ClienteSupabase {
             resultado = ejecutar(metodo, ruta, cuerpo(), cabeceras, conToken)
         }
         if (resultado.first !in 200..299) {
-            throw ErrorSupabase(resultado.first, traducirError(resultado.first, resultado.second))
+            val o = runCatching { json.parseToJsonElement(resultado.second).jsonObject }.getOrNull()
+            val crudo = o?.let { listOf("message", "msg", "error_description", "error").firstNotNullOfOrNull { k -> it[k]?.jsonPrimitive?.contentOrNull } }
+                ?: resultado.second.take(160)
+            val detalle = o?.get("details")?.jsonPrimitive?.contentOrNull
+            throw ErrorSupabase(resultado.first, traducirError(resultado.first, resultado.second), crudo, detalle)
         }
         resultado.second
     }
@@ -163,6 +174,7 @@ object ClienteSupabase {
                 .firstNotNullOfOrNull { o[it]?.jsonPrimitive?.contentOrNull }
         }.getOrNull() ?: texto.take(160)
         val minus = original.lowercase()
+        MENSAJES_REGLAS.entries.firstOrNull { it.key in original }?.let { return it.value }
         return when {
             "could not find the function" in minus || "schema cache" in minus ->
                 "Supabase aún no tiene cargada la función para crear tiendas. Ejecuta supabase/04_registro_vendedores.sql en el SQL Editor de Supabase y vuelve a intentar."
@@ -179,6 +191,27 @@ object ClienteSupabase {
             else -> original
         }
     }
+
+    /** Respuestas de las funciones del servidor (05_catalogo_ventas.sql) en palabras simples. */
+    private val MENSAJES_REGLAS = linkedMapOf(
+        "STOCK_INSUFICIENTE" to "No quedan unidades suficientes de esa opción.",
+        "PIEZA_VENDIDA" to "Esa pieza única ya se vendió.",
+        "ENCARGO_NO_PERMITIDO" to "Una pieza única no se puede encargar.",
+        "OPCION_NO_ENCONTRADA" to "Una opción ya no existe. Revisa el producto.",
+        "PRODUCTO_NO_ENCONTRADO" to "Uno de los productos ya no existe en tu tienda.",
+        "ID_CONFLICTO" to "Ya existe otra venta con ese código.",
+        "TIENDA_AJENA" to "Esa tienda no es tuya.",
+        "PRODUCTO_AJENO" to "Ese producto es de otra tienda.",
+        "SIN_TIENDA" to "Tu cuenta todavía no tiene tienda.",
+        "CONFLICTO_STOCK" to "Mientras editabas se vendieron unidades. Revisa la cantidad.",
+        "PIEZA_UNICA_UNA_UNIDAD" to "Una pieza única tiene una sola unidad en total.",
+        "CANTIDAD_INVALIDA" to "Revisa las cantidades.",
+        "PRECIO_INVALIDO" to "Revisa el precio.",
+        "NOMBRE_OBLIGATORIO" to "Escribe el nombre del producto.",
+        "OPCIONES_OBLIGATORIAS" to "Agrega al menos una opción.",
+        "FERIA_NO_ENCONTRADA" to "Esa feria ya no está en la plataforma.",
+        "NO_AUTENTICADO" to "Vuelve a iniciar sesión."
+    )
 
     // ---------------------------------------------------------------- Auth
 

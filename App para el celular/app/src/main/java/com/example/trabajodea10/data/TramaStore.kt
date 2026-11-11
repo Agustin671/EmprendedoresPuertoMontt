@@ -1,7 +1,9 @@
 package com.example.trabajodea10.data
 
 import android.content.Context
+import com.example.trabajodea10.data.remoto.ClienteSupabase
 import com.example.trabajodea10.data.remoto.Sincronizador
+import com.example.trabajodea10.data.remoto.StockServidor
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -113,7 +115,7 @@ object TramaStore {
 
     fun agregarAlCarrito(item: ItemVenta) {
         val existente = carritoVenta.firstOrNull {
-            it.productoId == item.productoId && it.varianteId == item.varianteId
+            it.productoId == item.productoId && it.varianteId == item.varianteId && it.encargo == item.encargo
         }
         if (existente != null) {
             val indice = carritoVenta.indexOf(existente)
@@ -244,16 +246,64 @@ object TramaStore {
 
     private var persistenciaLista = false
 
+    /** Cuenta cuyos datos están cargados (uid de Supabase) o null sin cuenta. */
+    var cuentaActual: String? = null
+        private set
+
+    // Tipos de producto y ferias de la plataforma (copias del servidor para usar sin señal).
+    val tiposProducto = mutableStateListOf<TipoProducto>()
+    val feriasPlataforma = mutableStateListOf<FeriaPlataforma>()
+
+    /** Producto que se está creando o editando (se guarda a cada cambio, RNF-USA-04). */
+    var borrador by mutableStateOf<BorradorProducto?>(null)
+        private set
+
+    /** Avisos de sincronización que la emprendedora debe ver (conflictos resueltos por el servidor). */
+    val avisosSync = mutableStateListOf<String>()
+
     /** Inicializa el almacenamiento local y recupera lo guardado. Se llama desde el Application. */
     fun inicializar(context: Context) {
         if (persistenciaLista) return
         PersistenciaStore.inicializar(context)
         persistenciaLista = true
+        cuentaActual = ClienteSupabase.sesion?.userId
         cargarDesdeDisco()
     }
 
+    /**
+     * Cambia a los datos de otra cuenta (o a los de invitado). Lo de la cuenta
+     * anterior queda guardado en el celular y no se mezcla con la nueva.
+     */
+    fun cambiarCuenta(uid: String?) {
+        if (persistenciaLista && uid == cuentaActual) { Sincronizador.activarCuenta(uid); return }
+        persistir()
+        cuentaActual = uid
+        restablecerEnMemoria()
+        cargarDesdeDisco()
+        Sincronizador.activarCuenta(uid)
+    }
+
+    private fun restablecerEnMemoria() {
+        rol = null
+        emprendedoraActualId = "emp1"
+        asociaciones.clear(); asociaciones.addAll(MockData.asociaciones)
+        emprendedoras.clear(); emprendedoras.addAll(MockData.emprendedoras)
+        ferias.clear(); ferias.addAll(MockData.ferias)
+        productos.clear(); productos.addAll(MockData.productos)
+        ventas.clear(); ventas.addAll(MockData.ventas)
+        tienda = MockData.tienda
+        config = ConfigSistema()
+        prefs = PreferenciasEmprendedora()
+        inscripcionesVisitante.clear()
+        tiposProducto.clear()
+        feriasPlataforma.clear()
+        borrador = null
+        avisosSync.clear()
+        carritoVenta.clear()
+    }
+
     private fun cargarDesdeDisco() {
-        val estado = PersistenciaStore.cargar() ?: return
+        val estado = PersistenciaStore.cargar(cuentaActual) ?: return
         rol = estado.rol
         emprendedoraActualId = estado.emprendedoraActualId
         if (estado.asociaciones.isNotEmpty()) {
@@ -281,11 +331,34 @@ object TramaStore {
         inscripcionesVisitante.addAll(estado.inscripcionesVisitante)
         // Nunca por debajo del tamaño de letra que eligió la persona en su celular.
         escalaTexto = estado.escalaTexto.coerceAtLeast(1f)
+        tiposProducto.clear(); tiposProducto.addAll(estado.tiposProducto)
+        feriasPlataforma.clear(); feriasPlataforma.addAll(estado.feriasPlataforma)
+        borrador = estado.borrador
     }
+
+    /** Fotografía completa del estado (también la usan las pruebas). */
+    fun estadoActual(): EstadoApp = EstadoApp(
+        rol = rol,
+        emprendedoraActualId = emprendedoraActualId,
+        asociaciones = asociaciones.toList(),
+        emprendedoras = emprendedoras.toList(),
+        ferias = ferias.toList(),
+        productos = productos.toList(),
+        ventas = ventas.toList(),
+        tienda = tienda,
+        config = config,
+        prefs = prefs,
+        inscripcionesVisitante = inscripcionesVisitante.toList(),
+        escalaTexto = escalaTexto,
+        tiposProducto = tiposProducto.toList(),
+        feriasPlataforma = feriasPlataforma.toList(),
+        borrador = borrador
+    )
 
     private fun persistir() {
         if (!persistenciaLista) return
         PersistenciaStore.guardar(
+            cuentaActual,
             EstadoApp(
                 rol = rol,
                 emprendedoraActualId = emprendedoraActualId,
@@ -298,7 +371,10 @@ object TramaStore {
                 config = config,
                 prefs = prefs,
                 inscripcionesVisitante = inscripcionesVisitante.toList(),
-                escalaTexto = escalaTexto
+                escalaTexto = escalaTexto,
+                tiposProducto = tiposProducto.toList(),
+                feriasPlataforma = feriasPlataforma.toList(),
+                borrador = borrador
             )
         )
     }
@@ -347,10 +423,15 @@ object TramaStore {
     fun descartarSiEstaVacio(id: String) {
         val feria = ferias.firstOrNull { it.id == id }
         if (feria != null && feria.nombre.isBlank()) ferias.removeAll { it.id == id }
-        val producto = productos.firstOrNull { it.id == id }
-        if (producto != null && producto.nombre.isBlank()) productos.removeAll { it.id == id }
+        // Un producto nuevo solo se descarta si no se ingresó nada (ni siquiera una foto).
+        val b = borrador
+        if (b != null && b.producto.id == id && b.esNuevo && borradorVacio(b.producto)) borrador = null
         persistir()
     }
+
+    fun borradorVacio(p: Producto): Boolean =
+        p.nombre.isBlank() && p.fotoUrl == null && p.descripcion.isBlank() && p.precio <= 0.0 &&
+            p.atributos.isEmpty() && p.variantes.size <= 1 && p.variantes.all { it.fotoUrl == null && it.precio == null }
 
     fun setAsistencia(feriaId: String, emprendedoraId: String, estado: EstadoAsistencia) {
         val indice = ferias.indexOfFirst { it.id == feriaId }
@@ -441,27 +522,106 @@ object TramaStore {
 
     /** Productos visibles de una tienda. Ya no rellena con productos de otras tiendas. */
     fun productosDeTienda(tiendaId: String): List<Producto> =
-        productos.filter { it.tiendaId == tiendaId && it.publicado }
+        productos.filter { it.tiendaId == tiendaId && ReglasCatalogo.estadoPublico(it) != EstadoPublico.OCULTO }
 
+    /**
+     * Empieza un producto nuevo con los valores de la tienda (RF-PRO-11). Si
+     * quedó uno sin terminar, se retoma ese (RNF-USA-04).
+     */
     fun crearProductoBorrador(): String {
-        val id = "p${System.currentTimeMillis()}"
-        productos.add(
-            0,
+        borrador?.takeIf { it.esNuevo }?.let { return it.producto.id }
+        val v = tienda.valoresProducto
+        val id = "p_" + java.util.UUID.randomUUID().toString()
+        val nuevo = ReglasCatalogo.normalizar(
             Producto(
                 id = id,
                 tiendaId = tienda.id,
                 nombre = "",
-                categoria = Categoria.TEXTIL,
+                categoria = v.categoria,
                 precio = 0.0,
-                publicado = false,
+                publicado = v.publicado,
                 destacado = false,
                 colorFoto = 0xFF8E6B94,
-                variantes = listOf(Variante("${id}v1", "Único", 0))
+                variantes = listOf(Variante("${id}_v1", "Única", if (v.manejaStock && v.modalidad != Modalidad.A_PEDIDO) 1 else 0)),
+                modalidad = v.modalidad,
+                manejaStock = v.manejaStock,
+                alAgotarse = v.alAgotarse,
+                disponible = v.disponible
             )
         )
+        borrador = BorradorProducto(nuevo, esNuevo = true, paso = 0)
         persistir()
         return id
     }
+
+    /** Abre un producto existente para editarlo (o retoma su edición sin terminar). */
+    fun abrirEdicion(id: String): BorradorProducto? {
+        borrador?.takeIf { it.producto.id == id }?.let { return it }
+        val p = productoPorId(id) ?: return null
+        borrador = BorradorProducto(p, esNuevo = false, paso = 0)
+        persistir()
+        return borrador
+    }
+
+    /** Guarda en el celular lo ingresado hasta ahora (autoguardado). */
+    fun actualizarBorrador(producto: Producto, paso: Int) {
+        val b = borrador ?: return
+        if (b.producto.id != producto.id) return
+        borrador = b.copy(producto = producto, paso = paso)
+        persistir()
+    }
+
+    /** Termina el alta o la edición: queda en el catálogo y se sube al servidor. */
+    fun finalizarBorrador(): Producto? {
+        val b = borrador ?: return null
+        val p = ReglasCatalogo.normalizar(b.producto.copy(nombre = b.producto.nombre.trim(), tiendaId = tienda.id))
+        borrador = null
+        guardarProducto(p)
+        return p
+    }
+
+    /** Descarta el borrador y borra sus fotos del celular que nadie más usa. */
+    fun descartarBorrador() {
+        val b = borrador ?: return
+        val usadas = productos.flatMap { listOfNotNull(it.fotoUrl) + it.variantes.mapNotNull { v -> v.fotoUrl } }.toSet()
+        (listOfNotNull(b.producto.fotoUrl) + b.producto.variantes.mapNotNull { it.fotoUrl })
+            .filter { it !in usadas }.forEach { FotoProductoStore.eliminar(it) }
+        borrador = null
+        persistir()
+    }
+
+    /** Disponible / no disponible para varios productos a la vez (RF-PRO-10). */
+    fun cambiarDisponibilidad(ids: Collection<String>, disponible: Boolean): Int {
+        var cambiados = 0
+        ids.forEach { id ->
+            val i = productos.indexOfFirst { it.id == id && it.tiendaId == tienda.id }
+            if (i >= 0 && productos[i].disponible != disponible) {
+                productos[i] = productos[i].copy(disponible = disponible)
+                cambiados++
+                Sincronizador.productoCambiado(id)
+            }
+        }
+        persistir()
+        return cambiados
+    }
+
+    /** Guarda los valores iniciales de los productos nuevos y el interruptor del historial. */
+    fun guardarConfiguracionVentas(valores: ValoresProducto, historialActivo: Boolean) {
+        tienda = tienda.copy(valoresProducto = valores, historialActivo = historialActivo)
+        persistir()
+        Sincronizador.tiendaPendiente()
+        Sincronizador.subirEnSegundoPlano()
+    }
+
+    fun reemplazarTipos(lista: List<TipoProducto>) {
+        tiposProducto.clear(); tiposProducto.addAll(lista); persistir()
+    }
+
+    fun reemplazarFeriasPlataforma(lista: List<FeriaPlataforma>) {
+        feriasPlataforma.clear(); feriasPlataforma.addAll(lista); persistir()
+    }
+
+    fun tipoPorId(id: String?): TipoProducto? = tiposProducto.firstOrNull { it.id == id }
 
     fun guardarProducto(producto: Producto) {
         val indice = productos.indexOfFirst { it.id == producto.id }
@@ -521,14 +681,55 @@ object TramaStore {
     // ---------- Datos que llegan del servidor (Supabase) ----------
 
     /** Reemplaza los productos de una tienda por los del servidor, sin pisar los que faltan subir. */
-    fun reemplazarProductosDeTienda(tiendaId: String, remotos: List<Producto>, conservar: Set<String>) {
+    fun reemplazarProductosDeTienda(
+        tiendaId: String,
+        remotos: List<Producto>,
+        conservar: Set<String>,
+        eliminados: Set<String> = emptySet()
+    ) {
         val locales = productos.filter { it.tiendaId == tiendaId && it.id in conservar }
         val idsLocales = locales.map { it.id }.toSet()
         productos.removeAll { it.tiendaId == tiendaId }
-        productos.addAll(remotos.filterNot { it.id in idsLocales })
+        // Un borrado que aún no llega al servidor no debe "revivir" al descargar.
+        productos.addAll(remotos.filterNot { it.id in idsLocales || it.id in eliminados })
         productos.addAll(locales)
         persistir()
     }
+
+    /**
+     * El servidor confirmó un producto. Si no cambió en el celular mientras se
+     * subía, se usa la versión del servidor; si cambió, solo se actualiza la base
+     * de cada opción conservando la diferencia que falta subir.
+     */
+    fun aplicarProductoServidor(guardado: Producto, enviado: Producto) {
+        val i = productos.indexOfFirst { it.id == guardado.id }
+        if (i < 0) return
+        val actual = productos[i]
+        productos[i] = if (actual == enviado) {
+            guardado
+        } else {
+            actual.copy(variantes = rebasar(actual.variantes, guardado.variantes))
+        }
+        persistir()
+    }
+
+    /** Ajusta las opciones locales a las cantidades del servidor sin perder lo que falta subir. */
+    private fun rebasar(locales: List<Variante>, servidor: List<Variante>): List<Variante> = locales.map { v ->
+        val s = servidor.firstOrNull { it.id == v.id } ?: return@map v
+        val pendiente = v.stock - (v.stockBase ?: v.stock)
+        v.copy(stock = (s.stock + pendiente).coerceAtLeast(0), stockBase = s.stock)
+    }
+
+    /** El servidor rechazó una edición (por ejemplo, se vendieron unidades mientras se editaba). */
+    fun marcarConflictoProducto(id: String, mensaje: String, actualServidor: Producto?) {
+        val i = productos.indexOfFirst { it.id == id }
+        if (i >= 0 && actualServidor != null) productos[i] = actualServidor
+        val nombre = actualServidor?.nombre ?: productoPorId(id)?.nombre ?: "un producto"
+        avisosSync.add("«$nombre»: $mensaje Se dejó la cantidad que tiene el servidor; revísala y vuelve a guardar.")
+        persistir()
+    }
+
+    fun descartarAviso(texto: String) { avisosSync.remove(texto) }
 
     /** Agrega o actualiza los productos publicados de la vitrina (excepto los de mi propia tienda). */
     fun fusionarProductosPublicos(remotos: List<Producto>, excluirTienda: String?) {
@@ -543,11 +744,25 @@ object TramaStore {
     }
 
     fun reemplazarVentas(remotas: List<Venta>, conservar: Set<String>) {
-        val pendientes = ventas.filter { it.id in conservar }
+        // Se conservan las que faltan subir y las que quedaron en conflicto.
+        val pendientes = ventas.filter { it.id in conservar || it.estadoSync != EstadoSync.CONFIRMADA }
         val idsPendientes = pendientes.map { it.id }.toSet()
         ventas.clear()
         ventas.addAll((pendientes + remotas.filterNot { it.id in idsPendientes }).sortedByDescending { it.fecha })
         persistir()
+    }
+
+    /** La foto de una opción ya se subió. */
+    fun aplicarFotoOpcionRemota(productoId: String, varianteId: String, rutaLocal: String, url: String) {
+        val i = productos.indexOfFirst { it.id == productoId }
+        if (i < 0) return
+        productos[i] = productos[i].copy(variantes = productos[i].variantes.map {
+            if (it.id == varianteId && it.fotoUrl == rutaLocal) it.copy(fotoUrl = url) else it
+        })
+        persistir()
+        if (productos.none { p -> p.fotoUrl == rutaLocal || p.variantes.any { it.fotoUrl == rutaLocal } } && borrador?.producto?.variantes?.none { it.fotoUrl == rutaLocal } != false) {
+            FotoProductoStore.eliminar(rutaLocal)
+        }
     }
 
     /** La foto ya se subió: se usa la URL pública y se borra la copia del celular. */
@@ -562,41 +777,119 @@ object TramaStore {
 
     // ---------- Ventas ----------
 
+    /** Problema que impide registrar la venta (se muestra antes de cobrar). */
+    fun validarVenta(items: List<ItemVenta>): String? {
+        if (items.isEmpty()) return "Agrega al menos un producto."
+        // Se suman las cantidades por opción para no vender dos veces la misma unidad.
+        items.groupBy { Triple(it.productoId, it.varianteId, it.encargo) }.forEach { (clave, lineas) ->
+            val p = productoPorId(clave.first) ?: return "«${lineas.first().nombre}» ya no está en tu catálogo."
+            val v = p.variantes.firstOrNull { it.id == clave.second }
+            ReglasCatalogo.validarLinea(p, v, lineas.sumOf { it.cantidad }, clave.third)?.let { return "«${p.nombre}»: $it" }
+        }
+        val piezas = items.filter { !it.encargo }.groupBy { it.productoId }
+            .filter { (id, l) -> productoPorId(id)?.modalidad == Modalidad.PIEZA_UNICA && l.sumOf { it.cantidad } > 1 }
+        if (piezas.isNotEmpty()) return "Una pieza única se vende una sola vez."
+        return null
+    }
+
+    /**
+     * Anota la venta en el celular y la deja en la cola. El descuento real lo
+     * hace el servidor (registrar_venta); aquí se descuenta también la base
+     * para que una edición posterior no vuelva a descontar lo mismo.
+     */
     fun registrarVenta(
         items: List<ItemVenta>,
         medioPago: MedioPago,
-        feriaId: String?
-    ): Venta {
-        val total = items.sumOf { it.precio * it.cantidad }
+        feriaId: String?,
+        lugarNombre: String? = null
+    ): Result<Venta> {
+        validarVenta(items)?.let { return Result.failure(IllegalArgumentException(it)) }
+        val historial = tienda.historialActivo
         val venta = Venta(
-            id = "v${System.currentTimeMillis()}",
+            id = "v_" + java.util.UUID.randomUUID().toString(),
             fecha = fechaActualIso() + " " + horaActual(),
             items = items,
             medioPago = medioPago,
             feriaId = feriaId,
-            total = total
+            total = items.sumOf { it.precio * it.cantidad },
+            lugarTipo = when { feriaId != null -> "FERIA"; !lugarNombre.isNullOrBlank() -> "OTRO"; else -> null },
+            lugarNombre = lugarNombre?.trim()?.takeIf { it.isNotEmpty() && feriaId == null },
+            enHistorial = historial,
+            estadoSync = if (Sincronizador.ventasConServidor) EstadoSync.PENDIENTE else EstadoSync.CONFIRMADA
         )
         ventas.add(0, venta)
-        descontarStock(items)
+        aplicarDescuentoLocal(items, signo = -1)
         persistir()
         Sincronizador.ventaRegistrada(venta.id)
-        items.map { it.productoId }.distinct().forEach { Sincronizador.productoCambiado(it) }
-        return venta
+        return Result.success(venta)
     }
 
-    private fun descontarStock(items: List<ItemVenta>) {
-        items.forEach { item ->
-            val indice = productos.indexOfFirst { it.id == item.productoId }
-            if (indice >= 0) {
-                val producto = productos[indice]
-                val nuevasVariantes = producto.variantes.map { variante ->
-                    if (variante.id == item.varianteId) {
-                        variante.copy(stock = (variante.stock - item.cantidad).coerceAtLeast(0))
-                    } else variante
-                }
-                productos[indice] = producto.copy(variantes = nuevasVariantes)
-            }
+    /** signo = -1 descuenta, +1 devuelve (si el servidor rechazó la venta). */
+    private fun aplicarDescuentoLocal(items: List<ItemVenta>, signo: Int) {
+        items.filter { !it.encargo }.groupBy { it.productoId }.forEach { (productoId, lineas) ->
+            val i = productos.indexOfFirst { it.id == productoId }
+            if (i < 0) return@forEach
+            val p = productos[i]
+            if (p.modalidad == Modalidad.A_PEDIDO) return@forEach
+            productos[i] = if (p.modalidad == Modalidad.PIEZA_UNICA) {
+                if (signo < 0) p.copy(variantes = p.variantes.map { it.copy(stock = 0, stockBase = it.stockBase?.let { 0 }) }, vendidaEn = "pendiente")
+                else p.copy(variantes = p.variantes.map { v -> if (v.id == lineas.first().varianteId) v.copy(stock = 1, stockBase = v.stockBase?.let { 1 }) else v }, vendidaEn = null)
+            } else if (!p.manejaStock) p
+            else p.copy(variantes = p.variantes.map { v ->
+                val cant = lineas.filter { it.varianteId == v.id }.sumOf { it.cantidad }
+                if (cant == 0) v else v.copy(stock = (v.stock + signo * cant).coerceAtLeast(0), stockBase = v.stockBase?.let { (it + signo * cant).coerceAtLeast(0) })
+            })
         }
+    }
+
+    /** El servidor registró la venta: se usan sus cantidades (sin perder ediciones por subir). */
+    fun confirmarVenta(id: String, productosServidor: List<StockServidor>) {
+        val i = ventas.indexOfFirst { it.id == id }
+        if (i >= 0) {
+            val v = ventas[i]
+            // Con el historial desactivado se queda solo el registro técnico mínimo.
+            ventas[i] = if (v.enHistorial) v.copy(estadoSync = EstadoSync.CONFIRMADA, mensajeConflicto = null)
+            else v.copy(estadoSync = EstadoSync.CONFIRMADA, mensajeConflicto = null, total = 0.0, lugarTipo = null, lugarNombre = null,
+                items = v.items.map { it.copy(precio = 0.0, fotoUrl = null) })
+        }
+        productosServidor.forEach { s ->
+            val j = productos.indexOfFirst { it.id == s.productoId }
+            if (j >= 0) productos[j] = productos[j].copy(variantes = rebasar(productos[j].variantes, s.variantes), vendidaEn = s.vendidaEn)
+        }
+        persistir()
+    }
+
+    /** El servidor rechazó la venta: se conserva, se marca y se devuelven las unidades descontadas en el celular. */
+    fun marcarConflictoVenta(id: String, mensaje: String) {
+        val i = ventas.indexOfFirst { it.id == id }
+        if (i < 0) return
+        val v = ventas[i]
+        if (v.estadoSync == EstadoSync.CONFLICTO) return
+        ventas[i] = v.copy(estadoSync = EstadoSync.CONFLICTO, mensajeConflicto = mensaje)
+        aplicarDescuentoLocal(v.items, signo = +1)
+        persistir()
+    }
+
+    /** Vuelve a intentar una venta en conflicto (por ejemplo, después de reponer unidades). */
+    fun reintentarVenta(id: String): String? {
+        val i = ventas.indexOfFirst { it.id == id }
+        if (i < 0) return "La venta ya no existe."
+        val v = ventas[i]
+        if (v.estadoSync != EstadoSync.CONFLICTO) return null
+        validarVenta(v.items)?.let { return it }
+        ventas[i] = v.copy(estadoSync = EstadoSync.PENDIENTE, mensajeConflicto = null)
+        aplicarDescuentoLocal(v.items, signo = -1)
+        persistir()
+        Sincronizador.ventaRegistrada(id)
+        return null
+    }
+
+    /** La emprendedora decide que la venta en conflicto no ocurrió. */
+    fun anularVentaEnConflicto(id: String) {
+        val v = ventas.firstOrNull { it.id == id } ?: return
+        if (v.estadoSync != EstadoSync.CONFLICTO) return
+        ventas.removeAll { it.id == id }
+        persistir()
     }
 
     private fun horaActual(): String {
@@ -607,7 +900,7 @@ object TramaStore {
     }
 
     fun feriaDeLaVenta(feriaId: String?): String =
-        feriaId?.let { feriaPorId(it) }?.nombre ?: "Venta sin feria"
+        feriaId?.let { id -> feriasPlataforma.firstOrNull { it.id == id }?.nombre ?: feriaPorId(id)?.nombre } ?: "Venta sin feria"
 
     // ---------- Tienda y configuración ----------
 
@@ -806,7 +1099,7 @@ object TramaStore {
 
     /** Borra todo lo guardado y vuelve a los datos de ejemplo originales. */
     fun restablecerDatos() {
-        PersistenciaStore.borrar()
+        PersistenciaStore.borrar(cuentaActual)
         rol = null
         emprendedoraActualId = "emp1"
         asociaciones.clear(); asociaciones.addAll(MockData.asociaciones)

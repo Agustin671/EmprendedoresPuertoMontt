@@ -168,9 +168,20 @@ fun PantallaAjustes(
             // Accesibilidad: disponible para todos los perfiles.
             AjustesAccesibilidad()
 
+            // Cerrar sesión no borra lo pendiente: se avisa y queda guardado para esta cuenta.
+            var avisoPendientes by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            if (avisoPendientes) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { avisoPendientes = false },
+                    title = { Text("Tienes cambios sin subir", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                    text = { Text("Hay ${com.example.trabajodea10.data.remoto.Sincronizador.pendientes} cambios que aún no llegan al servidor. Quedan guardados en este celular y se subirán cuando vuelvas a entrar con esta misma cuenta. No se suben con otra cuenta.") },
+                    confirmButton = { androidx.compose.material3.TextButton(onClick = { avisoPendientes = false; nav.cerrarSesion() }) { Text("Cerrar sesión igual") } },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { avisoPendientes = false; com.example.trabajodea10.data.remoto.Sincronizador.subirEnSegundoPlano() }) { Text("Intentar subir ahora") } }
+                )
+            }
             BotonSecundario(
                 texto = "Cerrar sesión",
-                onClick = { nav.cerrarSesion() },
+                onClick = { if (com.example.trabajodea10.data.remoto.Sincronizador.pendientes > 0) avisoPendientes = true else nav.cerrarSesion() },
                 icono = { Icon(Icons.Filled.Logout, contentDescription = null, tint = RojoError) },
                 modifier = Modifier.padding(top = 4.dp)
             )

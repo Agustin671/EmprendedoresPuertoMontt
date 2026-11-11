@@ -100,6 +100,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     // Después de entrar con contraseña: ofrecer activar la huella para la próxima vez
     var rolPorConfirmarHuella by remember { mutableStateOf<Rol?>(null) }
     var huellaDisponible by remember { mutableStateOf(SesionManager.huellaDisponible()) }
+    var soloPin by remember { mutableStateOf(false) }
     // Recuperación de contraseña y fotos opcionales del registro
     var mostrarRecuperacion by remember { mutableStateOf(false) }
     var correoRecuperacion by remember { mutableStateOf("") }
@@ -174,8 +175,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                 nav.iniciarSesion(rolObtenido)
             },
             icon = { Icon(Icons.Filled.Fingerprint, contentDescription = null) },
-            title = { Text("¿Entrar con tu huella la próxima vez?", fontWeight = FontWeight.Bold) },
-            text = { Text("Así no tienes que escribir tu correo y contraseña cada vez. Puedes desactivarlo cuando quieras.") },
+            title = { Text(if (soloPin) "¿Entrar con el PIN de tu celular la próxima vez?" else "¿Entrar con tu huella la próxima vez?", fontWeight = FontWeight.Bold) },
+            text = { Text("Así no tienes que escribir tu correo y contraseña cada vez. Solo sirve para esta cuenta. Puedes desactivarlo cuando quieras.") },
             confirmButton = {
                 TextButton(onClick = {
                     SesionManager.activarHuella(true)
@@ -196,6 +197,9 @@ fun PantallaLogin(nav: ControladorNavegacion) {
     LaunchedEffect(Unit) {
         val biometricManager = BiometricManager.from(contexto)
         puedeUsarBiometria = biometricManager.canAuthenticate(autenticadoresHuella()) ==
+            BiometricManager.BIOMETRIC_SUCCESS
+        // Sin huella registrada, Android 11+ igual permite el PIN del celular: se dice así.
+        soloPin = puedeUsarBiometria && biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) !=
             BiometricManager.BIOMETRIC_SUCCESS
     }
 
@@ -349,7 +353,8 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         color = TextoSecundario
                     )
 
-                    if (pestanaModo == 0 && !esModoRegistro) {
+                    // Credenciales de prueba: solo en el APK de depuración, nunca en producción.
+                    if (BuildConfig.DEBUG && !com.example.trabajodea10.data.remoto.ConfigSupabase.configurado && pestanaModo == 0 && !esModoRegistro) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = Color(0xFFF8F9FA),
@@ -599,6 +604,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                                     try {
                                         autenticarConHuella(
                                             activity = activity,
+                                            soloPin = soloPin,
                                             onExito = {
                                                 // La huella la valida Android; la app no guarda datos biométricos (RNF-SEG-02).
                                                 cargando = true
@@ -626,7 +632,7 @@ fun PantallaLogin(nav: ControladorNavegacion) {
                         ) {
                             Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = NegroApple, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Ingresar con huella digital", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = NegroApple)
+                            Text(if (soloPin) "Ingresar con el PIN del celular" else "Ingresar con huella (o PIN del celular)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = NegroApple)
                         }
                         TextButton(
                             onClick = {
@@ -658,7 +664,9 @@ fun PantallaLogin(nav: ControladorNavegacion) {
             }
 
             // SECCIÓN DESARROLLADORES: solo en el APK de pruebas (debug), nunca en el de producción
-            if (BuildConfig.DEBUG) {
+            // Tiendas de prueba sin servidor: solo en depuración y sin conexión configurada,
+            // para no mezclar datos inventados con los del servidor real.
+            if (BuildConfig.DEBUG && !com.example.trabajodea10.data.remoto.ConfigSupabase.configurado) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = BlancoPuro,
@@ -824,6 +832,7 @@ fun autenticadoresHuella(): Int =
 
 fun autenticarConHuella(
     activity: FragmentActivity,
+    soloPin: Boolean = false,
     onExito: () -> Unit,
     onError: (String) -> Unit,
     onCancelar: () -> Unit
@@ -853,8 +862,8 @@ fun autenticarConHuella(
 
     val autenticadores = autenticadoresHuella()
     val constructor = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Ingresar con huella")
-        .setSubtitle("Pon tu dedo en el lector del celular")
+        .setTitle(if (soloPin) "Ingresar con el PIN del celular" else "Ingresar con huella")
+        .setSubtitle(if (soloPin) "Escribe el PIN, patrón o contraseña de tu celular" else "Pon tu dedo en el lector, o usa el PIN de tu celular")
         .setAllowedAuthenticators(autenticadores)
     // Sin el PIN del celular como alternativa, Android exige un botón para cancelar.
     if ((autenticadores and BiometricManager.Authenticators.DEVICE_CREDENTIAL) == 0) {

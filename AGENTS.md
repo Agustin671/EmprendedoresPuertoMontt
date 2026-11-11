@@ -77,8 +77,9 @@ Sin `supabase.properties` la app compila y funciona solo con datos de ejemplo.
 | `cuentas_autorizadas` | `email` | admin | admin |
 | `perfiles` | `id` = `auth.users.id` | la propia persona, admin | admin |
 | `tiendas` | `id` (text) | todos (sin sesión también) | dueña (`owner_id`) o admin; crear/borrar solo admin |
-| `productos` | `id` (text) | publicados: todos · no publicados: solo la dueña | dueña |
-| `ventas` | `id` (text) | **solo la dueña** (ni el admin, RN-10) | dueña |
+| `productos` | `id` (text) | lo que deja ver `estado_publico_producto` (05): todos · el resto: solo la dueña | dueña; cantidades con `guardar_producto()` |
+| `ventas` | `id` (text) | **solo la dueña** (ni el admin, RN-10) | solo `registrar_venta()` (atómica e idempotente, 05) |
+| `tipos_producto` | `id` | todos | admin |
 | `asociaciones`, `ferias` | `id` | todos | admin |
 | `participaciones` | (`feria_id`, `tienda_id`) | todos | admin; la dueña responde la suya |
 
@@ -115,9 +116,16 @@ const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 - Web conectada a Supabase por `js/config.js`, generado en despliegue con `SUPABASE_URL` y `SUPABASE_ANON_KEY` de GitHub Actions. La clave pública queda expuesta en el cliente por diseño; RLS es el control de acceso. No incluir secretos en el repositorio.
 - Mejoras de uso: “Mis productos” solo muestra los de la propia tienda; botón “Se acabó” con Deshacer; dictado por voz en nombre y descripción; guardado automático de productos nuevos; “¿Cuántos tienes?”; confirmación antes de borrar; QR y enlace por tienda (`?tienda=ID`).
 
+## 5b. Entrega 5 (rama `entrega5/catalogo-ventas`)
+
+- Contrato único del catálogo en SQL (`05_catalogo_ventas.sql`), web (`js/catalogo.js`) y Android (`data/ReglasCatalogo.kt`), probado con `tests/contrato/casos_estado.json`. Ver `docs/entrega5/contrato-catalogo.md`.
+- La web lee y escribe solo por `js/servicio.js`; nunca guarda el catálogo en el navegador ni muestra tiendas de ejemplo fuera del modo demostración.
+- Android: alta guiada (`AltaProductoScreen.kt`), vista previa, historial con filtros, configuración de ventas, sincronización por cuenta (`Sincronizador.kt`).
+- Pruebas: `npm run test:sql`, `npm run test:web`, `npm run test:e2e` y `./gradlew testDebugUnitTest`. Ver `docs/desarrollo-y-pruebas.md` e informe en `docs/entrega5/README.md`.
+
 ## 6. Qué falta / configuración externa
 
-1. En Supabase, ejecutar `03_migracion_fotos.sql` y `04_registro_vendedores.sql` en una base ya creada. Para una base nueva, ejecutar `01_esquema.sql`, `02_datos_prueba.sql`, `03_migracion_fotos.sql` y `04_registro_vendedores.sql`.
+1. En Supabase, seguir `docs/entrega5/administrador.md`: diagnóstico de solo lectura, respaldo, 03/04 si faltan y `05_catalogo_ventas.sql`. Para una base nueva (de prueba): 01, 02, 03, 04 y 05.
 2. En Supabase Auth, desactivar la confirmación de correo si se requiere entrar inmediatamente después del registro; si permanece activa, el flujo informa que se debe confirmar el correo.
 3. Configurar los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub Actions y `supabase.properties` local para conectar web y Android a la instancia. Sin esa configuración solo se pueden compilar y usar pantallas sin servicios remotos.
 4. Ferias en el servidor: las tablas `ferias` y `participaciones` existen, pero la app y la web aún usan datos locales (Entrega 7).
@@ -129,11 +137,13 @@ const aArgb = hex => 0xFF000000 + parseInt(hex.replace("#", ""), 16);
 La web inicializa Supabase solo cuando `js/config.js` define URL y anon key. El workflow escribe ese archivo desde los secretos `SUPABASE_URL` y `SUPABASE_ANON_KEY`; el archivo generado está ignorado por Git. La clave anon se sirve al navegador, por lo que todas las operaciones deben quedar protegidas por RLS. El alta de vendedor solicita `tipo_cuenta=EMPRENDEDORA`; el trigger del servidor asigna el rol y crea su tienda. `ADMIN` sigue reservado a `cuentas_autorizadas`. Las imágenes se suben a los buckets `productos` y `perfiles`, bajo la carpeta del ID autenticado.
 ## 8. Probar las reglas de seguridad
 
-En un Postgres local (no en la instancia del curso); los comandos están en `supabase/README.md`. Resultado esperado: cada caso imprime `OK`. La batería valida también el registro de vendedores y la creación de productos por tienda; vuelve a ejecutarla al modificar el esquema.
+`npm install && npm run test:sql` levanta un PostgreSQL local desechable (nunca la instancia del curso) y ejecuta RLS, ventas, concurrencia, actualización y reversión. Vuelve a ejecutarla al modificar el esquema.
 
 ## 9. Trampas conocidas
 
 - Las carpetas tienen espacios y paréntesis (`App para el celular`, `LA PAgina (segun)`): usa comillas en la terminal.
 - `HttpURLConnection` no soporta `PATCH`; por eso la app usa OkHttp.
-- Las pruebas unitarias se compilan junto con el APK: si renombras clases, actualiza `app/src/test/…/ExampleUnitTest.kt`.
+- Las pruebas unitarias se compilan junto con el APK: si renombras clases, actualiza `app/src/test/…`.
+- Nunca escribas cantidades directamente en `productos` desde un cliente nuevo: usa `guardar_producto()` con `stockBase`; el trigger `proteger_producto` ignora cantidades enviadas por otra vía.
+- Las ventas solo se registran con `registrar_venta()`; reintenta siempre con el mismo `id`.
 - `index.html` de la raíz redirige a la web; la URL pública es `https://agustin671.github.io/EmprendedoresPuertoMontt/`.

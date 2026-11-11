@@ -93,11 +93,42 @@ data class Emprendedora(
     val seguidores: Int = 0
 )
 
+/** Cómo se vende un producto (RF-PRO-06). */
+enum class Modalidad(val etiqueta: String, val explicacion: String) {
+    REGULAR("Regular", "Se vende de inmediato mientras queden unidades."),
+    A_PEDIDO("A pedido", "Lo haces por encargo: no se agota."),
+    PIEZA_UNICA("Pieza única", "Una sola unidad en total. Al venderse desaparece para siempre.")
+}
+
+/** Qué pasa cuando no quedan unidades vendibles entre las opciones (RF-PRO-08). */
+enum class AlAgotarse(val etiqueta: String) {
+    MOSTRAR_AGOTADO("Mostrar «Se acabó»"),
+    OCULTAR("Ocultar de la tienda"),
+    PASAR_A_PEDIDO("Pasar a «A pedido»")
+}
+
+/** Lo que ve el público (mismo contrato que la web y el servidor). */
+enum class EstadoPublico(val etiqueta: String) {
+    DISPONIBLE("Disponible"), AGOTADO("Se acabó"), A_PEDIDO("A pedido"), OCULTO("No se muestra")
+}
+
+/** Estado de una venta respecto del servidor. */
+enum class EstadoSync { PENDIENTE, CONFIRMADA, CONFLICTO }
+
+/**
+ * Opción de un producto (talla, color, sabor) con su propio precio, foto y cantidad.
+ * precio = null usa el precio del producto. stockBase es la cantidad que tenía
+ * el servidor la última vez (solo en el celular): permite enviar diferencias
+ * sin pisar ventas hechas en otro dispositivo.
+ */
 @Serializable
 data class Variante(
     val id: String,
     val nombre: String,
-    val stock: Int
+    val stock: Int,
+    val precio: Double? = null,
+    val fotoUrl: String? = null,
+    val stockBase: Int? = null
 )
 
 @Serializable
@@ -112,11 +143,21 @@ data class Producto(
     val colorFoto: Long,
     val variantes: List<Variante>,
     val fotoUrl: String? = null,
-    val descripcion: String = ""
+    val descripcion: String = "",
+    val tipo: String? = null,
+    val atributos: Map<String, String> = emptyMap(),
+    val fotos: List<String> = emptyList(),
+    val modalidad: Modalidad = Modalidad.REGULAR,
+    val manejaStock: Boolean = true,
+    val alAgotarse: AlAgotarse = AlAgotarse.MOSTRAR_AGOTADO,
+    val disponible: Boolean = true,
+    val vendidaEn: String? = null
 ) {
-    val stockTotal: Int get() = variantes.sumOf { it.stock }
-    val agotado: Boolean get() = stockTotal == 0
-    val stockBajo: Boolean get() = stockTotal in 1..3
+    val stockTotal: Int get() = ReglasCatalogo.unidades(this)
+    /** Sin unidades vendibles (solo si lleva la cuenta y no es a pedido). */
+    val agotado: Boolean
+        get() = manejaStock && modalidad != Modalidad.A_PEDIDO && (vendidaEn != null || stockTotal == 0)
+    val stockBajo: Boolean get() = manejaStock && modalidad == Modalidad.REGULAR && stockTotal in 1..3
 }
 
 @Serializable
@@ -127,7 +168,9 @@ data class ItemVenta(
     val detalle: String,
     val precio: Double,
     val cantidad: Int,
-    val fotoUrl: String? = null
+    val fotoUrl: String? = null,
+    /** Encargo: se anota la venta pero no descuenta unidades (a pedido). */
+    val encargo: Boolean = false
 )
 
 @Serializable
@@ -137,7 +180,60 @@ data class Venta(
     val items: List<ItemVenta>,
     val medioPago: MedioPago,
     val feriaId: String?,
-    val total: Double
+    val total: Double,
+    val lugarTipo: String? = null,
+    val lugarNombre: String? = null,
+    /** false: historial desactivado, solo se guardó el registro técnico mínimo. */
+    val enHistorial: Boolean = true,
+    val estadoSync: EstadoSync = EstadoSync.CONFIRMADA,
+    val mensajeConflicto: String? = null
+) {
+    val lugarLegible: String
+        get() = when {
+            lugarTipo == "OTRO" && !lugarNombre.isNullOrBlank() -> lugarNombre
+            else -> ""
+        }
+}
+
+/** Valores con los que nace un producto nuevo (RF-PRO-11). */
+@Serializable
+data class ValoresProducto(
+    val categoria: Categoria = Categoria.TEXTIL,
+    val modalidad: Modalidad = Modalidad.REGULAR,
+    val manejaStock: Boolean = true,
+    val alAgotarse: AlAgotarse = AlAgotarse.MOSTRAR_AGOTADO,
+    val publicado: Boolean = false,
+    val disponible: Boolean = true
+)
+
+/** Campo específico de un tipo de producto (lo define la administración en tipos_producto). */
+@Serializable
+data class CampoTipo(
+    val clave: String,
+    val etiqueta: String,
+    val tipo: String = "texto",
+    val opciones: List<String> = emptyList(),
+    val obligatorio: Boolean = false
+)
+
+@Serializable
+data class TipoProducto(
+    val id: String,
+    val categoria: String,
+    val nombre: String,
+    val campos: List<CampoTipo> = emptyList()
+)
+
+/** Feria registrada en la plataforma (tabla ferias del servidor). */
+@Serializable
+data class FeriaPlataforma(val id: String, val nombre: String)
+
+/** Producto que se está creando o editando; se guarda en el celular a cada cambio. */
+@Serializable
+data class BorradorProducto(
+    val producto: Producto,
+    val esNuevo: Boolean,
+    val paso: Int = 0
 )
 
 @Serializable
@@ -184,7 +280,9 @@ data class Tienda(
     val colorPortada: Long = 0xFF5C315B,
     val colorLogo: Long = 0xFF2E7D5B,
     val logoUrl: String? = null,
-    val necesidades: NecesidadesTienda = NecesidadesTienda()
+    val necesidades: NecesidadesTienda = NecesidadesTienda(),
+    val historialActivo: Boolean = true,
+    val valoresProducto: ValoresProducto = ValoresProducto()
 ) {
     fun toMap(): Map<String, Any> = mapOf(
         "id" to id,
@@ -255,7 +353,10 @@ data class EstadoApp(
     val config: ConfigSistema = ConfigSistema(),
     val prefs: PreferenciasEmprendedora = PreferenciasEmprendedora(),
     val inscripcionesVisitante: List<String> = emptyList(),
-    val escalaTexto: Float = 1f
+    val escalaTexto: Float = 1f,
+    val tiposProducto: List<TipoProducto> = emptyList(),
+    val feriasPlataforma: List<FeriaPlataforma> = emptyList(),
+    val borrador: BorradorProducto? = null
 )
 
 data class BloqueHorario(

@@ -22,8 +22,8 @@ android {
         applicationId = "com.company.ultrapp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2-supabase"
+        versionCode = 4
+        versionName = "1.3-entrega5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

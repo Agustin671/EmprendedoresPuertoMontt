@@ -32,8 +32,8 @@
     <div class="barra-superior-info">
       <div class="contenedor barra-superior-flex">
         <div class="info-status">
-          <span class="punto-verde"></span>
-          <span>Sincronizado con Firebase Firestore & App Android · Alerce, Puerto Montt</span>
+          <span class="punto-verde" id="punto-estado-sincronizacion" aria-hidden="true"></span>
+          <span id="texto-estado-sincronizacion" aria-live="polite">Conectando…</span>
         </div>
         <div class="controles-accesibilidad">
           <span>Accesibilidad:</span>
@@ -70,7 +70,7 @@
       <!-- Acciones de cabecera: Carrito, POS, Descarga y Usuario -->
       <div class="header-acciones">
         <!-- Descarga directa APK Android -->
-        <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" id="btn-descarga-apk-header" style="text-decoration: none; background: var(--gris-chip); border: 1px solid var(--gris-borde); color: var(--negro-apple); font-weight: 700; height: 36px; padding: 0 11px; gap: 5px;" title="Descargar APK oficial para Android v1.2 (22.4 MB)">
+        <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" id="btn-descarga-apk-header" style="text-decoration: none; background: var(--gris-chip); border: 1px solid var(--gris-borde); color: var(--negro-apple); font-weight: 700; height: 36px; padding: 0 11px; gap: 5px;" title="Descargar APK oficial para Android v1.3 (22.8 MB)">
           <span>📱</span>
           <span>App Android</span>
         </a>
@@ -165,7 +165,7 @@
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <a href="app-debug.apk" download="AlerceEmprende.apk" class="btn-accion-pill" style="background: var(--rojo-alerce); color: #fff; border: none; font-weight: 800; height: 40px; padding: 0 18px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);">
             <span>📥</span>
-            <span>Descargar APK v1.2 (22.4 MB)</span>
+            <span>Descargar APK v1.3 (22.8 MB)</span>
           </a>
         </div>
       </div>
@@ -302,6 +302,7 @@
       <p class="subtitulo-seccion" id="subtitulo-conteo-tiendas">Explora las vitrinas, haz consultas en el muro comunitario o pide directo por WhatsApp y Carrito.</p>
 
       <!-- Grilla de Tarjetas de Tiendas (Renderizado dinámico con JS) -->
+      <div id="estado-datos-vitrina" class="estado-datos" role="status" style="display: none;"></div>
       <div class="grilla-tarjetas" id="grilla-tiendas-marketplace" role="region" aria-live="polite">
         <!-- Renderizado dinámico desde main.js -->
       </div>
@@ -316,6 +317,7 @@
         <span>📅 Próximas Ferias Comunales</span>
       </h2>
       <p class="subtitulo-seccion">Encuentros presenciales en Puerto Montt y alrededores. Revisa lugares, mapas y participantes.</p>
+      <p class="aviso-referencia">Información de referencia: esta sección aún no se carga desde el servidor (se conectará en una próxima entrega).</p>
 
       <div class="grilla-tarjetas" id="grilla-ferias-container">
         <!-- FERIA 1 -->
@@ -373,6 +375,7 @@
         <span>🤝 Asociaciones y Redes de Emprendimiento</span>
       </h2>
       <p class="subtitulo-seccion">Agrupaciones de Puerto Montt que colaboran y fomentan el comercio local.</p>
+      <p class="aviso-referencia">Información de referencia: el directorio de asociaciones se conectará al servidor en una próxima entrega.</p>
 
       <div class="grilla-tarjetas" id="grilla-asociaciones-container">
         <!-- Renderizado dinámico de asociaciones -->
@@ -809,7 +812,7 @@
               <span style="color: var(--rojo-alerce);">💬</span>
               <strong style="font-size: 14px;">Muro Comunitario & Consultas</strong>
             </div>
-            <span class="insignia-live" style="background: var(--rosado-contenedor); color: var(--rosado-foro);">EN VIVO</span>
+            <span class="insignia-live" style="background: var(--rosado-contenedor); color: var(--rosado-foro);">Solo en este navegador</span>
           </div>
 
           <!-- Lista de mensajes del muro -->
@@ -1006,100 +1009,105 @@
 
   <!-- 6. MODAL PUBLICAR PRODUCTO -->
   <div class="modal-overlay" id="modal-publicar-producto" role="dialog" aria-modal="true" aria-labelledby="modal-publicar-titulo">
-    <div class="modal-panel-editorial" style="max-width: 620px;">
+    <div class="modal-panel-editorial" style="max-width: 680px;">
       <div class="modal-cabecera">
         <div>
-          <h2 id="modal-publicar-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Añadir Producto</h2>
+          <h2 id="modal-publicar-titulo" style="font-size: 17px; font-weight: 800; color: var(--negro-apple);">Añadir producto</h2>
+          <p style="font-size: 12px; color: var(--gris-texto); margin: 2px 0 0 0;">Se guarda en el servidor solo al tocar «Guardar producto».</p>
         </div>
         <button type="button" class="btn-cerrar-x" onclick="TramaWeb.cerrarModal('modal-publicar-producto')" aria-label="Cerrar">✕</button>
       </div>
 
-      <div class="modal-cuerpo" style="gap: 14px;">
-
-        <!-- FOTO -->
-        <div>
-          <label class="label-fb-market">Foto</label>
-          <div class="fb-caja-foto-preview" id="fb-caja-foto-preview">
-            <div id="fb-placeholder-foto" class="fb-placeholder-foto">
-              <span style="font-size: 32px;">📷</span>
-              <p style="font-size: 13px; font-weight: 700; color: var(--negro-apple); margin: 4px 0;">Foto del producto o afiche</p>
-              <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;">
-                <label for="inp-subir-foto-producto" class="btn-accion-pill" style="cursor: pointer; background: #ffffff;">
-                  📁 Subir Foto
-                </label>
-                <input type="file" id="inp-subir-foto-producto" accept="image/*" style="display: none;" onchange="TramaWeb.onFotoProductoSubida(event)">
-                <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">
-                  🎨 Crear Afiche
-                </button>
-              </div>
-            </div>
-            <img id="fb-img-preview" src="" alt="Vista previa" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: 8px;">
-          </div>
-          <div id="fb-opciones-foto-activa" style="display: none; margin-top: 8px; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: var(--verde-ok); font-weight: 700;">✓ Foto lista</span>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px;" onclick="TramaWeb.abrirEstudioFlyerDesdePublicar()">Editar en Diseñador ➔</button>
-              <button type="button" class="btn-accion-pill" style="height: 30px; font-size: 11px; padding: 0 10px; color: var(--rojo-alerce);" onclick="TramaWeb.quitarFotoProducto()">Cambiar Foto</button>
+      <div class="modal-cuerpo pub-formulario">
+        <!-- PASO 1: FOTO -->
+        <fieldset class="pub-paso">
+          <legend>1. Foto</legend>
+          <div class="pub-foto-fila">
+            <div id="pub-foto-preview" class="pub-foto-caja" aria-live="polite"><span class="pub-foto-vacia">Sin foto</span></div>
+            <div class="pub-foto-botones">
+              <label for="pub-foto-input" class="btn-accion-pill">📁 Elegir foto</label>
+              <input type="file" id="pub-foto-input" accept="image/*" class="sr-only">
+              <button type="button" id="pub-abrir-afiche" class="btn-accion-pill">🎨 Crear afiche</button>
+              <button type="button" id="pub-quitar-foto" class="btn-accion-pill btn-quitar">Quitar foto</button>
             </div>
           </div>
+          <p class="pub-ayuda">La foto se comprime antes de subirla.</p>
+        </fieldset>
 
-          <div class="fb-galeria-rapida" id="fb-galeria-rapida" style="margin-top: 8px;"></div>
-        </div>
-
-        <!-- NOMBRE -->
-        <div>
-          <label for="fb-inp-titulo" class="label-fb-market">Nombre del producto</label>
-          <input type="text" id="fb-inp-titulo" class="input-fb-market" placeholder="Ej: Pan amasado artesanal" maxlength="90">
-        </div>
-
-        <!-- PRECIO Y NEGOCIO -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <!-- PASO 2: DATOS -->
+        <fieldset class="pub-paso">
+          <legend>2. Datos</legend>
           <div>
-            <label for="fb-inp-precio" class="label-fb-market">Precio ($ CLP)</label>
-            <input type="number" id="fb-inp-precio" class="input-fb-market" placeholder="2500" min="0" step="100">
+            <label for="pub-nombre" class="label-fb-market">Nombre del producto *</label>
+            <input type="text" id="pub-nombre" class="input-fb-market" placeholder="Ej: Pan amasado" maxlength="90" autocomplete="off">
+          </div>
+          <div class="pub-dos-columnas">
+            <div>
+              <label for="pub-precio" class="label-fb-market">Precio en pesos *</label>
+              <input type="number" id="pub-precio" class="input-fb-market" placeholder="2500" min="0" step="1" inputmode="numeric">
+            </div>
+            <div>
+              <label for="pub-categoria" class="label-fb-market">Categoría</label>
+              <select id="pub-categoria" class="input-fb-market">
+                <option value="TEXTIL">Textil</option>
+                <option value="CUERO">Cuero</option>
+                <option value="JOYERIA">Joyería</option>
+                <option value="COSMETICA">Cosmética</option>
+                <option value="GOURMET">Gourmet</option>
+                <option value="DECORACION">Decoración</option>
+              </select>
+            </div>
           </div>
           <div>
-            <label for="fb-select-tienda" class="label-fb-market">Negocio</label>
-            <select id="fb-select-tienda" class="input-fb-market" style="height: 44px; background: #ffffff;">
-              <option value="t_minimarket_rosa">Minimarket Doña Rosa</option>
-              <option value="t_tejidos_austral">Tejidos & Lanares Austral</option>
-              <option value="t_reposteria_surena">Repostería Casera Tradición Sureña</option>
-              <option value="t_barberia_alerce">Barbería & Estilo Alerce</option>
+            <label for="pub-tipo" class="label-fb-market">Tipo de producto</label>
+            <select id="pub-tipo" class="input-fb-market"></select>
+          </div>
+          <div id="pub-campos" class="pub-campos" style="display: none;"></div>
+          <div>
+            <label for="pub-descripcion" class="label-fb-market">Descripción</label>
+            <textarea id="pub-descripcion" class="input-fb-market" rows="3" placeholder="De qué está hecho, tamaño, cómo se entrega"></textarea>
+          </div>
+        </fieldset>
+
+        <!-- PASO 3: OPCIONES -->
+        <fieldset class="pub-paso">
+          <legend>3. Opciones (tallas, colores, sabores)</legend>
+          <p class="pub-ayuda">Cada opción tiene su propio precio (opcional), foto y cantidad.</p>
+          <div id="pub-opciones"></div>
+          <button type="button" id="pub-agregar-opcion" class="btn-accion-pill">➕ Agregar opción</button>
+        </fieldset>
+
+        <!-- PASO 4: DISPONIBILIDAD -->
+        <fieldset class="pub-paso">
+          <legend>4. Disponibilidad</legend>
+          <div class="pub-radios" role="radiogroup" aria-label="Modalidad">
+            <label><input type="radio" name="pub-modalidad" value="REGULAR" checked> Regular</label>
+            <label><input type="radio" name="pub-modalidad" value="A_PEDIDO"> A pedido</label>
+            <label><input type="radio" name="pub-modalidad" value="PIEZA_UNICA"> Pieza única</label>
+          </div>
+          <p id="pub-ayuda-modalidad" class="pub-ayuda" aria-live="polite"></p>
+          <label class="pub-check"><input type="checkbox" id="pub-maneja-stock" checked> Llevar la cuenta de unidades</label>
+          <div>
+            <label for="pub-al-agotarse" class="label-fb-market">Cuando se acaben las unidades</label>
+            <select id="pub-al-agotarse" class="input-fb-market">
+              <option value="MOSTRAR_AGOTADO">Mostrar «Agotado»</option>
+              <option value="OCULTAR">Ocultar de la vitrina</option>
+              <option value="PASAR_A_PEDIDO">Pasar a «A pedido»</option>
             </select>
           </div>
-        </div>
+          <label class="pub-check"><input type="checkbox" id="pub-disponible" checked> Disponible (si lo apagas, sigue en tu tienda pero el público no lo ve)</label>
+        </fieldset>
 
-        <!-- CATEGORÍA -->
-        <div>
-          <label class="label-fb-market">Categoría</label>
-          <div class="fb-selector-chips" id="fb-selector-categoria">
-            <button type="button" class="fb-chip-cat activo" data-cat="Abarrotes y Alimentos" onclick="TramaWeb.seleccionarCategoriaFB('Abarrotes y Alimentos')">🍞 Alimentos</button>
-            <button type="button" class="fb-chip-cat" data-cat="Artesanía y Textil" onclick="TramaWeb.seleccionarCategoriaFB('Artesanía y Textil')">🧶 Artesanía</button>
-            <button type="button" class="fb-chip-cat" data-cat="Pastelería y Gastronomía" onclick="TramaWeb.seleccionarCategoriaFB('Pastelería y Gastronomía')">🍰 Pastelería</button>
-            <button type="button" class="fb-chip-cat" data-cat="Servicios y Peluquería" onclick="TramaWeb.seleccionarCategoriaFB('Servicios y Peluquería')">💈 Servicios</button>
-          </div>
-        </div>
+        <!-- PASO 5: PUBLICACIÓN Y REVISIÓN -->
+        <fieldset class="pub-paso">
+          <legend>5. Publicación</legend>
+          <label class="pub-check"><input type="checkbox" id="pub-publicado"> Lo ven todos (si no, solo tú lo ves)</label>
+          <label class="pub-check"><input type="checkbox" id="pub-destacado"> Mostrar primero en mi tienda</label>
+        </fieldset>
 
-        <!-- DISPONIBILIDAD -->
-        <div>
-          <label class="label-fb-market">Disponibilidad</label>
-          <div class="fb-selector-chips" id="fb-selector-stock">
-            <button type="button" class="fb-chip-cat activo" data-stock="inmediato" onclick="TramaWeb.seleccionarStockFB('inmediato')">📦 Con Stock (Entrega hoy)</button>
-            <button type="button" class="fb-chip-cat" data-stock="pedido" onclick="TramaWeb.seleccionarStockFB('pedido')">✂️ A Pedido (Por encargo)</button>
-          </div>
-        </div>
+        <div id="pub-aviso" class="estado-datos error" role="alert" style="display: none;"></div>
 
-        <!-- DETALLES -->
-        <div>
-          <label for="fb-inp-desc" class="label-fb-market">Descripción (opcional)</label>
-          <textarea id="fb-inp-desc" class="input-fb-market" style="min-height: 52px; font-family: inherit; font-size: 13px;" placeholder="Detalles de entrega o elaboración"></textarea>
-        </div>
-
-        <!-- BOTÓN PUBLICAR -->
-        <button type="button" class="btn-publicar-gigante" onclick="TramaWeb.confirmarPublicacionFB()">
-          <span>Publicar Producto</span>
-        </button>
-
+        <button type="button" id="pub-guardar" class="btn-publicar-gigante">Guardar producto</button>
       </div>
     </div>
   </div>
@@ -1290,22 +1298,15 @@
       </div>
 
       <div class="modal-cuerpo" style="padding: 16px;">
-        <!-- Selector de Tienda activa en POS -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f4f4f5; padding: 8px 12px; border-radius: 8px; flex-wrap: wrap; gap: 8px;">
-          <span style="font-size: 12px; font-weight: 700;">Emprendimiento activo:</span>
-          <select id="pos-select-tienda" class="input-fb-market" style="width: auto; height: 32px; font-size: 12px; padding: 2px 8px;" onchange="TramaWeb.cambiarTiendaPOS(this.value)">
-            <!-- Opciones dinámicas -->
-          </select>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px;">
+        <div id="pos-aviso" class="estado-datos" role="status" style="display: none;"></div>
+        <div class="pos-columnas">
           <!-- Columna Izquierda: Catálogo para agregar con 1 clic -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <strong style="font-size: 13px;">Toca un producto para sumar al ticket:</strong>
               <span id="pos-conteo-disponibles" style="font-size: 11px; color: var(--gris-texto);"></span>
             </div>
-            <div id="pos-grid-productos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+            <div id="pos-grid-productos" class="pos-grilla">
               <!-- Productos renderizados dinámicamente -->
             </div>
           </div>
@@ -1318,7 +1319,7 @@
             </div>
 
             <!-- Lista de items del ticket -->
-            <div id="pos-lista-items" style="flex: 1; min-height: 120px; max-height: 180px; overflow-y: auto; margin-bottom: 12px; font-size: 12px;">
+            <div id="pos-lista-items" class="pos-lista" aria-live="polite">
               <!-- Items en el ticket -->
             </div>
 
@@ -1331,7 +1332,7 @@
 
               <!-- Selector medio de pago -->
               <div style="margin-bottom: 8px;">
-                <label style="font-size: 11px; font-weight: 700; color: var(--gris-texto); display: block; margin-bottom: 4px;">Medio de Pago:</label>
+                <span style="font-size: 11px; font-weight: 700; color: var(--gris-texto); display: block; margin-bottom: 4px;">Medio de pago:</span>
                 <div style="display: flex; gap: 4px;">
                   <button type="button" class="btn-accion-pill btn-negro" id="btn-pos-pago-efectivo" style="flex: 1; height: 30px; font-size: 11px; justify-content: center;" onclick="TramaWeb.seleccionarMedioPagoPOS('Efectivo')">💵 Efectivo</button>
                   <button type="button" class="btn-accion-pill" id="btn-pos-pago-transferencia" style="flex: 1; height: 30px; font-size: 11px; justify-content: center; background: #fff; border: 1px solid var(--gris-borde);" onclick="TramaWeb.seleccionarMedioPagoPOS('Transferencia')">📱 Transf.</button>
@@ -1342,7 +1343,7 @@
               <!-- Calculadora de efectivo si es Efectivo -->
               <div id="pos-caja-calculo-vuelto" style="background: #fff; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 8px; margin-bottom: 10px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                  <span style="font-size: 11px; font-weight: 700;">Cliente paga con:</span>
+                  <label for="pos-inp-paga-con" style="font-size: 11px; font-weight: 700;">Cliente paga con:</label>
                   <input type="number" id="pos-inp-paga-con" class="input-fb-market" style="width: 110px; height: 28px; font-size: 12px; text-align: right;" placeholder="$" oninput="TramaWeb.calcularVueltoPOS()">
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; font-size: 12px; font-weight: 800; color: #16a34a;">
@@ -1351,10 +1352,18 @@
                 </div>
               </div>
 
+              <div class="pos-lugar-caja">
+                <label for="pos-lugar" class="label-fb-market">Lugar de la venta</label>
+                <select id="pos-lugar" class="input-fb-market"><option value="">Sin indicar</option></select>
+                <div style="display: none;">
+                  <label for="pos-lugar-otro" class="label-fb-market">¿Dónde?</label>
+                  <input type="text" id="pos-lugar-otro" class="input-fb-market" maxlength="80" placeholder="Ej: Plaza de Alerce">
+                </div>
+                <label class="pub-check"><input type="checkbox" id="pos-historial" checked> Guardar precio, fecha y lugar en mi historial</label>
+              </div>
+
               <!-- Botón Confirmar Venta -->
-              <button type="button" class="btn-accion-pill btn-negro" style="width: 100%; height: 42px; font-size: 13.5px; font-weight: 800; justify-content: center;" onclick="TramaWeb.confirmarVentaPOS()">
-                <span>✅ Registrar Venta y Comprobante</span>
-              </button>
+              <button type="button" id="pos-btn-confirmar" class="btn-accion-pill btn-negro" style="width: 100%; height: 44px; font-size: 13.5px; font-weight: 800; justify-content: center;">Registrar venta</button>
             </div>
           </div>
         </div>
@@ -1377,14 +1386,24 @@
       </div>
 
       <div class="modal-cuerpo" style="gap: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--gris-chip); border-radius: 8px; padding: 10px 14px; flex-wrap: wrap; gap: 8px;">
-          <span style="font-size: 12px; color: var(--negro-apple); font-weight: 700;" id="conteo-prods-catalogo-gestion">4 productos en catálogo</span>
-          <button type="button" class="btn-accion-pill btn-negro" style="height: 32px; font-size: 11.5px;" onclick="TramaWeb.abrirModalPublicarProducto()">
-            ➕ Añadir Nuevo Producto
-          </button>
+        <div class="gestion-barra">
+          <span id="conteo-prods-catalogo-gestion">Cargando tu catálogo…</span>
+          <button type="button" id="gestion-nuevo" class="btn-accion-pill btn-negro">➕ Añadir producto</button>
         </div>
+        <div class="gestion-barra gestion-masiva">
+          <label for="gestion-filtro-categoria" class="label-fb-market">Categoría</label>
+          <select id="gestion-filtro-categoria" class="input-fb-market">
+            <option value="">Todas</option>
+            <option value="TEXTIL">Textil</option><option value="CUERO">Cuero</option><option value="JOYERIA">Joyería</option>
+            <option value="COSMETICA">Cosmética</option><option value="GOURMET">Gourmet</option><option value="DECORACION">Decoración</option>
+          </select>
+          <button type="button" id="gestion-disponibles" class="btn-accion-pill">Marcar disponibles</button>
+          <button type="button" id="gestion-no-disponibles" class="btn-accion-pill">Marcar no disponibles</button>
+        </div>
+        <p class="pub-ayuda">Marca casillas para cambiar varios a la vez; sin casillas se aplica a la categoría elegida o a todo el catálogo.</p>
+        <div id="estado-gestion-catalogo" class="estado-datos" role="status" style="display: none;"></div>
 
-        <div id="lista-items-catalogo-gestion" style="display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow-y: auto; padding-right: 2px;">
+        <div id="lista-items-catalogo-gestion" class="gestion-lista">
           <!-- Items renderizados dinámicamente -->
         </div>
       </div>
@@ -1407,28 +1426,28 @@
 
       <div class="modal-cuerpo" style="gap: 14px;">
         <div>
-          <label class="label-fb-market">Nombre del Emprendimiento / Negocio</label>
-          <input type="text" id="edit-tienda-nombre" class="input-fb-market" placeholder="Ej: Minimarket Doña Rosa">
+          <label for="edit-tienda-nombre" class="label-fb-market">Nombre del emprendimiento</label>
+          <input type="text" id="edit-tienda-nombre" class="input-fb-market" placeholder="Ej: Almacén de mi barrio">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
-            <label class="label-fb-market">Rubro o Giro Comercial</label>
+            <label for="edit-tienda-rubro" class="label-fb-market">Rubro</label>
             <input type="text" id="edit-tienda-rubro" class="input-fb-market" placeholder="Ej: Minimarket y Abarrotes">
           </div>
           <div>
-            <label class="label-fb-market">Sector en Alerce / Puerto Montt</label>
+            <label for="edit-tienda-sector" class="label-fb-market">Sector</label>
             <input type="text" id="edit-tienda-sector" class="input-fb-market" placeholder="Ej: Alerce Histórico">
           </div>
         </div>
 
         <div>
-          <label class="label-fb-market">Teléfono WhatsApp para Pedidos</label>
+          <label for="edit-tienda-whatsapp" class="label-fb-market">WhatsApp para pedidos</label>
           <input type="tel" id="edit-tienda-whatsapp" class="input-fb-market" placeholder="+56991234567">
         </div>
 
         <div>
-          <label class="label-fb-market">Descripción o Biografía del Negocio</label>
+          <label for="edit-tienda-bio" class="label-fb-market">Descripción del negocio</label>
           <textarea id="edit-tienda-bio" class="input-fb-market" style="height: 70px; resize: none;" placeholder="Cuéntale a los vecinos qué ofreces y tus horarios..."></textarea>
         </div>
 
@@ -1456,9 +1475,26 @@
           </div>
         </div>
 
-        <button type="button" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px;" onclick="TramaWeb.guardarPerfilTienda()">
-          💾 Guardar Cambios en Mi Tienda
-        </button>
+        <fieldset class="pub-paso">
+          <legend>Historial de ventas</legend>
+          <label class="pub-check"><input type="checkbox" id="check-historial-ventas"> Guardar precio, fecha y lugar de cada venta</label>
+          <p class="pub-ayuda">Si lo desactivas, las próximas ventas solo guardan lo mínimo para descontar unidades. Las anteriores no se borran.</p>
+        </fieldset>
+        <fieldset class="pub-paso">
+          <legend>Valores iniciales de un producto nuevo</legend>
+          <div class="pub-dos-columnas">
+            <div><label for="def-categoria" class="label-fb-market">Categoría</label>
+              <select id="def-categoria" class="input-fb-market"><option value="TEXTIL">Textil</option><option value="CUERO">Cuero</option><option value="JOYERIA">Joyería</option><option value="COSMETICA">Cosmética</option><option value="GOURMET">Gourmet</option><option value="DECORACION">Decoración</option></select></div>
+            <div><label for="def-modalidad" class="label-fb-market">Modalidad</label>
+              <select id="def-modalidad" class="input-fb-market"><option value="REGULAR">Regular</option><option value="A_PEDIDO">A pedido</option><option value="PIEZA_UNICA">Pieza única</option></select></div>
+          </div>
+          <div><label for="def-al-agotarse" class="label-fb-market">Cuando se acaben</label>
+            <select id="def-al-agotarse" class="input-fb-market"><option value="MOSTRAR_AGOTADO">Mostrar «Agotado»</option><option value="OCULTAR">Ocultar</option><option value="PASAR_A_PEDIDO">Pasar a «A pedido»</option></select></div>
+          <label class="pub-check"><input type="checkbox" id="def-maneja-stock"> Llevar la cuenta de unidades</label>
+          <label class="pub-check"><input type="checkbox" id="def-publicado"> Que lo vean todos al crearlo</label>
+        </fieldset>
+        <div id="edit-tienda-aviso" class="estado-datos error" role="alert" style="display: none;"></div>
+        <button type="button" id="btn-guardar-perfil-tienda" class="btn-accion-pill btn-negro" style="height: 44px; width: 100%; justify-content: center; font-size: 13.5px;">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -1680,13 +1716,13 @@
         <!-- SECCIÓN 1: INICIAR SESIÓN -->
         <div id="usuario-seccion-login" style="display: flex; flex-direction: column; gap: 12px;">
           <div>
-            <label class="label-fb-market">Correo electrónico</label>
-            <input type="email" id="auth-inp-email" class="input-fb-market" placeholder="tu-correo@gmail.com">
+            <label for="auth-inp-email" class="label-fb-market">Correo electrónico</label>
+            <input type="email" id="auth-inp-email" autocomplete="email" class="input-fb-market" placeholder="tu-correo@gmail.com">
           </div>
 
           <div>
-            <label class="label-fb-market">Contraseña</label>
-            <input type="password" id="auth-inp-password" class="input-fb-market" placeholder="Mínimo 6 caracteres">
+            <label for="auth-inp-password" class="label-fb-market">Contraseña</label>
+            <input type="password" id="auth-inp-password" autocomplete="current-password" class="input-fb-market" placeholder="Mínimo 6 caracteres">
           </div>
 
           <div id="auth-aviso-error" style="display: none; padding: 8px 12px; background: #fee2e2; border-radius: 6px; color: #dc2626; font-size: 12px; font-weight: 600;"></div>
@@ -1709,8 +1745,8 @@
             </button>
           </div>
 
-          <!-- Accesos de Prueba Rápida -->
-          <div style="background: #f8fafc; border: 1px dashed var(--gris-borde); border-radius: 8px; padding: 10px; font-size: 11.5px; display: flex; flex-direction: column; gap: 6px;">
+          <!-- Accesos de prueba: solo visibles en modo demostración -->
+          <div id="auth-accesos-demo" style="display: none; background: #f8fafc; border: 1px dashed var(--gris-borde); border-radius: 8px; padding: 10px; font-size: 11.5px; display: flex; flex-direction: column; gap: 6px;">
             <span style="font-weight: 700; color: #475569;">Cuentas de Acceso Rápido:</span>
             <div style="display: flex; gap: 6px;">
               <button type="button" class="btn-accion-pill" style="flex: 1; height: 28px; font-size: 10.5px; justify-content: center; background: #fff;" onclick="TramaWeb.autocompletarCredenciales('paul@alerce.app', 'comprador123')">
@@ -1730,22 +1766,22 @@
           </div>
 
           <div>
-            <label class="label-fb-market">Nombre y Apellido *</label>
-            <input type="text" id="reg-usuario-nombre" class="input-fb-market" placeholder="Ej: Paul Ferrada">
+            <label for="reg-usuario-nombre" class="label-fb-market">Nombre y apellido *</label>
+            <input type="text" id="reg-usuario-nombre" class="input-fb-market" autocomplete="name">
           </div>
 
           <div>
-            <label class="label-fb-market">Correo electrónico *</label>
-            <input type="email" id="reg-usuario-email" class="input-fb-market" placeholder="tu-correo@gmail.com">
+            <label for="reg-usuario-email" class="label-fb-market">Correo electrónico *</label>
+            <input type="email" id="reg-usuario-email" autocomplete="email" class="input-fb-market" placeholder="tu-correo@gmail.com">
           </div>
 
           <div>
-            <label class="label-fb-market">Contraseña *</label>
-            <input type="password" id="reg-usuario-password" class="input-fb-market" placeholder="Mínimo 6 caracteres">
+            <label for="reg-usuario-password" class="label-fb-market">Contraseña *</label>
+            <input type="password" id="reg-usuario-password" autocomplete="new-password" class="input-fb-market" placeholder="Mínimo 6 caracteres">
           </div>
 
           <div>
-            <label class="label-fb-market">Foto de perfil (opcional, JPG/PNG)</label>
+            <label for="reg-usuario-avatar" class="label-fb-market">Foto de perfil (opcional, JPG/PNG)</label>
             <input type="file" id="reg-usuario-avatar" accept="image/*" class="input-fb-market" style="padding: 6px; background: #fff;">
           </div>
 
@@ -1918,16 +1954,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Scripts Firebase SDK Oficial (Fallback de compatibilidad) -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
 
   <!-- Configuración oficial Supabase y Firebase (generado en deploy o local) -->
   <script src="js/config.js"></script>
 
   <!-- Scripts -->
   <script src="js/qrcode.min.js"></script>
-  <script src="js/main.js?v=20261108_fotos"></script>
+  <script src="js/catalogo.js?v=20261111_e5"></script>
+  <script src="js/servicio.js?v=20261111_e5"></script>
+  <script src="js/main.js?v=20261111_e5"></script>
 </body>
 </html>

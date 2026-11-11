@@ -1,7 +1,14 @@
 package com.example.trabajodea10.data.remoto
 
+import com.example.trabajodea10.data.AlAgotarse
+import com.example.trabajodea10.data.CampoTipo
 import com.example.trabajodea10.data.Categoria
+import com.example.trabajodea10.data.EstadoSync
+import com.example.trabajodea10.data.FeriaPlataforma
 import com.example.trabajodea10.data.ItemVenta
+import com.example.trabajodea10.data.Modalidad
+import com.example.trabajodea10.data.TipoProducto
+import com.example.trabajodea10.data.ValoresProducto
 import com.example.trabajodea10.data.MedioPago
 import com.example.trabajodea10.data.NecesidadesTienda
 import com.example.trabajodea10.data.Producto
@@ -12,6 +19,7 @@ import com.example.trabajodea10.data.Venta
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
@@ -106,6 +114,7 @@ object CuentaRepositorio {
     }
 }
 
+
 // ===================================================================== Tiendas
 
 object TiendaRepositorio {
@@ -119,9 +128,15 @@ object TiendaRepositorio {
         )
     }
 
+    private inline fun <reified T : Enum<T>> enumO(valor: String?, porDefecto: T): T =
+        runCatching { enumValueOf<T>(valor ?: "") }.getOrDefault(porDefecto)
+
     fun desdeJson(o: JsonObject): Tienda {
         val nec = o["necesidades"] as? JsonObject ?: JsonObject(emptyMap())
         fun n(clave: String, porDefecto: Boolean) = nec[clave]?.jsonPrimitive?.booleanOrNull ?: porDefecto
+        val val0 = o["valores_producto"] as? JsonObject ?: JsonObject(emptyMap())
+        fun vt(clave: String) = val0[clave]?.jsonPrimitive?.contentOrNull
+        fun vb(clave: String, porDefecto: Boolean) = val0[clave]?.jsonPrimitive?.booleanOrNull ?: porDefecto
         return Tienda(
             id = o.textoO("id"),
             nombre = o.textoO("nombre", "Comercio local"),
@@ -140,6 +155,15 @@ object TiendaRepositorio {
                 tieneProductosAPedido = n("tieneProductosAPedido", false),
                 participaEnFerias = n("participaEnFerias", true),
                 tieneForoComunidad = n("tieneForoComunidad", false)
+            ),
+            historialActivo = o.booleano("historial_activo", true),
+            valoresProducto = ValoresProducto(
+                categoria = enumO(vt("categoria"), Categoria.TEXTIL),
+                modalidad = enumO(vt("modalidad"), Modalidad.REGULAR),
+                manejaStock = vb("manejaStock", true),
+                alAgotarse = enumO(vt("alAgotarse"), AlAgotarse.MOSTRAR_AGOTADO),
+                publicado = vb("publicado", false),
+                disponible = vb("disponible", true)
             )
         )
     }
@@ -161,6 +185,15 @@ object TiendaRepositorio {
             put("tieneProductosAPedido", t.necesidades.tieneProductosAPedido)
             put("participaEnFerias", t.necesidades.participaEnFerias)
             put("tieneForoComunidad", t.necesidades.tieneForoComunidad)
+        })
+        put("historial_activo", t.historialActivo)
+        put("valores_producto", buildJsonObject {
+            put("categoria", t.valoresProducto.categoria.name)
+            put("modalidad", t.valoresProducto.modalidad.name)
+            put("manejaStock", t.valoresProducto.manejaStock)
+            put("alAgotarse", t.valoresProducto.alAgotarse.name)
+            put("publicado", t.valoresProducto.publicado)
+            put("disponible", t.valoresProducto.disponible)
         })
     }.toString()
 
@@ -186,70 +219,121 @@ object TiendaRepositorio {
 
 // ===================================================================== Productos
 
+/** Cantidades confirmadas por el servidor para un producto después de una venta. */
+data class StockServidor(val productoId: String, val variantes: List<Variante>, val vendidaEn: String?)
+
 object ProductoRepositorio {
 
-    fun desdeJson(o: JsonObject): Producto {
-        val variantes = (o["variantes"] as? JsonArray)?.mapNotNull { elemento: JsonElement ->
-            val v = elemento as? JsonObject ?: return@mapNotNull null
+    private inline fun <reified T : Enum<T>> enumO(valor: String?, porDefecto: T): T =
+        runCatching { enumValueOf<T>(valor ?: "") }.getOrDefault(porDefecto)
+
+    /** Opciones tal como las guarda el servidor; stockBase = lo que tenía el servidor. */
+    fun variantesDesdeJson(arr: JsonArray?, productoId: String): List<Variante> =
+        arr?.mapIndexedNotNull { i, elemento ->
+            val v = elemento as? JsonObject ?: return@mapIndexedNotNull null
+            val stock = v["stock"]?.jsonPrimitive?.intOrNull ?: 0
             Variante(
-                id = v.textoO("id", "v1"),
+                id = v.texto("id")?.takeIf { it.isNotBlank() } ?: "${productoId}_v${i + 1}",
                 nombre = v.textoO("nombre", "Unidad"),
-                stock = v["stock"]?.jsonPrimitive?.intOrNull ?: 0
+                stock = stock,
+                precio = v["precio"]?.jsonPrimitive?.doubleOrNull,
+                fotoUrl = v.texto("foto_url")?.takeIf { it.startsWith("http") },
+                stockBase = stock
             )
         } ?: emptyList()
+
+    fun desdeJson(o: JsonObject): Producto {
+        val id = o.textoO("id")
+        val atributos = (o["atributos"] as? JsonObject)?.mapNotNull { (k, v) ->
+            v.jsonPrimitive.contentOrNull?.let { k to it }
+        }?.toMap() ?: emptyMap()
+        val fotos = (o["fotos"] as? JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull?.takeIf { u -> u.startsWith("http") } } ?: emptyList()
         return Producto(
-            id = o.textoO("id"),
+            id = id,
             tiendaId = o.textoO("tienda_id"),
             nombre = o.textoO("nombre"),
-            categoria = runCatching { Categoria.valueOf(o.textoO("categoria", "TEXTIL")) }
-                .getOrDefault(Categoria.TEXTIL),
+            categoria = enumO(o.texto("categoria"), Categoria.TEXTIL),
             precio = o.decimal("precio"),
             publicado = o.booleano("publicado"),
             destacado = o.booleano("destacado"),
             colorFoto = o.largo("color_foto") ?: 0xFF8E6B94,
-            variantes = variantes.ifEmpty { listOf(Variante("${o.textoO("id")}v1", "Unidad", 0)) },
+            variantes = variantesDesdeJson(o["variantes"] as? JsonArray, id),
             fotoUrl = o.texto("foto_url"),
-            descripcion = o.textoO("descripcion")
+            descripcion = o.textoO("descripcion"),
+            tipo = o.texto("tipo")?.takeIf { it.isNotBlank() },
+            atributos = atributos,
+            fotos = fotos,
+            modalidad = enumO(o.texto("modalidad"), Modalidad.REGULAR),
+            manejaStock = o.booleano("maneja_stock", true),
+            alAgotarse = enumO(o.texto("al_agotarse"), AlAgotarse.MOSTRAR_AGOTADO),
+            disponible = o.booleano("disponible", true),
+            vendidaEn = o.texto("vendida_en")
         )
     }
 
-    private fun aJson(p: Producto): String = buildJsonObject {
+    /**
+     * Cuerpo de guardar_producto(). La tienda la decide el servidor. Para opciones
+     * que ya existían envía stockBase: el servidor suma la diferencia a lo que
+     * quede, sin pisar ventas hechas en otro dispositivo.
+     */
+    fun cuerpoGuardar(p: Producto): JsonObject = buildJsonObject {
         put("id", p.id)
-        put("tienda_id", p.tiendaId)
-        put("nombre", p.nombre)
+        put("nombre", p.nombre.trim())
         put("descripcion", p.descripcion)
         put("categoria", p.categoria.name)
+        put("tipo", p.tipo)
+        put("atributos", buildJsonObject { p.atributos.forEach { (k, v) -> put(k, v) } })
         put("precio", p.precio)
         put("publicado", p.publicado)
+        put("disponible", p.disponible)
         put("destacado", p.destacado)
-        put("color_foto", p.colorFoto)
+        put("colorFoto", p.colorFoto)
+        put("modalidad", p.modalidad.name)
+        put("manejaStock", p.manejaStock)
+        put("alAgotarse", p.alAgotarse.name)
+        // Solo se guardan URLs públicas; una ruta del celular no sirve en el servidor.
+        put("fotoUrl", p.fotoUrl?.takeIf { it.startsWith("https://") })
+        put("fotos", buildJsonArray { p.fotos.filter { it.startsWith("https://") }.forEach { add(JsonPrimitive(it)) } })
         put("variantes", buildJsonArray {
             p.variantes.forEach { v ->
                 addJsonObject {
                     put("id", v.id)
-                    put("nombre", v.nombre)
-                    put("stock", v.stock)
+                    put("nombre", v.nombre.trim())
+                    put("precio", v.precio)
+                    put("fotoUrl", v.fotoUrl?.takeIf { it.startsWith("https://") })
+                    put("stock", v.stock.coerceAtLeast(0))
+                    v.stockBase?.let { put("stockBase", it) }
                 }
             }
         })
-        // Solo se guardan URLs públicas; una ruta del celular no sirve en el servidor.
-        put("foto_url", p.fotoUrl?.takeIf { it.startsWith("http") })
-    }.toString()
+    }
 
-    /** Productos visibles para el público (vitrina). */
+    /** Productos que la RLS deja ver a esta sesión (sin sesión: solo los públicos). */
     suspend fun publicados(): List<Producto> =
-        arreglo(ClienteSupabase.pedir("GET", "/rest/v1/productos?select=*&publicado=eq.true")).map(::desdeJson)
+        arreglo(ClienteSupabase.pedir("GET", "/rest/v1/productos?select=*")).map(::desdeJson)
 
     /** Todos los productos de una tienda (la dueña también ve los que solo ella ve). */
     suspend fun deTienda(tiendaId: String): List<Producto> =
         arreglo(ClienteSupabase.pedir("GET", "/rest/v1/productos?select=*&tienda_id=eq.${cod(tiendaId)}"))
             .map(::desdeJson)
 
-    suspend fun guardar(p: Producto) {
-        ClienteSupabase.pedir(
-            "POST", "/rest/v1/productos?on_conflict=id",
-            cuerpoJson = aJson(p), cabeceras = mapOf("Prefer" to PREFER_UPSERT)
+    /** Alta o edición segura; devuelve el producto como quedó en el servidor. */
+    suspend fun guardar(p: Producto): Producto {
+        val cuerpo = buildJsonObject { put("p", cuerpoGuardar(p)) }.toString()
+        val texto = ClienteSupabase.pedir("POST", "/rest/v1/rpc/guardar_producto", cuerpoJson = cuerpo)
+        return desdeJson(ClienteSupabase.json.parseToJsonElement(texto).jsonObject)
+    }
+
+    /** Disponible / no disponible para varios a la vez; devuelve cuántos cambió el servidor. */
+    suspend fun cambiarDisponible(ids: List<String>, disponible: Boolean): Int {
+        if (ids.isEmpty()) return 0
+        val filtro = ids.joinToString(",") { "\"" + it.replace("\"", "") + "\"" }
+        val texto = ClienteSupabase.pedir(
+            "PATCH", "/rest/v1/productos?id=in.(${cod(filtro)})",
+            cuerpoJson = buildJsonObject { put("disponible", disponible) }.toString(),
+            cabeceras = mapOf("Prefer" to "return=representation")
         )
+        return arreglo(texto).size
     }
 
     suspend fun eliminar(id: String) {
@@ -258,6 +342,9 @@ object ProductoRepositorio {
 }
 
 // ===================================================================== Ventas
+
+/** Resultado de registrar_venta(): REGISTRADA o YA_REGISTRADA (reintento). */
+data class ResultadoVenta(val estado: String, val productos: List<StockServidor>)
 
 object VentaRepositorio {
 
@@ -271,7 +358,8 @@ object VentaRepositorio {
                 detalle = i.textoO("detalle"),
                 precio = i.decimal("precio"),
                 cantidad = i["cantidad"]?.jsonPrimitive?.intOrNull ?: 1,
-                fotoUrl = i.texto("fotoUrl")
+                fotoUrl = i.texto("fotoUrl"),
+                encargo = i.booleano("encargo")
             )
         } ?: emptyList()
         // Se usa la hora local con que se anotó; si no está, la del servidor.
@@ -283,7 +371,11 @@ object VentaRepositorio {
             medioPago = runCatching { MedioPago.valueOf(o.textoO("medio_pago", "EFECTIVO")) }
                 .getOrDefault(MedioPago.EFECTIVO),
             feriaId = o.texto("feria_id"),
-            total = o.decimal("total")
+            total = o.decimal("total"),
+            lugarTipo = o.texto("lugar_tipo"),
+            lugarNombre = o.texto("lugar_nombre"),
+            enHistorial = o.booleano("en_historial", true),
+            estadoSync = EstadoSync.CONFIRMADA
         )
     }
 
@@ -292,31 +384,72 @@ object VentaRepositorio {
             ClienteSupabase.pedir("GET", "/rest/v1/ventas?select=*&tienda_id=eq.${cod(tiendaId)}&order=fecha.desc")
         ).map(::desdeJson)
 
-    suspend fun registrar(venta: Venta, tiendaId: String) {
-        val cuerpo = buildJsonObject {
-            put("id", venta.id)
-            put("tienda_id", tiendaId)
-            put("fecha_local", venta.fecha)
-            put("medio_pago", venta.medioPago.name)
-            put("feria_id", venta.feriaId)
-            put("total", venta.total)
-            put("items", buildJsonArray {
-                venta.items.forEach { i ->
-                    addJsonObject {
-                        put("productoId", i.productoId)
-                        put("varianteId", i.varianteId)
-                        put("nombre", i.nombre)
-                        put("detalle", i.detalle)
-                        put("precio", i.precio)
-                        put("cantidad", i.cantidad)
-                        put("fotoUrl", i.fotoUrl?.takeIf { it.startsWith("http") })
-                    }
+    fun cuerpoRegistrar(venta: Venta): JsonObject = buildJsonObject {
+        put("id", venta.id)
+        put("fechaLocal", venta.fecha)
+        put("medioPago", venta.medioPago.name)
+        put("feriaId", venta.feriaId)
+        put("lugarTipo", venta.lugarTipo ?: if (venta.feriaId != null) "FERIA" else null)
+        put("lugarNombre", venta.lugarNombre)
+        put("conHistorial", venta.enHistorial)
+        put("items", buildJsonArray {
+            venta.items.forEach { i ->
+                addJsonObject {
+                    put("productoId", i.productoId)
+                    put("varianteId", i.varianteId)
+                    put("cantidad", i.cantidad)
+                    put("encargo", i.encargo)
+                    put("precio", i.precio)
+                    put("nombre", i.nombre)
+                    put("detalle", i.detalle)
+                    put("fotoUrl", i.fotoUrl?.takeIf { it.startsWith("https://") })
                 }
-            })
-        }.toString()
-        ClienteSupabase.pedir(
-            "POST", "/rest/v1/ventas?on_conflict=id",
-            cuerpoJson = cuerpo, cabeceras = mapOf("Prefer" to PREFER_UPSERT)
-        )
+            }
+        })
     }
+
+    /**
+     * Registra la venta y descuenta unidades en una sola operación del servidor.
+     * Es idempotente: reintentar con el mismo id no duplica la venta.
+     */
+    suspend fun registrar(venta: Venta): ResultadoVenta {
+        val cuerpo = buildJsonObject { put("p_venta", cuerpoRegistrar(venta)) }.toString()
+        val texto = ClienteSupabase.pedir("POST", "/rest/v1/rpc/registrar_venta", cuerpoJson = cuerpo)
+        val o = ClienteSupabase.json.parseToJsonElement(texto).jsonObject
+        val productos = (o["productos"] as? JsonArray)?.mapNotNull { e ->
+            val p = e as? JsonObject ?: return@mapNotNull null
+            val id = p.textoO("id")
+            StockServidor(id, ProductoRepositorio.variantesDesdeJson(p["variantes"] as? JsonArray, id), p.texto("vendida_en"))
+        } ?: emptyList()
+        return ResultadoVenta(o.textoO("estado", "REGISTRADA"), productos)
+    }
+}
+
+// ===================================================================== Tipos y ferias (solo lectura)
+
+object TipoRepositorio {
+    suspend fun listar(): List<TipoProducto> =
+        arreglo(ClienteSupabase.pedir("GET", "/rest/v1/tipos_producto?select=*&activo=eq.true&order=orden.asc")).map { o ->
+            TipoProducto(
+                id = o.textoO("id"),
+                categoria = o.textoO("categoria"),
+                nombre = o.textoO("nombre"),
+                campos = (o["campos"] as? JsonArray)?.mapNotNull { e ->
+                    val c = e as? JsonObject ?: return@mapNotNull null
+                    CampoTipo(
+                        clave = c.textoO("clave"),
+                        etiqueta = c.textoO("etiqueta", c.textoO("clave")),
+                        tipo = c.textoO("tipo", "texto"),
+                        opciones = (c["opciones"] as? JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull } ?: emptyList(),
+                        obligatorio = c.booleano("obligatorio")
+                    )
+                }?.filter { it.clave.isNotBlank() } ?: emptyList()
+            )
+        }
+}
+
+object FeriaRepositorio {
+    suspend fun listar(): List<FeriaPlataforma> =
+        arreglo(ClienteSupabase.pedir("GET", "/rest/v1/ferias?select=id,nombre&order=fecha_inicio.desc.nullslast"))
+            .map { FeriaPlataforma(it.textoO("id"), it.textoO("nombre")) }
 }

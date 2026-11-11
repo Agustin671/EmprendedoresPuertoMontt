@@ -123,7 +123,7 @@
   // DATOS LOCALES SINCRONIZADOS CON ANDROID TRAMASTORE & FIRESTORE
   // ============================================================
 
-  var TIENDAS = [
+  var TIENDAS_DEMO = [
     {
       id: "t_barberia_alerce",
       nombre: "Barbería & Estilo Alerce",
@@ -198,7 +198,7 @@
     }
   ];
 
-  var PRODUCTOS_BASE = [
+  var PRODUCTOS_DEMO = [
     // Doña Rosa
     {
       id: "p_mini_1",
@@ -328,23 +328,114 @@
     }
   ];
 
-  function cargarProductosDeStorage() {
-    try {
-      var completo = localStorage.getItem("trama_productos_completo");
-      if (completo) return JSON.parse(completo);
-      var guardados = localStorage.getItem("trama_productos_custom");
-      var custom = guardados ? JSON.parse(guardados) : [];
-      return PRODUCTOS_BASE.concat(custom);
-    } catch (e) {
-      return PRODUCTOS_BASE.slice();
-    }
+  // ============================================================
+  // MODO DE DATOS: real (Supabase), demostración o sin configuración.
+  // En producción nunca se muestran tiendas de ejemplo como si fueran reales.
+  // ============================================================
+  var Cat = window.AlerceCatalogo;
+  var servicio = (supabaseClient && window.AlerceServicio) ? window.AlerceServicio.crear(supabaseClient) : null;
+  var ES_LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
+  var MODO = servicio ? "real" : ((ES_LOCAL || /[?&]demo=1(&|$)/.test(window.location.search)) ? "demo" : "sin_config");
+  var CATEGORIA_DEMO = { t_minimarket_rosa: "GOURMET", t_reposteria_surena: "GOURMET", t_tejidos_austral: "TEXTIL", t_barberia_alerce: "COSMETICA" };
+
+  // Las versiones anteriores guardaban el catálogo en el navegador y mostraban
+  // productos ocultos o borrados. Esos datos se eliminan al cargar.
+  ["trama_productos_completo", "trama_productos_custom", "trama_tiendas_completo", "trama_tiendas_custom"].forEach(function (k) {
+    try { localStorage.removeItem(k); } catch (e) { /* almacenamiento no disponible */ }
+  });
+
+  function productoDemo(p) {
+    return Cat.normalizarProducto({
+      id: p.id, tienda_id: p.tiendaId, nombre: p.nombre, descripcion: p.descripcion, precio: p.precio,
+      publicado: true, categoria: CATEGORIA_DEMO[p.tiendaId] || "",
+      modalidad: p.stockTotal === 0 ? "A_PEDIDO" : "REGULAR", maneja_stock: p.stockTotal !== 99,
+      variantes: (p.variantes || []).map(function (v, i) {
+        return { id: p.id + "_v" + (i + 1), nombre: v.nombre, precio: v.precio, stock: i === 0 ? p.stockTotal : 0 };
+      })
+    });
   }
 
-  function guardarProductosEnStorage() {
-    try {
-      localStorage.setItem("trama_productos_completo", JSON.stringify(PRODUCTOS));
-    } catch (e) {}
+  function tiendaDemo(t) {
+    return Cat.normalizarTienda({
+      id: t.id, nombre: t.nombre, rubro: t.rubro, sector: t.sector, bio: t.bio, whatsapp: t.whatsapp,
+      color_portada: t.colorPortada, color_logo: t.colorLogo, necesidades: t.necesidades
+    });
   }
+
+  var TIENDAS = MODO === "demo" ? TIENDAS_DEMO.map(tiendaDemo) : [];
+  var MIS_PRODUCTOS = [];          // productos de la tienda con sesión (incluye los que solo ella ve)
+  var TIPOS = {};                  // tipos_producto por id
+  var FERIAS_SERVIDOR = [];
+  var estadoCatalogo = { cargando: MODO === "real", cargado: MODO === "demo", error: null, actualizado: null };
+  var promesaCatalogo = Promise.resolve();
+  var seleccionOpcion = {};        // productoId -> varianteId elegida en la vitrina
+
+  function cargarProductosDeStorage() {
+    return MODO === "demo" ? PRODUCTOS_DEMO.map(productoDemo) : [];
+  }
+
+  /** Crea un elemento sin interpretar HTML: los datos van como texto o atributos validados. */
+  function h(tag, props, hijos) {
+    var el = document.createElement(tag);
+    if (props) {
+      Object.keys(props).forEach(function (k) {
+        var v = props[k];
+        if (v === null || v === undefined || v === false) return;
+        if (k === "class") el.className = v;
+        else if (k === "text") el.textContent = v;
+        else if (k === "style") el.style.cssText = v;
+        else if (k.indexOf("on") === 0 && typeof v === "function") el.addEventListener(k.slice(2), v);
+        else el.setAttribute(k, v === true ? "" : String(v));
+      });
+    }
+    (hijos || []).forEach(function (c) {
+      if (c === null || c === undefined || c === false) return;
+      el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return el;
+  }
+
+  function imagenSegura(url, alt, clase, estilo) {
+    var limpia = Cat.urlImagenSegura(url);
+    if (!limpia) return null;
+    var img = h("img", { src: limpia, alt: alt || "", class: clase, style: estilo, loading: "lazy", decoding: "async" });
+    img.addEventListener("error", function () { img.style.display = "none"; });
+    return img;
+  }
+
+  function enlaceWhatsapp(numero, texto) {
+    var digitos = String(numero || "").replace(/[^0-9]/g, "");
+    if (!digitos) return null;
+    return "https://wa.me/" + digitos + "?text=" + encodeURIComponent(texto);
+  }
+
+  // El catálogo ya no se guarda en el navegador: la fuente de verdad es el servidor.
+  function guardarProductosEnStorage() {}
+  /** Conecta los controles nuevos (sin atributos onclick en el HTML). */
+  function configurarDomEntrega5() {
+    function al(id, evento, fn) { var el = document.getElementById(id); if (el) el.addEventListener(evento, fn); }
+    al("pub-categoria", "change", function () { seleccionarCategoriaFB(); });
+    al("pub-tipo", "change", function () { pintarCamposEspecificos({}); });
+    al("pub-maneja-stock", "change", actualizarReglasPublicar);
+    document.querySelectorAll('input[name="pub-modalidad"]').forEach(function (r) { r.addEventListener("change", actualizarReglasPublicar); });
+    al("pub-agregar-opcion", "click", agregarOpcionPublicar);
+    al("pub-guardar", "click", confirmarPublicacionFB);
+    al("pub-foto-input", "change", onFotoProductoSubida);
+    al("pub-quitar-foto", "click", quitarFotoProducto);
+    al("pub-abrir-afiche", "click", function () { abrirEstudioFlyerDesdePublicar(); });
+    al("gestion-nuevo", "click", function () { abrirModalPublicarProducto(); });
+    al("gestion-disponibles", "click", function () { cambiarDisponibleSeleccion(true); });
+    al("gestion-no-disponibles", "click", function () { cambiarDisponibleSeleccion(false); });
+    al("gestion-filtro-categoria", "change", renderizarGestionCatalogo);
+    al("pos-lugar", "change", pintarLugaresPOS);
+    al("pos-btn-confirmar", "click", confirmarVentaPOS);
+    al("btn-guardar-perfil-tienda", "click", guardarPerfilTienda);
+
+    var accesosDemo = document.getElementById("auth-accesos-demo");
+    if (accesosDemo) accesosDemo.style.display = MODO === "demo" ? "" : "none";
+    pintarEstadoDatos();
+  }
+
 
   var PRODUCTOS = cargarProductosDeStorage();
 
@@ -400,6 +491,9 @@
       respuestas: []
     }
   ];
+
+  // El muro aún no se guarda en el servidor: fuera del modo demostración no se muestran mensajes de ejemplo.
+  if (MODO !== "demo") PUBLICACIONES_FORO = [];
 
   var ASOCIACIONES = [
     {
@@ -525,37 +619,44 @@
     return "🛍️";
   }
 
-  function agregarAlCarrito(productoId, varianteIndice) {
+  function agregarAlCarrito(productoId, varianteId) {
     var prod = PRODUCTOS.find(function (p) { return p.id === productoId; });
     if (!prod) return;
+    var estadoP = Cat.estadoPublico(prod);
+    if (estadoP === "OCULTO") return;
     var tienda = TIENDAS.find(function (t) { return t.id === prod.tiendaId; });
-    var variante = (prod.variantes && prod.variantes[varianteIndice || 0]) || { nombre: "Estándar", precio: prod.precio };
-
+    var variante = prod.variantes.find(function (v) { return v.id === varianteId; }) || prod.variantes[0] || null;
+    var encargo = estadoP === "A_PEDIDO";
+    if (!encargo && (estadoP === "AGOTADO" || !Cat.opcionVendible(prod, variante))) {
+      mostrarToast("Esa opción está agotada.");
+      return;
+    }
+    var nombreOpcion = variante ? variante.nombre : "Única";
     var itemExistente = estado.carrito.find(function (item) {
-      return item.productoId === prod.id && item.varianteNombre === variante.nombre;
+      return item.productoId === prod.id && item.varianteId === (variante ? variante.id : null);
     });
 
     if (itemExistente) {
       itemExistente.cantidad += 1;
     } else {
-      var foto = prod.fotoUrl || (prod.fotos && prod.fotos[0]) || "";
       estado.carrito.push({
         id: "cart_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
         productoId: prod.id,
+        varianteId: variante ? variante.id : null,
         tiendaId: prod.tiendaId,
         tiendaNombre: tienda ? tienda.nombre : "Tienda",
-        tiendaWhatsapp: tienda ? tienda.whatsapp : "+56961230000",
-        nombre: prod.nombre,
-        varianteNombre: variante.nombre,
-        precio: variante.precio,
+        tiendaWhatsapp: tienda ? tienda.whatsapp : "",
+        nombre: prod.nombre + (encargo ? " (encargo)" : ""),
+        varianteNombre: nombreOpcion,
+        precio: Cat.precioDeOpcion(prod, variante),
         cantidad: 1,
-        fotoUrl: foto
+        fotoUrl: Cat.fotoDeOpcion(prod, variante)
       });
     }
 
     guardarCarritoEnStorage();
     renderizarCarrito();
-    mostrarToast("¡" + prod.nombre + " agregado al carrito!", "Ver Carrito 🛒", function () {
+    mostrarToast("«" + prod.nombre + "» agregado al carrito", "Ver carrito", function () {
       renderizarCarrito();
       abrirModal("modal-carrito");
     });
@@ -819,6 +920,7 @@
     var avisoVacio = document.getElementById("aviso-sin-tiendas");
     var subtitulo = document.getElementById("subtitulo-conteo-tiendas");
     if (!contenedor) return;
+    pintarEstadoDatos();
 
     var filtro = estado.categoriaActiva;
     var texto = estado.textoBusqueda.toLowerCase().trim();
@@ -833,89 +935,72 @@
     });
 
     if (subtitulo) {
-      subtitulo.textContent = "Mostrando " + tiendasFiltradas.length + " emprendimientos de Alerce (" + filtro + ")";
+      subtitulo.textContent = estadoCatalogo.cargando && !estadoCatalogo.cargado
+        ? "Cargando emprendimientos…"
+        : "Mostrando " + tiendasFiltradas.length + " emprendimientos de Alerce (" + filtro + ")";
     }
 
+    contenedor.textContent = "";
     if (tiendasFiltradas.length === 0) {
-      contenedor.innerHTML = "";
-      if (avisoVacio) avisoVacio.style.display = "block";
+      if (avisoVacio) {
+        avisoVacio.textContent = (MODO === "sin_config" || (estadoCatalogo.error && !estadoCatalogo.cargado))
+          ? "No pudimos mostrar las tiendas. Revisa el aviso de arriba."
+          : (estadoCatalogo.cargando ? "Cargando tiendas…" : "No encontramos tiendas que coincidan con la búsqueda.");
+        avisoVacio.style.display = "block";
+      }
       return;
     }
-
     if (avisoVacio) avisoVacio.style.display = "none";
 
-    var html = "";
     tiendasFiltradas.forEach(function (tienda) {
       var esFav = !!estado.favoritos[tienda.id];
-      var corazonIcon = esFav ? "❤️" : "🤍";
+      var nec = tienda.necesidades || {};
+      var badges = [];
+      if (nec.tieneStock) badges.push(h("span", { class: "badge-necesidad badge-stock", text: "📦 Stock" }));
+      if (nec.tieneProductosAPedido) badges.push(h("span", { class: "badge-necesidad badge-pedido", text: "✂️ A pedido" }));
+      if (nec.participaEnFerias) badges.push(h("span", { class: "badge-necesidad badge-ferias", text: "🎪 Ferias" }));
+      if (nec.tieneForoComunidad) badges.push(h("span", { class: "badge-necesidad badge-foro", text: "💬 Muro y foro" }));
+      if (nec.tieneAgendamiento) badges.push(h("span", { class: "badge-necesidad badge-agenda", text: "📅 Agenda horas" }));
 
-      html += '<article class="tarjeta-tienda">';
-      
-      // Franja de color superior con rubro y sector
-      html += '  <div class="tarjeta-franja-color" style="background-color: ' + tienda.colorPortada + ';">';
-      html += '    <span class="franja-rubro">' + escaparHtml(tienda.rubro) + '</span>';
-      html += '    <div class="franja-lado-derecho">';
-      html += '      <span class="franja-sector-chip">' + escaparHtml(tienda.sector) + '</span>';
-      html += '      <button type="button" class="btn-favorito-corazon ' + (esFav ? 'activo' : '') + '" onclick="TramaWeb.toggleFavorito(\'' + tienda.id + '\')" title="Favorito">' + corazonIcon + '</button>';
-      html += '    </div>';
-      html += '  </div>';
+      var logo = imagenSegura(tienda.logoUrl, "", "avatar-circulo", "object-fit: cover;") ||
+        h("div", { class: "avatar-circulo", style: "background-color: " + Cat.colorHex(tienda.colorLogo, "#2B6CB0") + ";", "aria-hidden": "true", text: tienda.nombre.charAt(0).toUpperCase() });
 
-      // Cuerpo de la tarjeta
-      html += '  <div class="tarjeta-cuerpo">';
-      html += '    <div class="tarjeta-perfil-fila">';
-      if (tienda.logoUrl) {
-        html += '      <img class="avatar-circulo" src="' + escaparHtml(tienda.logoUrl) + '" alt="" style="object-fit: cover;">';
-      } else {
-        html += '      <div class="avatar-circulo" style="background-color: ' + tienda.colorLogo + ';">' + tienda.nombre.charAt(0).toUpperCase() + '</div>';
-      }
-      html += '      <div class="tarjeta-titulos">';
-      html += '        <h3 class="tarjeta-nombre">' + escaparHtml(tienda.nombre) + '</h3>';
-      html += '        <p class="tarjeta-sub">' + escaparHtml(tienda.rubro) + ' · ' + escaparHtml(tienda.sector) + '</p>';
-      html += '      </div>';
-      html += '    </div>';
+      var accionPrincipal = nec.tieneAgendamiento
+        ? h("button", { type: "button", class: "btn-accion-pill btn-agenda", text: "Agendar cita", onclick: function () { abrirAgendamientoDirecto(tienda.id); } })
+        : h("button", { type: "button", class: "btn-accion-pill btn-negro", text: nec.tieneForoComunidad ? "Vitrina y foro" : "Ver vitrina", onclick: function () { abrirVitrinaTienda(tienda.id); } });
+      var urlWsp = enlaceWhatsapp(tienda.whatsapp, "Hola " + tienda.nombre + "! Vi tu tienda en Alerce Emprende y me gustaría hacer una consulta.");
 
-      html += '    <p class="tarjeta-descripcion">' + escaparHtml(tienda.bio) + '</p>';
-
-      // Badges de capacidades
-      html += '    <div class="tarjeta-badges-wrap">';
-      if (tienda.necesidades.tieneStock) {
-        html += '      <span class="badge-necesidad badge-stock">📦 Stock</span>';
-      }
-      if (tienda.necesidades.tieneProductosAPedido) {
-        html += '      <span class="badge-necesidad badge-pedido">✂️ A Pedido</span>';
-      }
-      if (tienda.necesidades.participaEnFerias) {
-        html += '      <span class="badge-necesidad badge-ferias">🎪 Ferias</span>';
-      }
-      if (tienda.necesidades.tieneForoComunidad) {
-        html += '      <span class="badge-necesidad badge-foro">💬 Muro y Foro</span>';
-      }
-      if (tienda.necesidades.tieneAgendamiento) {
-        html += '      <span class="badge-necesidad badge-agenda">📅 Agenda Horas</span>';
-      }
-      html += '    </div>';
-
-      html += '    <hr class="divisor-sutil">';
-
-      // Botones de acción inferiores
-      html += '    <div class="tarjeta-acciones-fila">';
-      if (tienda.necesidades.tieneAgendamiento) {
-        html += '      <button type="button" class="btn-accion-pill btn-agenda" onclick="TramaWeb.abrirAgendamientoDirecto(\'' + tienda.id + '\')">Agendar Cita</button>';
-      } else {
-        html += '      <button type="button" class="btn-accion-pill btn-negro" onclick="TramaWeb.abrirVitrinaTienda(\'' + tienda.id + '\')">' + (tienda.necesidades.tieneForoComunidad ? 'Vitrina y Foro' : 'Ver Vitrina') + '</button>';
-      }
-
-      html += '      <a href="https://wa.me/' + tienda.whatsapp.replace(/[^0-9]/g, "") + '?text=' + encodeURIComponent("Hola " + tienda.nombre + "! Vi tu tienda en Alerce Emprende y me gustaría hacer una consulta.") + '" target="_blank" rel="noopener" class="btn-accion-pill">WhatsApp</a>';
-      html += '      <button type="button" class="btn-qr-icon" onclick="TramaWeb.abrirQRTienda(\'' + tienda.id + '\')" title="Ver Código QR de la tienda" aria-label="Código QR">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M7 7h.01"/><path d="M17 7h.01"/><path d="M7 17h.01"/><path d="M17 17h.01"/></svg>' +
-        '</button>';
-      html += '    </div>';
-
-      html += '  </div>';
-      html += '</article>';
+      contenedor.appendChild(h("article", { class: "tarjeta-tienda" }, [
+        h("div", { class: "tarjeta-franja-color", style: "background-color: " + Cat.colorHex(tienda.colorPortada, "#1A202C") + ";" }, [
+          h("span", { class: "franja-rubro", text: tienda.rubro }),
+          h("div", { class: "franja-lado-derecho" }, [
+            h("span", { class: "franja-sector-chip", text: tienda.sector }),
+            h("button", {
+              type: "button", class: "btn-favorito-corazon" + (esFav ? " activo" : ""), "aria-pressed": esFav ? "true" : "false",
+              "aria-label": (esFav ? "Quitar de favoritos: " : "Agregar a favoritos: ") + tienda.nombre, text: esFav ? "❤️" : "🤍",
+              onclick: function () { toggleFavorito(tienda.id); }
+            })
+          ])
+        ]),
+        h("div", { class: "tarjeta-cuerpo" }, [
+          h("div", { class: "tarjeta-perfil-fila" }, [
+            logo,
+            h("div", { class: "tarjeta-titulos" }, [
+              h("h3", { class: "tarjeta-nombre", text: tienda.nombre }),
+              h("p", { class: "tarjeta-sub", text: [tienda.rubro, tienda.sector].filter(Boolean).join(" · ") })
+            ])
+          ]),
+          h("p", { class: "tarjeta-descripcion", text: tienda.bio }),
+          h("div", { class: "tarjeta-badges-wrap" }, badges),
+          h("hr", { class: "divisor-sutil" }),
+          h("div", { class: "tarjeta-acciones-fila" }, [
+            accionPrincipal,
+            urlWsp ? h("a", { href: urlWsp, target: "_blank", rel: "noopener", class: "btn-accion-pill", text: "WhatsApp" }) : null,
+            h("button", { type: "button", class: "btn-qr-icon", "aria-label": "Código QR de " + tienda.nombre, title: "Código QR de la tienda", text: "▦", onclick: function () { abrirQRTienda(tienda.id); } })
+          ])
+        ])
+      ]));
     });
-
-    contenedor.innerHTML = html;
   }
 
   function toggleFavorito(tiendaId) {
@@ -938,9 +1023,8 @@
     var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; });
     if (!tienda) return;
     estado.tiendaSeleccionada = tienda;
-    estado.tabModalActiva = 0; // Default: Catálogo
+    estado.tabModalActiva = 0;
 
-    var modal = document.getElementById("modal-tienda-vitrina");
     var avatar = document.getElementById("modal-tienda-avatar");
     var titulo = document.getElementById("modal-tienda-titulo");
     var rubroSector = document.getElementById("modal-tienda-rubro-sector");
@@ -949,31 +1033,23 @@
     var btnWhatsapp = document.getElementById("btn-modal-tienda-whatsapp");
 
     if (avatar) {
-      avatar.style.backgroundColor = tienda.logoUrl ? "transparent" : tienda.colorLogo;
-      if (tienda.logoUrl) {
-        avatar.innerHTML = '<img src="' + escaparHtml(tienda.logoUrl) + '" alt="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-      } else {
-        avatar.innerHTML = "";
-        avatar.textContent = tienda.nombre.charAt(0).toUpperCase();
-      }
+      avatar.textContent = "";
+      var logo = imagenSegura(tienda.logoUrl, "", null, "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;");
+      avatar.style.backgroundColor = logo ? "transparent" : Cat.colorHex(tienda.colorLogo, "#111111");
+      if (logo) avatar.appendChild(logo);
+      else avatar.textContent = tienda.nombre.charAt(0).toUpperCase();
     }
     if (titulo) titulo.textContent = tienda.nombre;
-    if (rubroSector) rubroSector.textContent = tienda.rubro + " · " + tienda.sector;
+    if (rubroSector) rubroSector.textContent = [tienda.rubro, tienda.sector].filter(Boolean).join(" · ");
     if (bio) bio.textContent = tienda.bio;
-
-    if (bannerAgenda) {
-      bannerAgenda.style.display = tienda.necesidades.tieneAgendamiento ? "block" : "none";
-    }
-
+    if (bannerAgenda) bannerAgenda.style.display = tienda.necesidades.tieneAgendamiento ? "block" : "none";
     if (btnWhatsapp) {
-      btnWhatsapp.href = "https://wa.me/" + tienda.whatsapp.replace(/[^0-9]/g, "") +
-        "?text=" + encodeURIComponent("Hola " + tienda.nombre + "! Vi tu vitrina en Alerce Emprende.");
+      var url = enlaceWhatsapp(tienda.whatsapp, "Hola " + tienda.nombre + "! Vi tu vitrina en Alerce Emprende.");
+      if (url) { btnWhatsapp.href = url; btnWhatsapp.style.display = ""; } else { btnWhatsapp.removeAttribute("href"); btnWhatsapp.style.display = "none"; }
     }
 
-    // Actualizar tabs y contenidos
     cambiarTabModal(0);
     actualizarContadorTabsModal();
-
     abrirModal("modal-tienda-vitrina");
   }
 
@@ -999,72 +1075,127 @@
     }
   }
 
+  function productosPublicosDeTienda(tiendaId) {
+    return PRODUCTOS.filter(function (p) {
+      return p.tiendaId === tiendaId && Cat.estadoPublico(p) !== "OCULTO";
+    }).sort(function (a, b) { return (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0); });
+  }
+
   function actualizarContadorTabsModal() {
     if (!estado.tiendaSeleccionada) return;
-    var prods = PRODUCTOS.filter(function (p) { return p.tiendaId === estado.tiendaSeleccionada.id; });
+    var prods = productosPublicosDeTienda(estado.tiendaSeleccionada.id);
     var pubs = PUBLICACIONES_FORO.filter(function (f) { return f.tiendaId === estado.tiendaSeleccionada.id; });
-
     var cCat = document.getElementById("conteo-tab-catalogo");
     var cForo = document.getElementById("conteo-tab-foro");
     if (cCat) cCat.textContent = prods.length;
     if (cForo) cForo.textContent = pubs.length;
   }
 
+  function avisoErrorConReintento(mensaje) {
+    return h("div", { class: "aviso-catalogo aviso-error", role: "alert" }, [
+      h("span", { text: mensaje + " " }),
+      h("button", { type: "button", class: "btn-accion-pill", text: "Reintentar", onclick: function () { cargarCatalogoPublico(); } })
+    ]);
+  }
+
   function renderizarProductosModal() {
     if (!estado.tiendaSeleccionada) return;
     var contenedor = document.getElementById("lista-productos-tienda-modal");
     if (!contenedor) return;
+    contenedor.textContent = "";
 
-    var prods = PRODUCTOS.filter(function (p) { return p.tiendaId === estado.tiendaSeleccionada.id; });
-
-    if (prods.length === 0) {
-      contenedor.innerHTML = '<p style="font-size: 13px; color: var(--gris-texto); padding: 18px 0;">Esta tienda aún no tiene productos registrados en la vitrina.</p>';
+    if (estadoCatalogo.cargando && !estadoCatalogo.cargado) {
+      contenedor.appendChild(h("p", { class: "aviso-catalogo", role: "status", text: "Cargando catálogo…" }));
       return;
     }
+    if (estadoCatalogo.error) {
+      contenedor.appendChild(avisoErrorConReintento(estadoCatalogo.cargado
+        ? "No se pudo actualizar el catálogo; se muestra lo último que llegó del servidor."
+        : "No se pudo cargar el catálogo. " + Cat.mensajeError(estadoCatalogo.error)));
+      if (!estadoCatalogo.cargado) return;
+    }
 
-    var html = "";
-    prods.forEach(function (p) {
-      var tieneStock = p.stockTotal > 0;
-      var badgeStock = tieneStock
-        ? '<span class="badge-necesidad badge-stock">Stock Disponible (' + p.stockTotal + ')</span>'
-        : '<span class="badge-necesidad badge-pedido">A Pedido</span>';
+    var prods = productosPublicosDeTienda(estado.tiendaSeleccionada.id);
+    if (prods.length === 0) {
+      contenedor.appendChild(h("p", { class: "aviso-catalogo", text: "Esta tienda aún no tiene productos a la vista." }));
+      return;
+    }
+    prods.forEach(function (p) { contenedor.appendChild(tarjetaProductoVitrina(p)); });
+  }
 
-      html += '<div class="producto-fila-card">';
-      html += '  <div class="producto-card-top">';
-      html += '    <div style="display: flex; gap: 12px; align-items: center;">';
-      if (p.fotoUrl) {
-        html += '      <img src="' + p.fotoUrl + '" alt="' + escaparHtml(p.nombre) + '" style="width: 52px; height: 52px; object-fit: cover; border-radius: 6px; border: 1px solid var(--gris-borde); flex-shrink: 0;">';
-      }
-      html += '      <div>';
-      html += '        <h4 class="prod-nombre">' + escaparHtml(p.nombre) + '</h4>';
-      html += '        <p style="font-size: 12px; color: var(--gris-texto); margin-top: 2px;">' + escaparHtml(p.descripcion) + '</p>';
-      html += '      </div>';
-      html += '    </div>';
-      html += '    <div style="text-align: right;">';
-      html += '      <span class="prod-precio">' + formatearMoneda(p.precio) + '</span>';
-      html += '      <div style="margin-top: 4px;">' + badgeStock + '</div>';
-      html += '    </div>';
-      html += '  </div>';
+  function opcionElegida(p) {
+    var id = seleccionOpcion[p.id];
+    return p.variantes.find(function (v) { return v.id === id; }) ||
+      p.variantes.find(function (v) { return Cat.opcionVendible(p, v); }) || p.variantes[0] || null;
+  }
 
-      // Variantes chips
-      if (p.variantes && p.variantes.length > 0) {
-        html += '  <div class="prod-variantes-chips">';
-        p.variantes.forEach(function (v) {
-          html += '    <span class="chip-variante">' + escaparHtml(v.nombre) + '</span>';
-        });
-        html += '  </div>';
-      }
+  function tarjetaProductoVitrina(p) {
+    var estadoP = Cat.estadoPublico(p);
+    var opcion = opcionElegida(p);
+    var precio = Cat.precioDeOpcion(p, opcion);
+    var foto = Cat.fotoDeOpcion(p, opcion);
+    var vendible = estadoP === "A_PEDIDO" || (estadoP === "DISPONIBLE" && Cat.opcionVendible(p, opcion));
+    var claseEstado = { DISPONIBLE: "badge-stock", AGOTADO: "badge-agotado", A_PEDIDO: "badge-pedido" }[estadoP] || "";
+    var detalleUnidades = "";
+    if (p.modalidad === "PIEZA_UNICA") detalleUnidades = "Pieza única";
+    else if (estadoP === "DISPONIBLE" && p.manejaStock && opcion) detalleUnidades = opcion.stock > 0 ? "Quedan " + opcion.stock : "Opción agotada";
 
-      // Botones de acción
-      html += '  <div class="producto-botones-fila">';
-      html += '    <button type="button" class="btn-anadir-carrito" onclick="TramaWeb.agregarAlCarrito(\'' + p.id + '\', 0)">🛒 Agregar al Carrito</button>';
-      html += '    <a href="https://wa.me/' + estado.tiendaSeleccionada.whatsapp.replace(/[^0-9]/g, "") + '?text=' + encodeURIComponent("Hola " + estado.tiendaSeleccionada.nombre + "! Me interesa comprar '" + p.nombre + "' (" + formatearMoneda(p.precio) + ") que vi en tu vitrina de Alerce.") + '" target="_blank" rel="noopener" class="btn-whatsapp-prod">Pedir por WhatsApp</a>';
-      html += '  </div>';
+    var imagen = imagenSegura(foto, p.nombre + (opcion ? " — " + opcion.nombre : ""), "prod-foto") ||
+      h("div", { class: "prod-foto prod-foto-vacia", "aria-hidden": "true", text: obtenerIconoProducto(p.nombre) });
 
-      html += '</div>';
-    });
+    var chips = null;
+    if (p.variantes.length > 1) {
+      chips = h("div", { class: "prod-variantes-chips", role: "group", "aria-label": "Opciones de " + p.nombre },
+        p.variantes.map(function (v) {
+          var agotada = estadoP !== "A_PEDIDO" && !Cat.opcionVendible(p, v);
+          return h("button", {
+            type: "button", class: "chip-variante" + (opcion && v.id === opcion.id ? " activa" : "") + (agotada ? " agotada" : ""),
+            "aria-pressed": opcion && v.id === opcion.id ? "true" : "false",
+            text: v.nombre + (agotada ? " (agotada)" : ""),
+            onclick: function () {
+              seleccionOpcion[p.id] = v.id;
+              var actual = document.querySelector('[data-producto-vitrina="' + CSS.escape(p.id) + '"]');
+              if (actual) {
+                var nueva = tarjetaProductoVitrina(p);
+                actual.replaceWith(nueva);
+                var boton = nueva.querySelector('.chip-variante[aria-pressed="true"]');
+                if (boton) boton.focus();
+              }
+            }
+          });
+        }));
+    }
 
-    contenedor.innerHTML = html;
+    var urlWsp = estado.tiendaSeleccionada ? enlaceWhatsapp(estado.tiendaSeleccionada.whatsapp,
+      "Hola " + estado.tiendaSeleccionada.nombre + "! Me interesa «" + p.nombre + (opcion && p.variantes.length > 1 ? " — " + opcion.nombre : "") +
+      "» (" + formatearMoneda(precio) + ") que vi en tu vitrina de Alerce.") : null;
+
+    return h("article", { class: "producto-fila-card", "data-producto-vitrina": p.id }, [
+      h("div", { class: "producto-card-top" }, [
+        h("div", { class: "producto-card-info" }, [
+          imagen,
+          h("div", null, [
+            h("h4", { class: "prod-nombre", text: p.nombre }),
+            Cat.etiquetaCategoria(p) ? h("p", { class: "prod-categoria", text: Cat.etiquetaCategoria(p) }) : null,
+            p.descripcion ? h("p", { class: "prod-descripcion", text: p.descripcion }) : null
+          ])
+        ]),
+        h("div", { class: "producto-card-precio" }, [
+          h("span", { class: "prod-precio", text: formatearMoneda(precio) }),
+          h("div", null, [h("span", { class: "badge-necesidad " + claseEstado, text: Cat.etiquetaEstado(estadoP) })]),
+          detalleUnidades ? h("small", { class: "prod-unidades", text: detalleUnidades }) : null
+        ])
+      ]),
+      chips,
+      h("div", { class: "producto-botones-fila" }, [
+        h("button", {
+          type: "button", class: "btn-anadir-carrito", disabled: !vendible,
+          text: !vendible ? "Agotado" : (estadoP === "A_PEDIDO" ? "🛒 Encargar" : "🛒 Agregar al carrito"),
+          onclick: function () { agregarAlCarrito(p.id, opcion ? opcion.id : null); }
+        }),
+        urlWsp ? h("a", { href: urlWsp, target: "_blank", rel: "noopener", class: "btn-whatsapp-prod", text: "Pedir por WhatsApp" }) : null
+      ])
+    ]);
   }
 
   // ============================================================
@@ -1412,41 +1543,74 @@
   // GESTIÓN DE VENTANAS MODALES (ABRIR / CERRAR)
   // ============================================================
 
+  var focoAntesDeModal = [];
+
+  function elementosEnfocables(contenedor) {
+    return Array.prototype.filter.call(
+      contenedor.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+      function (el) { return el.offsetParent !== null || el === document.activeElement; });
+  }
+
   function abrirModal(modalId) {
     var m = document.getElementById(modalId);
-    if (m) {
-      m.classList.add("abierto");
-      m.style.display = "flex";
-      document.body.style.overflow = "hidden";
+    if (!m) return;
+    if (!m.classList.contains("abierto")) focoAntesDeModal.push(document.activeElement);
+    m.classList.add("abierto");
+    m.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    function enfocar() {
+      if (!m.classList.contains("abierto") || m.contains(document.activeElement)) return;
+      var panel = m.querySelector(".modal-panel-editorial") || m;
+      var objetivo = panel.querySelector("[autofocus]") || elementosEnfocables(panel)[0];
+      if (objetivo) objetivo.focus();
     }
+    // Se intenta al abrir y otra vez al terminar la animación (antes puede no aceptar el foco).
+    setTimeout(enfocar, 30);
+    setTimeout(enfocar, 320);
   }
 
   function cerrarModal(modalId) {
     var m = document.getElementById(modalId);
-    if (m) {
-      m.classList.remove("abierto");
-      m.style.display = "none";
-      document.body.style.overflow = "";
+    if (!m) return;
+    var estabaAbierto = m.classList.contains("abierto");
+    m.classList.remove("abierto");
+    m.style.display = "none";
+    if (!document.querySelector(".modal-overlay.abierto, .modal-fondo.abierto")) document.body.style.overflow = "";
+    if (estabaAbierto) {
+      var previo = focoAntesDeModal.pop();
+      if (previo && typeof previo.focus === "function" && document.contains(previo)) previo.focus();
     }
   }
 
+  function modalSuperior() {
+    var abiertos = document.querySelectorAll(".modal-overlay.abierto, .modal-fondo.abierto");
+    return abiertos.length ? abiertos[abiertos.length - 1] : null;
+  }
+
+  // Tab no sale del modal abierto (foco atrapado mientras está visible).
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Tab") return;
+    var m = modalSuperior();
+    if (!m) return;
+    var lista = elementosEnfocables(m);
+    if (!lista.length) return;
+    var primero = lista[0], ultimo = lista[lista.length - 1];
+    if (e.shiftKey && (document.activeElement === primero || !m.contains(document.activeElement))) { e.preventDefault(); ultimo.focus(); }
+    else if (!e.shiftKey && (document.activeElement === ultimo || !m.contains(document.activeElement))) { e.preventDefault(); primero.focus(); }
+  });
+
   // Cerrar al hacer clic en el backdrop
   document.addEventListener("click", function (e) {
-    if (e.target && (e.target.classList.contains("modal-overlay") || e.target.classList.contains("modal-fondo"))) {
-      e.target.classList.remove("abierto");
-      e.target.style.display = "none";
-      document.body.style.overflow = "";
+    if (e.target && e.target.id && (e.target.classList.contains("modal-overlay") || e.target.classList.contains("modal-fondo"))) {
+      cerrarModal(e.target.id);
     }
   });
 
   // Cerrar con Escape
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      document.querySelectorAll(".modal-overlay.abierto, .modal-fondo.abierto").forEach(function (m) {
-        m.classList.remove("abierto");
-        m.style.display = "none";
-      });
-      document.body.style.overflow = "";
+      var superior = modalSuperior();
+      if (superior && superior.id) cerrarModal(superior.id);
     }
   });
 
@@ -1532,236 +1696,314 @@
   };
 
   // Abrir Modal Publicar estilo FB Marketplace
-  function abrirModalPublicarProducto() {
+  function nuevoEstadoPublicar() {
+    return { productoId: null, previo: null, foto: null, opciones: [], guardando: false };
+  }
+  var estadoPublicar = nuevoEstadoPublicar();
+
+  function valoresIniciales() {
+    var tienda = obtenerTiendaUsuarioActivo();
+    var v = (tienda && tienda.valoresProducto) || {};
+    return {
+      categoria: Cat.CATEGORIAS[v.categoria] ? v.categoria : "TEXTIL",
+      modalidad: Cat.MODALIDADES.indexOf(v.modalidad) >= 0 ? v.modalidad : "REGULAR",
+      manejaStock: v.manejaStock !== false,
+      alAgotarse: Cat.AL_AGOTARSE.indexOf(v.alAgotarse) >= 0 ? v.alAgotarse : "MOSTRAR_AGOTADO",
+      publicado: v.publicado === true,
+      disponible: v.disponible !== false
+    };
+  }
+
+  function campo(id) { return document.getElementById(id); }
+
+  function previsualizar(contenedor, url, alt) {
+    contenedor.textContent = "";
+    var img = imagenSegura(url, alt, "pub-foto-img") || (url && /^blob:/.test(url) ? h("img", { src: url, alt: alt, class: "pub-foto-img" }) : null);
+    if (img) contenedor.appendChild(img);
+    else contenedor.appendChild(h("span", { class: "pub-foto-vacia", text: "Sin foto" }));
+  }
+
+  /** Abre el formulario guiado: sin id crea un producto con los valores de la tienda. */
+  function abrirModalPublicarProducto(productoId) {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para añadir productos.");
+      mostrarToast("Inicia sesión como emprendedora para añadir productos.");
       return;
     }
-    renderizarGaleriaSugeridaFB();
+    if (MODO !== "real") {
+      mostrarToast("La gestión de productos necesita la conexión con el servidor.");
+      return;
+    }
+    var previo = typeof productoId === "string" ? MIS_PRODUCTOS.find(function (p) { return p.id === productoId; }) : null;
+    var base = previo || Object.assign({ id: null, nombre: "", descripcion: "", precio: "", tipo: "", atributos: {}, destacado: false, fotoUrl: "",
+      variantes: [{ id: Cat.nuevoId("v_"), nombre: "Única", stock: 1, precio: null, fotoUrl: "" }] }, valoresIniciales());
+    estadoPublicar = nuevoEstadoPublicar();
+    estadoPublicar.productoId = previo ? previo.id : Cat.nuevoId("p_");
+    estadoPublicar.previo = previo;
+    estadoPublicar.foto = { url: base.fotoUrl || "", blob: null };
+    estadoPublicar.opciones = base.variantes.map(function (v) {
+      return { id: v.id, nombre: v.nombre, precio: v.precio === null ? "" : v.precio, stock: v.stock, foto: { url: v.fotoUrl || "", blob: null } };
+    });
+
+    campo("modal-publicar-titulo").textContent = previo ? "Editar producto" : "Añadir producto";
+    campo("pub-nombre").value = base.nombre;
+    campo("pub-precio").value = base.precio === "" ? "" : String(base.precio);
+    campo("pub-descripcion").value = base.descripcion;
+    campo("pub-categoria").value = Cat.CATEGORIAS[base.categoria] ? base.categoria : "TEXTIL";
+    var radio = document.querySelector('input[name="pub-modalidad"][value="' + base.modalidad + '"]');
+    if (radio) radio.checked = true;
+    campo("pub-maneja-stock").checked = base.manejaStock !== false;
+    campo("pub-al-agotarse").value = base.alAgotarse;
+    campo("pub-disponible").checked = base.disponible !== false;
+    campo("pub-publicado").checked = base.publicado === true;
+    campo("pub-destacado").checked = base.destacado === true;
+    campo("pub-foto-input").value = "";
+    previsualizar(campo("pub-foto-preview"), estadoPublicar.foto.url, "Foto del producto");
+    pintarTiposPublicar(base.tipo, base.atributos);
+    pintarOpcionesPublicar();
+    actualizarReglasPublicar();
+    mostrarAviso("pub-aviso", "");
     abrirModal("modal-publicar-producto");
   }
 
-  // Renderizar galería de fotos sugeridas en modal FB
-  function renderizarGaleriaSugeridaFB() {
-    var cont = document.getElementById("fb-galeria-rapida");
-    if (!cont) return;
-    cont.innerHTML = FOTOS_SUGERIDAS.map(function (f) {
-      return '<button type="button" class="fb-chip-cat" style="font-size: 11px; padding: 4px 8px;" onclick="TramaWeb.seleccionarFotoSugeridaFB(\'' + f.url + '\')">' +
-        f.emoji + ' ' + f.nombre +
-      '</button>';
-    }).join("");
+  function pintarTiposPublicar(tipoSeleccionado, atributos) {
+    var select = campo("pub-tipo");
+    var categoria = campo("pub-categoria").value;
+    var tipos = Object.keys(TIPOS).map(function (k) { return TIPOS[k]; }).filter(function (t) { return t.categoria === categoria && t.activo !== false; });
+    select.textContent = "";
+    if (!tipos.length) {
+      select.appendChild(h("option", { value: "", text: "Sin tipos configurados para esta categoría" }));
+      select.disabled = true;
+    } else {
+      select.disabled = false;
+      select.appendChild(h("option", { value: "", text: "Sin tipo específico" }));
+      tipos.forEach(function (t) { select.appendChild(h("option", { value: t.id, text: t.nombre })); });
+      select.value = tipos.some(function (t) { return t.id === tipoSeleccionado; }) ? tipoSeleccionado : "";
+    }
+    pintarCamposEspecificos(atributos || {});
   }
+
+  /** Campos específicos definidos por el tipo (tabla tipos_producto). */
+  function pintarCamposEspecificos(atributos) {
+    var cont = campo("pub-campos");
+    cont.textContent = "";
+    var tipo = TIPOS[campo("pub-tipo").value];
+    if (!tipo || !Array.isArray(tipo.campos) || !tipo.campos.length) { cont.style.display = "none"; return; }
+    cont.style.display = "";
+    tipo.campos.forEach(function (c, i) {
+      var id = "pub-campo-" + i;
+      var control;
+      if (c.tipo === "opciones" && Array.isArray(c.opciones)) {
+        control = h("select", { id: id, class: "input-fb-market", "data-clave": c.clave }, [h("option", { value: "", text: "Elegir…" })].concat(
+          c.opciones.map(function (o) { return h("option", { value: o, text: o }); })));
+      } else {
+        control = h("input", { id: id, class: "input-fb-market", "data-clave": c.clave, type: c.tipo === "numero" ? "number" : "text", required: c.obligatorio === true });
+      }
+      control.value = atributos[c.clave] !== undefined ? String(atributos[c.clave]) : "";
+      cont.appendChild(h("div", null, [h("label", { for: id, class: "label-fb-market", text: (c.etiqueta || c.clave) + (c.obligatorio ? " *" : "") }), control]));
+    });
+  }
+
+  function pintarOpcionesPublicar() {
+    var cont = campo("pub-opciones");
+    cont.textContent = "";
+    var manejaStock = campo("pub-maneja-stock").checked;
+    estadoPublicar.opciones.forEach(function (o, i) {
+      var pre = "pub-op-" + i;
+      var vista = h("div", { class: "pub-op-foto" });
+      previsualizar(vista, o.foto.blob ? o.foto.objectUrl : o.foto.url, "Foto de " + (o.nombre || "la opción"));
+      var entradaFoto = h("input", { id: pre + "-foto", type: "file", accept: "image/*", class: "sr-only" });
+      entradaFoto.addEventListener("change", function () {
+        var archivo = entradaFoto.files && entradaFoto.files[0];
+        if (!archivo) return;
+        if (o.foto.objectUrl) URL.revokeObjectURL(o.foto.objectUrl);
+        o.foto = { url: o.foto.url, blob: archivo, objectUrl: URL.createObjectURL(archivo) };
+        pintarOpcionesPublicar();
+      });
+      cont.appendChild(h("fieldset", { class: "pub-opcion" }, [
+        h("legend", { text: "Opción " + (i + 1) }),
+        h("div", { class: "pub-opcion-grid" }, [
+          h("div", null, [h("label", { for: pre + "-nombre", class: "label-fb-market", text: "Nombre (talla, color, sabor…)" }),
+            h("input", { id: pre + "-nombre", class: "input-fb-market", value: o.nombre, maxlength: "60", oninput: function (e) { o.nombre = e.target.value; } })]),
+          h("div", null, [h("label", { for: pre + "-precio", class: "label-fb-market", text: "Precio propio (opcional)" }),
+            h("input", { id: pre + "-precio", class: "input-fb-market", type: "number", min: "0", step: "1", inputmode: "numeric", value: o.precio === "" ? "" : String(o.precio), placeholder: "Igual al del producto", oninput: function (e) { o.precio = e.target.value; } })]),
+          h("div", null, [h("label", { for: pre + "-stock", class: "label-fb-market", text: manejaStock ? "¿Cuántos tienes?" : "Sin conteo de unidades" }),
+            h("input", { id: pre + "-stock", class: "input-fb-market", type: "number", min: "0", step: "1", inputmode: "numeric", value: String(o.stock), disabled: !manejaStock, oninput: function (e) { o.stock = e.target.value; } })])
+        ]),
+        h("div", { class: "pub-opcion-pie" }, [
+          vista,
+          h("label", { for: pre + "-foto", class: "btn-accion-pill", text: "Foto de esta opción" }),
+          entradaFoto,
+          estadoPublicar.opciones.length > 1 ? h("button", { type: "button", class: "btn-accion-pill btn-quitar", text: "Quitar opción", onclick: function () {
+            estadoPublicar.opciones.splice(i, 1);
+            pintarOpcionesPublicar();
+          } }) : null
+        ])
+      ]));
+    });
+  }
+
+  function agregarOpcionPublicar() {
+    estadoPublicar.opciones.push({ id: Cat.nuevoId("v_"), nombre: "", precio: "", stock: 0, foto: { url: "", blob: null } });
+    pintarOpcionesPublicar();
+    var ultimo = campo("pub-op-" + (estadoPublicar.opciones.length - 1) + "-nombre");
+    if (ultimo) ultimo.focus();
+  }
+
+  function modalidadElegida() {
+    var r = document.querySelector('input[name="pub-modalidad"]:checked');
+    return r ? r.value : "REGULAR";
+  }
+
+  /** La pieza única siempre cuenta unidades y se oculta al venderse; a pedido no se agota. */
+  function actualizarReglasPublicar() {
+    var modalidad = modalidadElegida();
+    var stock = campo("pub-maneja-stock");
+    var agotar = campo("pub-al-agotarse");
+    if (modalidad === "PIEZA_UNICA") { stock.checked = true; stock.disabled = true; agotar.value = "OCULTAR"; agotar.disabled = true; }
+    else { stock.disabled = false; agotar.disabled = !stock.checked || modalidad === "A_PEDIDO"; }
+    var ayuda = campo("pub-ayuda-modalidad");
+    if (ayuda) {
+      ayuda.textContent = {
+        REGULAR: "Se vende de inmediato mientras queden unidades.",
+        A_PEDIDO: "Lo haces por encargo: no se agota y la venta queda anotada como encargo.",
+        PIEZA_UNICA: "Hay una sola unidad en total, aunque tenga varias opciones. Al venderse desaparece para siempre."
+      }[modalidad];
+    }
+    pintarOpcionesPublicar();
+  }
+
+  function leerAtributos() {
+    var salida = {};
+    document.querySelectorAll("#pub-campos [data-clave]").forEach(function (el) {
+      if (el.value !== "") salida[el.getAttribute("data-clave")] = el.type === "number" ? Number(el.value) : el.value;
+    });
+    return salida;
+  }
+
+  function blobDesdeDataUrl(dataUrl) {
+    return fetch(dataUrl).then(function (r) { return r.blob(); });
+  }
+
+  /** Sube una imagen nueva (si la hay) y devuelve { url, ruta } o la URL anterior. */
+  function subirFotoSiCambio(foto, nombreArchivo, subidas) {
+    if (!foto || (!foto.blob && !foto.dataUrl)) return Promise.resolve(foto ? foto.url : "");
+    var origen = foto.blob ? Promise.resolve(foto.blob) : blobDesdeDataUrl(foto.dataUrl);
+    var ruta = estado.usuario.id + "/" + nombreArchivo + "_" + Date.now() + ".jpg";
+    return origen.then(comprimirImagen).then(function (jpeg) {
+      return servicio.subirImagen(BUCKET_FOTOS, ruta, jpeg);
+    }).then(function (r) {
+      if (!r.ok) throw r.error;
+      subidas.push(ruta);
+      return r.datos;
+    });
+  }
+
+  function confirmarPublicacionFB() {
+    if (!esUsuarioEmprendedora() || !servicio) { mostrarAviso("pub-aviso", "Inicia sesión como emprendedora para guardar."); return; }
+    if (estadoPublicar.guardando) return;
+    var nombre = campo("pub-nombre").value.trim();
+    var precio = campo("pub-precio").value.trim();
+    var modalidad = modalidadElegida();
+    var manejaStock = modalidad === "PIEZA_UNICA" || campo("pub-maneja-stock").checked;
+    if (!nombre) { mostrarAviso("pub-aviso", "Escribe el nombre del producto."); campo("pub-nombre").focus(); return; }
+    if (!/^\d+$/.test(precio)) { mostrarAviso("pub-aviso", "Escribe el precio en pesos, sin puntos (ej: 2500)."); campo("pub-precio").focus(); return; }
+    if (!estadoPublicar.opciones.length) { mostrarAviso("pub-aviso", "Agrega al menos una opción."); return; }
+    for (var i = 0; i < estadoPublicar.opciones.length; i++) {
+      var o = estadoPublicar.opciones[i];
+      if (!String(o.nombre || "").trim()) { mostrarAviso("pub-aviso", "Escribe el nombre de la opción " + (i + 1) + "."); campo("pub-op-" + i + "-nombre").focus(); return; }
+      if (manejaStock && !/^\d+$/.test(String(o.stock))) { mostrarAviso("pub-aviso", "La cantidad de la opción " + (i + 1) + " debe ser un número entero desde 0."); campo("pub-op-" + i + "-stock").focus(); return; }
+      if (String(o.precio) !== "" && !/^\d+$/.test(String(o.precio))) { mostrarAviso("pub-aviso", "El precio de la opción " + (i + 1) + " debe ser un número entero."); return; }
+    }
+    if (modalidad === "PIEZA_UNICA") {
+      var total = estadoPublicar.opciones.reduce(function (s, x) { return s + (Number(x.stock) || 0); }, 0);
+      if (total > 1) { mostrarAviso("pub-aviso", "Una pieza única tiene una sola unidad en total (ahora suma " + total + ")."); return; }
+    }
+    var obligatorios = Array.prototype.filter.call(document.querySelectorAll("#pub-campos [required]"), function (el) { return !el.value; });
+    if (obligatorios.length) { mostrarAviso("pub-aviso", "Completa los campos obligatorios del tipo de producto."); obligatorios[0].focus(); return; }
+
+    var boton = campo("pub-guardar");
+    var subidas = [];
+    estadoPublicar.guardando = true;
+    boton.disabled = true;
+    boton.textContent = "Guardando en el servidor…";
+    mostrarAviso("pub-aviso", "");
+    var id = estadoPublicar.productoId;
+
+    subirFotoSiCambio(estadoPublicar.foto, id, subidas).then(function (urlFoto) {
+      return Promise.all(estadoPublicar.opciones.map(function (op) {
+        return subirFotoSiCambio(op.foto, id + "_" + op.id, subidas).then(function (url) { return url; });
+      })).then(function (urlsOpciones) {
+        var cuerpo = Cat.productoParaGuardar({
+          id: id, nombre: nombre, descripcion: campo("pub-descripcion").value, categoria: campo("pub-categoria").value,
+          tipo: campo("pub-tipo").value || null, atributos: leerAtributos(), precio: Number(precio),
+          publicado: campo("pub-publicado").checked, disponible: campo("pub-disponible").checked, destacado: campo("pub-destacado").checked,
+          modalidad: modalidad, manejaStock: manejaStock, alAgotarse: campo("pub-al-agotarse").value, fotoUrl: urlFoto,
+          variantes: estadoPublicar.opciones.map(function (op, j) {
+            return { id: op.id, nombre: op.nombre, precio: String(op.precio) === "" ? null : Number(op.precio), stock: manejaStock ? Number(op.stock) : 0, fotoUrl: urlsOpciones[j] };
+          })
+        }, estadoPublicar.previo);
+        return servicio.guardarProducto(cuerpo);
+      });
+    }).then(function (r) {
+      if (!r.ok) throw r.error;
+      var guardado = Cat.normalizarProducto(r.datos);
+      var idx = MIS_PRODUCTOS.findIndex(function (p) { return p.id === guardado.id; });
+      if (idx >= 0) MIS_PRODUCTOS[idx] = guardado; else MIS_PRODUCTOS.unshift(guardado);
+      cerrarModal("modal-publicar-producto");
+      mostrarToast("Guardado en el servidor: «" + guardado.nombre + "»" + (Cat.estadoPublico(guardado) === "OCULTO" ? " (por ahora no se muestra al público)" : ""));
+      estadoPublicar = nuevoEstadoPublicar();
+      renderizarGestionCatalogo();
+      cargarCatalogoPublico();
+    }).catch(function (e) {
+      // Las imágenes subidas en este intento no quedaron en ningún producto: se borran.
+      subidas.forEach(function (ruta) { servicio.borrarImagen(BUCKET_FOTOS, ruta); });
+      mostrarAviso("pub-aviso", "No se guardó: " + Cat.mensajeError(e));
+    }).then(function () {
+      estadoPublicar.guardando = false;
+      boton.disabled = false;
+      boton.textContent = "Guardar producto";
+    });
+  }
+
+  // Renderizar galería de fotos sugeridas en modal FB
+  // Las fotos de muestra solo se usan en el diseñador de afiches, no como foto real del producto.
+  function renderizarGaleriaSugeridaFB() {}
 
   // Seleccionar foto sugerida en FB
   function seleccionarFotoSugeridaFB(url) {
-    estadoPublicar.fotoDataUrl = url;
-    var preview = document.getElementById("fb-img-preview");
-    var placeholder = document.getElementById("fb-placeholder-foto");
-    var opciones = document.getElementById("fb-opciones-foto-activa");
-    if (preview) {
-      preview.src = url;
-      preview.style.display = "block";
-    }
-    if (placeholder) placeholder.style.display = "none";
-    if (opciones) opciones.style.display = "flex";
-    cargarFotoEnFlyer(url);
-    mostrarToast("Foto sugerida seleccionada");
+    seleccionarFotoSugeridaFlyer(url);
   }
 
   // Al subir foto local (teléfono / PC)
   function onFotoProductoSubida(event) {
-    var file = event.target.files && event.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (e) {
-      var dataUrl = e.target.result;
-      estadoPublicar.fotoDataUrl = dataUrl;
-      var preview = document.getElementById("fb-img-preview");
-      var placeholder = document.getElementById("fb-placeholder-foto");
-      var opciones = document.getElementById("fb-opciones-foto-activa");
-      if (preview) {
-        preview.src = dataUrl;
-        preview.style.display = "block";
-      }
-      if (placeholder) placeholder.style.display = "none";
-      if (opciones) opciones.style.display = "flex";
-
-      cargarFotoEnFlyer(dataUrl);
-      mostrarToast("Foto cargada con éxito");
-    };
-    reader.readAsDataURL(file);
+    var archivo = event.target.files && event.target.files[0];
+    if (!archivo) return;
+    if (!/^image\//.test(archivo.type)) { mostrarAviso("pub-aviso", "Elige un archivo de imagen."); return; }
+    if (estadoPublicar.foto && estadoPublicar.foto.objectUrl) URL.revokeObjectURL(estadoPublicar.foto.objectUrl);
+    var objectUrl = URL.createObjectURL(archivo);
+    estadoPublicar.foto = { url: (estadoPublicar.foto && estadoPublicar.foto.url) || "", blob: archivo, objectUrl: objectUrl };
+    previsualizar(campo("pub-foto-preview"), objectUrl, "Foto del producto");
+    cargarFotoEnFlyer(objectUrl);
   }
 
   function quitarFotoProducto() {
-    estadoPublicar.fotoDataUrl = "";
-    var preview = document.getElementById("fb-img-preview");
-    var placeholder = document.getElementById("fb-placeholder-foto");
-    var opciones = document.getElementById("fb-opciones-foto-activa");
-    var inp = document.getElementById("inp-subir-foto-producto");
-    if (preview) preview.style.display = "none";
-    if (placeholder) placeholder.style.display = "flex";
-    if (opciones) opciones.style.display = "none";
+    if (estadoPublicar.foto && estadoPublicar.foto.objectUrl) URL.revokeObjectURL(estadoPublicar.foto.objectUrl);
+    estadoPublicar.foto = { url: "", blob: null };
+    var inp = campo("pub-foto-input");
     if (inp) inp.value = "";
+    previsualizar(campo("pub-foto-preview"), "", "Foto del producto");
   }
 
-  function seleccionarCategoriaFB(cat) {
-    estadoPublicar.categoriaSeleccionada = cat;
-    var contenedor = document.getElementById("fb-selector-categoria");
-    if (!contenedor) return;
-    var btns = contenedor.querySelectorAll(".fb-chip-cat");
-    btns.forEach(function (b) {
-      if (b.getAttribute("data-cat") === cat) {
-        b.classList.add("activo");
-      } else {
-        b.classList.remove("activo");
-      }
-    });
+  function seleccionarCategoriaFB() {
+    pintarTiposPublicar(campo("pub-tipo").value, leerAtributos());
   }
 
-  function seleccionarStockFB(stock) {
-    estadoPublicar.stockSeleccionado = stock;
-    var contenedor = document.getElementById("fb-selector-stock");
-    if (!contenedor) return;
-    var btns = contenedor.querySelectorAll(".fb-chip-cat");
-    btns.forEach(function (b) {
-      if (b.getAttribute("data-stock") === stock) {
-        b.classList.add("activo");
-      } else {
-        b.classList.remove("activo");
-      }
-    });
+  function seleccionarStockFB() {
+    actualizarReglasPublicar();
   }
 
   // Confirmar publicación estilo Facebook Marketplace
-  function confirmarPublicacionFB() {
-    if (!esUsuarioEmprendedora()) {
-      abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para publicar productos.");
-      return;
-    }
-
-    var inpTitulo = document.getElementById("fb-inp-titulo");
-    var inpPrecio = document.getElementById("fb-inp-precio");
-    var selectTienda = document.getElementById("fb-select-tienda");
-    var inpDesc = document.getElementById("fb-inp-desc");
-
-    var titulo = inpTitulo ? inpTitulo.value.trim() : "";
-    var precio = inpPrecio ? parseInt(inpPrecio.value, 10) : 0;
-    var tiendaId = selectTienda ? selectTienda.value : "t_minimarket_rosa";
-    var desc = inpDesc ? inpDesc.value.trim() : "";
-
-    if (!titulo) {
-      mostrarToast("⚠️ Por favor escribe el nombre de tu producto");
-      if (inpTitulo) inpTitulo.focus();
-      return;
-    }
-
-    if (!precio || isNaN(precio) || precio <= 0) {
-      mostrarToast("⚠️ Ingresa un precio válido en pesos chilenos ($)");
-      if (inpPrecio) inpPrecio.focus();
-      return;
-    }
-
-    var tiendaEncontrada = null;
-    for (var i = 0; i < TIENDAS.length; i++) {
-      if (TIENDAS[i].id === tiendaId) {
-        tiendaEncontrada = TIENDAS[i];
-        break;
-      }
-    }
-    var nombreTienda = tiendaEncontrada ? tiendaEncontrada.nombre : "Emprendedor/a de Alerce";
-
-    var nuevoProducto = {
-      id: "p_custom_" + Date.now(),
-      tiendaId: tiendaId,
-      nombre: titulo,
-      precio: precio,
-      stockTotal: estadoPublicar.stockSeleccionado === "inmediato" ? 15 : 0,
-      descripcion: desc || (titulo + " elaborado con amor por " + nombreTienda + "."),
-      fotoUrl: estadoPublicar.fotoDataUrl || "",
-      variantes: [{ nombre: "Unidad", precio: precio }]
-    };
-
-    // Guardar en almacenamiento local
-    try {
-      var guardados = localStorage.getItem("trama_productos_custom");
-      var lista = guardados ? JSON.parse(guardados) : [];
-      lista.unshift(nuevoProducto);
-      localStorage.setItem("trama_productos_custom", JSON.stringify(lista));
-    } catch (e) {
-      console.warn("No se pudo guardar en localStorage", e);
-    }
-
-    // Sincronizar con Cloud Firestore en tiempo real si está conectado
-    if (firebaseFirestore) {
-      try {
-        firebaseFirestore.collection("tiendas").doc(tiendaId).collection("productos").doc(nuevoProducto.id).set({
-          id: nuevoProducto.id,
-          nombre: nuevoProducto.nombre,
-          precio: nuevoProducto.precio,
-          stockTotal: nuevoProducto.stockTotal,
-          descripcion: nuevoProducto.descripcion,
-          fotoUrl: nuevoProducto.fotoUrl,
-          publicado: true,
-          fechaCreacion: Date.now()
-        }).then(function () {
-          console.log("Producto guardado exitosamente en Firestore online");
-        }).catch(function (err) {
-          console.warn("Aviso Firestore al guardar producto:", err);
-        });
-      } catch (errFs) {
-        console.warn("Excepción guardando producto en Firestore:", errFs);
-      }
-    }
-
-    // Sincronizar con Supabase Cloud en tiempo real si está conectado
-    if (supabaseClient) {
-      try {
-        supabaseClient.from("productos").insert([{
-          id: nuevoProducto.id,
-          tienda_id: tiendaId,
-          nombre: nuevoProducto.nombre,
-          precio: Number(nuevoProducto.precio) || 0,
-          descripcion: nuevoProducto.descripcion || "",
-          categoria: "GENERAL",
-          publicado: true,
-          destacado: false,
-          foto_url: nuevoProducto.fotoUrl || null,
-          variantes: nuevoProducto.variantes || [{ id: "v_" + nuevoProducto.id, nombre: "Unidad", stock: nuevoProducto.stockTotal || 10 }]
-        }]).then(function (res) {
-          if (res.error) {
-            console.warn("Aviso guardando producto en Supabase (RLS):", res.error.message);
-          } else {
-            console.log("✅ Producto guardado exitosamente en Supabase Cloud");
-          }
-        }).catch(function (e) {
-          console.warn("Aviso Supabase producto:", e);
-        });
-      } catch (errSupP) {
-        console.warn("Excepción guardando producto en Supabase:", errSupP);
-      }
-    }
-
-    // Agregar al listado en memoria
-    PRODUCTOS.unshift(nuevoProducto);
-
-    // Limpiar formulario
-    if (inpTitulo) inpTitulo.value = "";
-    if (inpPrecio) inpPrecio.value = "";
-    if (inpDesc) inpDesc.value = "";
-    quitarFotoProducto();
-
-    cerrarModal("modal-publicar-producto");
-    mostrarToast("🎉 ¡Producto publicado con éxito en la vitrina!");
-    renderizarTiendasMarketplace();
-
-    // Si la vitrina de la tienda está abierta, refrescarla
-    if (estado.tiendaSeleccionada && estado.tiendaSeleccionada.id === tiendaId) {
-      renderizarProductosTienda(tiendaId);
-    }
-  }
-
   // Pasar del modal de publicar al estudio de flyers
   function abrirEstudioFlyerDesdePublicar() {
     var inpTitulo = document.getElementById("fb-inp-titulo");
@@ -2404,43 +2646,25 @@
   }
 
   // APLICAR FLYER COMO FOTO DEL PRODUCTO
+  // El afiche se convierte en imagen y se sube al guardar (nunca se guarda como Base64).
   function aplicarFlyerComoFotoProducto() {
     var canvas = document.getElementById("canvas-flyer");
     if (!canvas) return;
-
     try {
       var dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      estadoPublicar.fotoDataUrl = dataUrl;
-
-      var preview = document.getElementById("fb-img-preview");
-      var placeholder = document.getElementById("fb-placeholder-foto");
-      var opciones = document.getElementById("fb-opciones-foto-activa");
-      if (preview) {
-        preview.src = dataUrl;
-        preview.style.display = "block";
-      }
-      if (placeholder) placeholder.style.display = "none";
-      if (opciones) opciones.style.display = "flex";
-
-      // Sincronizar título y precio si están vacíos
+      estadoPublicar.foto = { url: (estadoPublicar.foto && estadoPublicar.foto.url) || "", blob: null, dataUrl: dataUrl };
+      var vista = campo("pub-foto-preview");
+      if (vista) { vista.textContent = ""; vista.appendChild(h("img", { src: dataUrl, alt: "Afiche del producto", class: "pub-foto-img" })); }
       var flyerTit = document.getElementById("flyer-inp-titulo");
       var flyerPre = document.getElementById("flyer-inp-precio");
-      var fbTit = document.getElementById("fb-inp-titulo");
-      var fbPre = document.getElementById("fb-inp-precio");
-
-      if (flyerTit && fbTit && !fbTit.value.trim()) {
-        fbTit.value = flyerTit.value.trim();
-      }
-      if (flyerPre && fbPre && !fbPre.value.trim()) {
-        fbPre.value = flyerPre.value.trim().replace(/\D/g, "");
-      }
-
+      if (flyerTit && campo("pub-nombre") && !campo("pub-nombre").value.trim()) campo("pub-nombre").value = flyerTit.value.trim();
+      if (flyerPre && campo("pub-precio") && !campo("pub-precio").value.trim()) campo("pub-precio").value = flyerPre.value.trim().replace(/\D/g, "");
       cerrarModal("modal-estudio-flyer");
-      abrirModal("modal-publicar-producto");
-      mostrarToast("✅ Afiche aplicado como foto de tu producto");
+      if (!document.getElementById("modal-publicar-producto").classList.contains("abierto")) abrirModalPublicarProducto(estadoPublicar.productoId && estadoPublicar.previo ? estadoPublicar.productoId : undefined);
+      mostrarToast("Afiche listo: se subirá cuando guardes el producto.");
     } catch (err) {
       console.error(err);
-      mostrarToast("⚠️ Error al capturar afiche");
+      mostrarToast("No se pudo usar el afiche (la imagen de fondo no lo permite).");
     }
   }
 
@@ -2522,11 +2746,10 @@
     actualizarBadgesCarrito();
     renderizarTiendasMarketplace();
     renderizarAsociaciones();
+    configurarDomEntrega5();
+    cargarCatalogoPublico();
     configurarObservadorAuthSupabase();
-    cargarTiendasDesdeSupabase();
-    cargarProductosDesdeSupabase();
     cargarFeriasDesdeSupabase();
-    cargarProductosDesdeFirestore();
     actualizarUIControlesSegunRol();
   }
 
@@ -2535,7 +2758,9 @@
   // ============================================================
 
   var estadoPOS = {
-    tiendaId: "t_minimarket_rosa",
+    tiendaId: null,
+    ventaPendiente: null,
+    enviando: false,
     medioPago: "Efectivo",
     ticket: [],
     montoPagaCon: 0
@@ -2544,126 +2769,125 @@
   function abrirModalPOS() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para acceder a la Caja POS.");
+      mostrarToast("Inicia sesión como emprendedora para usar la caja.");
       return;
     }
-    var selectTienda = document.getElementById("pos-select-tienda");
-    if (selectTienda) {
-      selectTienda.innerHTML = "";
-      TIENDAS.forEach(function (t) {
-        var opt = document.createElement("option");
-        opt.value = t.id;
-        opt.textContent = t.nombre;
-        if (t.id === estadoPOS.tiendaId) opt.selected = true;
-        selectTienda.appendChild(opt);
-      });
-    }
+    if (MODO !== "real") { mostrarToast("La caja necesita la conexión con el servidor."); return; }
     renderizarPOS();
     abrirModal("modal-pos");
+    recargarMisProductos();
+    if (servicio && !FERIAS_SERVIDOR.length) {
+      servicio.listarFerias().then(function (r) {
+        if (r.ok) { FERIAS_SERVIDOR = r.datos || []; pintarLugaresPOS(); }
+      });
+    }
   }
 
-  function cambiarTiendaPOS(nuevaTiendaId) {
-    estadoPOS.tiendaId = nuevaTiendaId;
+  function pintarLugaresPOS() {
+    var sel = document.getElementById("pos-lugar");
+    if (!sel) return;
+    var actual = sel.value;
+    sel.textContent = "";
+    sel.appendChild(h("option", { value: "", text: "Sin indicar" }));
+    sel.appendChild(h("option", { value: "OTRO", text: "Otro lugar (escribir)" }));
+    FERIAS_SERVIDOR.forEach(function (f) { sel.appendChild(h("option", { value: "FERIA:" + f.id, text: "Feria: " + f.nombre })); });
+    sel.value = Array.prototype.some.call(sel.options, function (o) { return o.value === actual; }) ? actual : "";
+    var otro = document.getElementById("pos-lugar-otro");
+    if (otro) otro.parentNode.style.display = sel.value === "OTRO" ? "" : "none";
+  }
+
+  // La tienda de la caja es siempre la de la sesión (ya no se elige de una lista).
+  function cambiarTiendaPOS() {
     renderizarPOS();
   }
 
   function renderizarPOS() {
-    var tienda = null;
-    for (var i = 0; i < TIENDAS.length; i++) {
-      if (TIENDAS[i].id === estadoPOS.tiendaId) {
-        tienda = TIENDAS[i];
-        break;
-      }
-    }
+    var tienda = obtenerTiendaUsuarioActivo();
     var sub = document.getElementById("pos-tienda-subtitulo");
-    if (sub && tienda) {
-      sub.textContent = "Catálogo y caja de " + tienda.nombre + " · " + tienda.rubro;
-    }
-
-    var prods = PRODUCTOS.filter(function (p) {
-      return p.tiendaId === estadoPOS.tiendaId;
-    });
-
-    var conteoDisp = document.getElementById("pos-conteo-disponibles");
-    if (conteoDisp) {
-      conteoDisp.textContent = prods.length + " productos listados";
-    }
+    if (sub) sub.textContent = tienda ? "Caja de " + tienda.nombre + " · las ventas descuentan unidades en el servidor" : "";
+    var chkHist = document.getElementById("pos-historial");
+    if (chkHist && tienda) chkHist.checked = tienda.historialActivo !== false;
+    pintarLugaresPOS();
 
     var grid = document.getElementById("pos-grid-productos");
-    if (grid) {
-      grid.innerHTML = "";
-      if (prods.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--gris-texto); font-size: 12px;">No hay productos registrados en esta tienda.<br>Usa el botón "Añadir Producto" para crear uno.</div>';
-      } else {
-        prods.forEach(function (prod) {
-          var tarjeta = document.createElement("div");
-          tarjeta.style.cssText = "background: #fff; border: 1px solid var(--gris-borde); border-radius: 8px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: transform .15s ease, border-color .15s ease;";
-          tarjeta.onmouseover = function () { this.style.borderColor = "var(--negro-apple)"; };
-          tarjeta.onmouseout = function () { this.style.borderColor = "var(--gris-borde)"; };
-          tarjeta.onclick = function () { agregarProductoTicketPOS(prod.id); };
-
-          var fotoHtml = prod.fotoUrl
-            ? '<img src="' + prod.fotoUrl + '" alt="' + prod.nombre + '" style="width: 100%; height: 60px; object-fit: cover; border-radius: 6px; margin-bottom: 6px;">'
-            : '<div style="width: 100%; height: 50px; background: #e4e4e7; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #71717a; margin-bottom: 6px;">📦</div>';
-
-          tarjeta.innerHTML = fotoHtml +
-            '<strong style="font-size: 11.5px; color: var(--negro-apple); line-height: 1.2; margin-bottom: 4px;">' + prod.nombre + '</strong>' +
-            '<span style="font-size: 12.5px; font-weight: 800; color: var(--rojo-alerce);">' + formatearMoneda(prod.precio) + '</span>';
-
-          grid.appendChild(tarjeta);
-        });
-      }
+    var conteoDisp = document.getElementById("pos-conteo-disponibles");
+    if (!grid) return;
+    grid.textContent = "";
+    var lineas = [];
+    MIS_PRODUCTOS.forEach(function (p) {
+      if (p.vendidaEn) return;
+      p.variantes.forEach(function (v) { lineas.push({ p: p, v: v }); });
+    });
+    if (conteoDisp) conteoDisp.textContent = lineas.length + " opciones";
+    if (!lineas.length) {
+      grid.appendChild(h("p", { class: "aviso-catalogo", style: "grid-column: 1 / -1;", text: "No tienes productos para vender. Agrégalos desde «Añadir producto»." }));
     }
-
+    lineas.forEach(function (x) {
+      var p = x.p, v = x.v;
+      var aPedido = p.modalidad === "A_PEDIDO" || Cat.estadoPublico(Object.assign({}, p, { publicado: true, disponible: true })) === "A_PEDIDO";
+      var vendible = Cat.opcionVendible(p, v);
+      var habilitado = vendible || aPedido;
+      var detalle = p.modalidad === "PIEZA_UNICA" ? "Pieza única" : (aPedido && !vendible ? "Por encargo" : (p.manejaStock ? "Quedan " + v.stock : "Sin conteo"));
+      grid.appendChild(h("button", {
+        type: "button", class: "pos-tarjeta", disabled: !habilitado,
+        "aria-label": "Agregar " + p.nombre + (p.variantes.length > 1 ? " " + v.nombre : "") + ", " + formatearMoneda(Cat.precioDeOpcion(p, v)) + ", " + detalle,
+        onclick: function () { agregarProductoTicketPOS(p.id, v.id); }
+      }, [
+        imagenSegura(Cat.fotoDeOpcion(p, v), "", "pos-foto") || h("span", { class: "pos-foto pos-foto-vacia", "aria-hidden": "true", text: "📦" }),
+        h("strong", { text: p.nombre + (p.variantes.length > 1 ? " · " + v.nombre : "") }),
+        h("span", { class: "pos-precio", text: formatearMoneda(Cat.precioDeOpcion(p, v)) }),
+        h("small", { text: habilitado ? detalle : "Agotada" })
+      ]));
+    });
     renderizarTicketPOS();
   }
 
-  function agregarProductoTicketPOS(prodId) {
-    var prod = null;
-    for (var i = 0; i < PRODUCTOS.length; i++) {
-      if (PRODUCTOS[i].id === prodId) {
-        prod = PRODUCTOS[i];
-        break;
-      }
-    }
-    if (!prod) return;
-
-    var existe = null;
-    for (var j = 0; j < estadoPOS.ticket.length; j++) {
-      if (estadoPOS.ticket[j].productoId === prodId) {
-        existe = estadoPOS.ticket[j];
-        break;
-      }
-    }
-
-    if (existe) {
-      existe.cantidad++;
-    } else {
-      estadoPOS.ticket.push({
-        id: "tick_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-        productoId: prod.id,
-        nombre: prod.nombre,
-        precio: prod.precio,
-        cantidad: 1,
-        fotoUrl: prod.fotoUrl || ""
-      });
-    }
-
+  function agregarProductoTicketPOS(prodId, varianteId) {
+    var p = MIS_PRODUCTOS.find(function (x) { return x.id === prodId; });
+    if (!p) return;
+    var v = p.variantes.find(function (x) { return x.id === varianteId; }) || p.variantes[0];
+    if (!v) return;
+    var encargo = !Cat.opcionVendible(p, v);
+    var existe = estadoPOS.ticket.find(function (l) { return l.productoId === p.id && l.varianteId === v.id && l.encargo === encargo; });
+    var cantidad = existe ? existe.cantidad + 1 : 1;
+    var problema = Cat.validarLineaVenta(p, v, cantidad, encargo);
+    if (problema) { mostrarAvisoPOS(problema, true); return; }
+    if (existe) existe.cantidad = cantidad;
+    else estadoPOS.ticket.push({ productoId: p.id, varianteId: v.id, nombre: p.nombre, detalle: v.nombre, precio: Cat.precioDeOpcion(p, v), cantidad: 1, encargo: encargo, fotoUrl: Cat.fotoDeOpcion(p, v) });
+    estadoPOS.ventaPendiente = null;
+    mostrarAvisoPOS("");
     renderizarTicketPOS();
+  }
+
+  function mostrarAvisoPOS(mensaje, esError) {
+    var el = document.getElementById("pos-aviso");
+    if (!el) { if (mensaje) mostrarToast(mensaje); return; }
+    el.textContent = mensaje || "";
+    el.className = "estado-datos" + (esError ? " error" : (mensaje ? " ok" : ""));
+    el.style.display = mensaje ? "" : "none";
+    el.setAttribute("role", esError ? "alert" : "status");
   }
 
   function modificarCantidadTicketPOS(index, delta) {
-    if (estadoPOS.ticket[index]) {
-      estadoPOS.ticket[index].cantidad += delta;
-      if (estadoPOS.ticket[index].cantidad <= 0) {
-        estadoPOS.ticket.splice(index, 1);
-      }
+    var l = estadoPOS.ticket[index];
+    if (!l) return;
+    var nueva = l.cantidad + delta;
+    if (nueva <= 0) estadoPOS.ticket.splice(index, 1);
+    else {
+      var p = MIS_PRODUCTOS.find(function (x) { return x.id === l.productoId; });
+      var v = p && p.variantes.find(function (x) { return x.id === l.varianteId; });
+      var problema = p ? Cat.validarLineaVenta(p, v, nueva, l.encargo) : "El producto ya no existe.";
+      if (problema) { mostrarAvisoPOS(problema, true); return; }
+      l.cantidad = nueva;
     }
+    estadoPOS.ventaPendiente = null;
+    mostrarAvisoPOS("");
     renderizarTicketPOS();
   }
 
   function vaciarTicketPOS() {
     estadoPOS.ticket = [];
+    estadoPOS.ventaPendiente = null;
     renderizarTicketPOS();
   }
 
@@ -2671,39 +2895,28 @@
     var lista = document.getElementById("pos-lista-items");
     var totalCobrarEl = document.getElementById("pos-total-cobrar");
     var total = 0;
-
     if (!lista) return;
-    lista.innerHTML = "";
-
-    if (estadoPOS.ticket.length === 0) {
-      lista.innerHTML = '<div style="color: var(--gris-texto); text-align: center; padding: 24px 0;">El ticket está vacío.<br>Haz clic en los productos para agregarlos.</div>';
-    } else {
-      estadoPOS.ticket.forEach(function (item, idx) {
-        var subtotal = item.precio * item.cantidad;
-        total += subtotal;
-
-        var fila = document.createElement("div");
-        fila.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0;";
-        fila.innerHTML =
-          '<div style="flex: 1; padding-right: 6px;">' +
-            '<div style="font-weight: 700; color: var(--negro-apple); line-height: 1.2;">' + item.nombre + '</div>' +
-            '<div style="font-size: 11px; color: var(--gris-texto);">' + formatearMoneda(item.precio) + ' c/u</div>' +
-          '</div>' +
-          '<div style="display: flex; align-items: center; gap: 4px;">' +
-            '<button type="button" style="width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--gris-borde); background: #fff; font-weight: 800; cursor: pointer;" onclick="TramaWeb.modificarCantidadTicketPOS(' + idx + ', -1)">-</button>' +
-            '<span style="font-weight: 800; min-width: 18px; text-align: center;">' + item.cantidad + '</span>' +
-            '<button type="button" style="width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--gris-borde); background: #fff; font-weight: 800; cursor: pointer;" onclick="TramaWeb.modificarCantidadTicketPOS(' + idx + ', 1)">+</button>' +
-          '</div>' +
-          '<div style="min-width: 65px; text-align: right; font-weight: 800; color: var(--negro-apple);">' + formatearMoneda(subtotal) + '</div>';
-
-        lista.appendChild(fila);
-      });
+    lista.textContent = "";
+    if (!estadoPOS.ticket.length) {
+      lista.appendChild(h("p", { class: "aviso-catalogo", text: "El ticket está vacío. Toca un producto para agregarlo." }));
     }
-
-    if (totalCobrarEl) {
-      totalCobrarEl.textContent = formatearMoneda(total);
-    }
-
+    estadoPOS.ticket.forEach(function (item, idx) {
+      var subtotal = item.precio * item.cantidad;
+      total += subtotal;
+      lista.appendChild(h("div", { class: "pos-linea" }, [
+        h("div", { class: "pos-linea-texto" }, [
+          h("strong", { text: item.nombre }),
+          h("small", { text: item.detalle + " · " + formatearMoneda(item.precio) + " c/u" + (item.encargo ? " · Encargo" : "") })
+        ]),
+        h("div", { class: "pos-linea-cantidad" }, [
+          h("button", { type: "button", class: "btn-qty", "aria-label": "Quitar una unidad de " + item.nombre, text: "−", onclick: function () { modificarCantidadTicketPOS(idx, -1); } }),
+          h("span", { "aria-live": "polite", text: String(item.cantidad) }),
+          h("button", { type: "button", class: "btn-qty", "aria-label": "Sumar una unidad de " + item.nombre, text: "+", onclick: function () { modificarCantidadTicketPOS(idx, 1); } })
+        ]),
+        h("strong", { class: "pos-linea-total", text: formatearMoneda(subtotal) })
+      ]));
+    });
+    if (totalCobrarEl) totalCobrarEl.textContent = formatearMoneda(total);
     calcularVueltoPOS();
   }
 
@@ -2775,258 +2988,168 @@
   }
 
   function confirmarVentaPOS() {
-    if (estadoPOS.ticket.length === 0) {
-      mostrarToast("⚠️ El ticket está vacío. Agrega productos para cobrar.");
-      return;
-    }
+    if (!estadoPOS.ticket.length) { mostrarAvisoPOS("El ticket está vacío.", true); return; }
+    if (!servicio || !esUsuarioEmprendedora()) { mostrarAvisoPOS("Vuelve a iniciar sesión para vender.", true); return; }
+    if (estadoPOS.enviando) return;
+    var tienda = obtenerTiendaUsuarioActivo();
+    var lugar = (document.getElementById("pos-lugar") || {}).value || "";
+    var otro = ((document.getElementById("pos-lugar-otro") || {}).value || "").trim();
+    if (lugar === "OTRO" && !otro) { mostrarAvisoPOS("Escribe dónde fue la venta.", true); return; }
+    var conHistorial = (document.getElementById("pos-historial") || { checked: true }).checked;
 
-    var total = 0;
-    var cantTotal = 0;
-    var resumenTexto = "🛒 Comprobante de Venta - Alerce Emprende\n";
-    var tienda = null;
-    for (var i = 0; i < TIENDAS.length; i++) {
-      if (TIENDAS[i].id === estadoPOS.tiendaId) {
-        tienda = TIENDAS[i];
-        break;
+    // El mismo cuerpo (mismo id) se reutiliza si hay que reintentar: el servidor no duplica.
+    if (!estadoPOS.ventaPendiente) {
+      estadoPOS.ventaPendiente = Cat.ventaParaRegistrar(estadoPOS.ticket, {
+        medioPago: estadoPOS.medioPago,
+        feriaId: lugar.indexOf("FERIA:") === 0 ? lugar.slice(6) : null,
+        lugarNombre: lugar === "OTRO" ? otro : null,
+        conHistorial: conHistorial && (!tienda || tienda.historialActivo !== false)
+      });
+    }
+    var cuerpo = estadoPOS.ventaPendiente;
+    var boton = document.getElementById("pos-btn-confirmar");
+    estadoPOS.enviando = true;
+    if (boton) { boton.disabled = true; boton.textContent = "Registrando en el servidor…"; }
+    mostrarAvisoPOS("Registrando la venta…");
+
+    servicio.registrarVenta(cuerpo).then(function (r) {
+      if (!r.ok) {
+        var red = /fetch|network|conexión/i.test(Cat.mensajeError(r.error));
+        if (!red) estadoPOS.ventaPendiente = null;
+        mostrarAvisoPOS((red ? "No se confirmó la venta (sin conexión). Puedes reintentar sin duplicarla. " : "No se registró la venta: ") + Cat.mensajeError(r.error), true);
+        if (!red) recargarMisProductos();
+        return;
       }
-    }
-    if (tienda) resumenTexto += "🏪 Tienda: " + tienda.nombre + "\n\n";
-
-    estadoPOS.ticket.forEach(function (it) {
-      var sub = it.precio * it.cantidad;
-      total += sub;
-      cantTotal += it.cantidad;
-      resumenTexto += "• " + it.nombre + " x" + it.cantidad + " = " + formatearMoneda(sub) + "\n";
-    });
-
-    resumenTexto += "\n💰 Total: " + formatearMoneda(total);
-    resumenTexto += "\n💳 Medio de Pago: " + estadoPOS.medioPago;
-
-    if (estadoPOS.medioPago === "Efectivo" && estadoPOS.montoPagaCon > 0) {
-      resumenTexto += "\n💵 Pagado con: " + formatearMoneda(estadoPOS.montoPagaCon);
-      var vto = Math.max(0, estadoPOS.montoPagaCon - total);
-      resumenTexto += "\n🪙 Vuelto entregado: " + formatearMoneda(vto);
-    }
-
-    resumenTexto += "\n\n¡Gracias por apoyar a los emprendedores locales de Alerce!";
-
-    // Guardar en Supabase Cloud si está conectado (Paridad exacta con Android VentaRepositorio)
-    if (supabaseClient) {
-      try {
-        var medioPagoAndroid = "EFECTIVO";
-        var mp = (estadoPOS.medioPago || "").toUpperCase();
-        if (mp.indexOf("DEB") !== -1 || mp.indexOf("TARJ") !== -1) medioPagoAndroid = "DEBITO";
-        else if (mp.indexOf("TRANS") !== -1) medioPagoAndroid = "TRANSFERENCIA";
-        else if (mp.indexOf("QR") !== -1) medioPagoAndroid = "QR";
-
-        var ahora = new Date();
-        var yyyy = ahora.getFullYear();
-        var mm = String(ahora.getMonth() + 1).padStart(2, '0');
-        var dd = String(ahora.getDate()).padStart(2, '0');
-        var hh = String(ahora.getHours()).padStart(2, '0');
-        var min = String(ahora.getMinutes()).padStart(2, '0');
-        var fechaLocal = yyyy + "-" + mm + "-" + dd + " " + hh + ":" + min;
-
-        var itemsNormalizados = estadoPOS.ticket.map(function (it) {
-          return {
-            productoId: it.productoId || it.id || "",
-            varianteId: it.varianteId || (it.productoId ? it.productoId + "v1" : "v1"),
-            nombre: it.nombre || "",
-            detalle: it.detalle || "",
-            precio: Number(it.precio) || 0,
-            cantidad: Number(it.cantidad) || 1,
-            fotoUrl: it.fotoUrl || null
-          };
-        });
-
-        var payloadVentaSupa = {
-          id: "v_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-          tienda_id: estadoPOS.tiendaId || "t_minimarket_rosa",
-          fecha_local: fechaLocal,
-          items: itemsNormalizados,
-          medio_pago: medioPagoAndroid,
-          total: total
-        };
-
-        supabaseClient.from("ventas").insert([payloadVentaSupa]).then(function (res) {
-          if (res.error) {
-            console.warn("Aviso registrando venta en Supabase (RLS):", res.error.message);
-          } else {
-            console.log("✅ Venta sincronizada exitosamente con Supabase Cloud.");
-          }
-        }).catch(function (e) {
-          console.warn("Excepción Supabase ventas:", e);
-        });
-      } catch (errSup) {
-        console.warn("Error enviando venta a Supabase:", errSup);
-      }
-    }
-
-    // Descontar stock local tras completar la venta
-    estadoPOS.ticket.forEach(function (it) {
-      var prod = PRODUCTOS.find(function (p) { return p.id === it.productoId; });
-      if (prod) {
-        prod.stockTotal = Math.max(0, (prod.stockTotal || 0) - it.cantidad);
-        if (prod.variantes && prod.variantes[0]) {
-          prod.variantes[0].stock = Math.max(0, (prod.variantes[0].stock || 0) - it.cantidad);
+      (r.datos.productos || []).forEach(function (cambio) {
+        var p = MIS_PRODUCTOS.find(function (x) { return x.id === cambio.id; });
+        if (p) {
+          var fila = Object.assign({}, cambio, { id: p.id, tienda_id: p.tiendaId, nombre: p.nombre, descripcion: p.descripcion, categoria: p.categoria, tipo: p.tipo, precio: p.precio,
+            publicado: p.publicado, disponible: p.disponible, destacado: p.destacado, foto_url: p.fotoUrl, fotos: p.fotos, modalidad: p.modalidad, maneja_stock: p.manejaStock, al_agotarse: p.alAgotarse });
+          Object.assign(p, Cat.normalizarProducto(fila));
         }
+      });
+      var resumen = "Venta registrada en el servidor" + (r.datos.estado === "YA_REGISTRADA" ? " (ya estaba anotada; no se duplicó)" : "") +
+        (r.datos.total !== null && r.datos.total !== undefined ? " · " + formatearMoneda(r.datos.total) : " · sin detalle (historial desactivado)");
+      var lineasTexto = estadoPOS.ticket.map(function (it) { return "• " + it.nombre + " (" + it.detalle + ") x" + it.cantidad + " = " + formatearMoneda(it.precio * it.cantidad); }).join("\n");
+      estadoPOS.ticket = [];
+      estadoPOS.ventaPendiente = null;
+      renderizarPOS();
+      mostrarAvisoPOS(resumen + ".");
+      mostrarToast(resumen);
+      cargarCatalogoPublico();
+      actualizarDashboardEmprendedora();
+      if (confirm(resumen + ".\n¿Quieres compartir el comprobante por WhatsApp?")) {
+        var texto = "Comprobante de venta - " + (tienda ? tienda.nombre : "Alerce") + "\n" + lineasTexto + "\nMedio de pago: " + estadoPOS.medioPago;
+        window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
       }
+    }).then(function () {
+      estadoPOS.enviando = false;
+      if (boton) { boton.disabled = false; boton.textContent = "Registrar venta"; }
     });
-    guardarProductosEnStorage();
-    if (typeof renderizarProductosPOS === "function") renderizarProductosPOS();
-    if (typeof renderizarGestionCatalogo === "function") renderizarGestionCatalogo();
-    if (typeof actualizarDashboardEmprendedora === "function") actualizarDashboardEmprendedora();
-
-    // Guardar en Firestore si está conectado (fallback)
-    if (firebaseFirestore) {
-      try {
-        firebaseFirestore.collection("tiendas").doc(estadoPOS.tiendaId).collection("ventas").add({
-          items: estadoPOS.ticket,
-          total: total,
-          cantArticulos: cantTotal,
-          medioPago: estadoPOS.medioPago,
-          fecha: Date.now()
-        }).catch(function (e) { console.warn("Aviso Firestore al guardar venta:", e); });
-      } catch (err) {
-        console.warn("Excepción guardando venta:", err);
-      }
-    }
-
-    // Ofrecer enviar recibo por WhatsApp
-    if (confirm("✅ Venta de " + formatearMoneda(total) + " registrada con éxito.\n¿Deseas enviar o compartir el comprobante por WhatsApp al cliente?")) {
-      var urlWsp = "https://wa.me/?text=" + encodeURIComponent(resumenTexto);
-      window.open(urlWsp, "_blank");
-    } else {
-      mostrarToast("✅ Venta de " + formatearMoneda(total) + " registrada en caja.");
-    }
-
-    vaciarTicketPOS();
-    cerrarModal("modal-pos");
   }
 
   // ============================================================
   // SINCRONIZACIÓN EN VIVO CON SUPABASE CLOUD (INSTANCIA ALERCE I7)
   // ============================================================
 
-  function cargarTiendasDesdeSupabase() {
-    if (!supabaseClient) return;
-    supabaseClient.from("tiendas").select("*").then(function (res) {
-      if (res.error) {
-        console.warn("Aviso consultando tiendas en Supabase:", res.error);
-        return;
+  /** Aviso visible del estado de los datos: demostración, sin configuración, cargando o error. */
+  function pintarEstadoDatos() {
+    var caja = document.getElementById("estado-datos-vitrina");
+    var estadoCabecera = document.getElementById("texto-estado-sincronizacion");
+    var punto = document.getElementById("punto-estado-sincronizacion");
+    var texto = "", clase = "", cabecera = "", conReintento = false;
+    if (MODO === "sin_config") {
+      clase = "error";
+      texto = "La vitrina no está conectada a la base de datos (falta la configuración del sitio). No se muestran tiendas de ejemplo como si fueran reales.";
+      cabecera = "Sin conexión configurada";
+    } else if (MODO === "demo") {
+      clase = "demo";
+      texto = "Modo demostración: las tiendas y productos son de ejemplo y no son datos reales.";
+      cabecera = "Modo demostración · datos de ejemplo";
+    } else if (estadoCatalogo.error) {
+      clase = "error";
+      conReintento = true;
+      texto = (estadoCatalogo.cargado ? "No se pudo actualizar el catálogo; se muestra lo último recibido. " : "No se pudo cargar el catálogo. ") + Cat.mensajeError(estadoCatalogo.error);
+      cabecera = "Error de conexión con el servidor";
+    } else if (estadoCatalogo.cargando) {
+      clase = "cargando";
+      texto = "Cargando tiendas y productos…";
+      cabecera = "Conectando…";
+    } else {
+      cabecera = "Conectado · datos del servidor" + (estadoCatalogo.actualizado ? " (" + estadoCatalogo.actualizado.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) + ")" : "");
+    }
+    if (estadoCabecera) estadoCabecera.textContent = cabecera;
+    if (punto) punto.className = "punto-verde" + (clase ? " punto-" + clase : "");
+    if (!caja) return;
+    caja.textContent = "";
+    caja.className = "estado-datos" + (clase ? " " + clase : "");
+    caja.style.display = texto ? "" : "none";
+    caja.setAttribute("role", clase === "error" ? "alert" : "status");
+    if (texto) caja.appendChild(h("span", { text: texto }));
+    if (conReintento) caja.appendChild(h("button", { type: "button", class: "btn-accion-pill", text: "Reintentar", onclick: function () { cargarCatalogoPublico(); } }));
+  }
+
+  /**
+   * Trae tiendas, productos visibles y tipos. Una respuesta válida (aunque
+   * vacía) reemplaza lo anterior; un error lo conserva y se informa.
+   */
+  function cargarCatalogoPublico() {
+    if (MODO !== "real") {
+      pintarEstadoDatos();
+      return Promise.resolve();
+    }
+    estadoCatalogo.cargando = true;
+    pintarEstadoDatos();
+    promesaCatalogo = Promise.all([servicio.listarTiendas(), servicio.listarProductosVisibles(), servicio.listarTipos()]).then(function (r) {
+      var t = Cat.aplicarRespuesta({ elementos: TIENDAS, cargado: estadoCatalogo.cargado }, r[0], Cat.normalizarTienda);
+      var p = Cat.aplicarRespuesta({ elementos: PRODUCTOS, cargado: estadoCatalogo.cargado }, r[1], Cat.normalizarProducto);
+      if (r[2].ok) {
+        TIPOS = {};
+        (r[2].datos || []).forEach(function (x) { TIPOS[x.id] = x; });
       }
-      var data = res.data;
-      if (!data || !data.length) return;
-
-      var tiendasActualizadas = data.map(function (t) {
-        var nec = t.necesidades;
-        if (typeof nec === "string") {
-          try { nec = JSON.parse(nec); } catch(e) { nec = {}; }
-        }
-        var nombreTienda = t.nombre;
-        if (t.id === "t_minimarket_rosa" && nombreTienda && nombreTienda.indexOf("Marta") !== -1) {
-          nombreTienda = "Minimarket Doña Rosa";
-        }
-        return {
-          id: t.id,
-          nombre: nombreTienda || t.nombre,
-          rubro: t.rubro || "Comercio Local",
-          sector: t.sector || "Alerce",
-          bio: t.bio || "",
-          whatsapp: t.whatsapp || "",
-          instagram: t.instagram || "",
-          colorPortada: normalizarColorHex(t.color_portada, "#1A202C"),
-          colorLogo: normalizarColorHex(t.color_logo, "#2B6CB0"),
-          logoUrl: t.logo_url || "",
-          necesidades: nec || {
-            tieneStock: true,
-            tieneAgendamiento: false,
-            tieneVentaPorWhatsApp: true,
-            tieneProductosAPedido: false,
-            participaEnFerias: false,
-            tieneForoComunidad: false
-          }
-        };
-      });
-
-      tiendasActualizadas.forEach(function (tNueva) {
-        var idx = TIENDAS.findIndex(function (t) { return t.id === tNueva.id; });
-        if (idx >= 0) {
-          TIENDAS[idx] = Object.assign({}, TIENDAS[idx], tNueva);
-        } else {
-          TIENDAS.push(tNueva);
-        }
-      });
-
-      renderizarTiendasMarketplace();
-      if (typeof actualizarDashboardEmprendedora === "function") {
-        actualizarDashboardEmprendedora();
+      TIENDAS = t.elementos;
+      PRODUCTOS = p.elementos;
+      PRODUCTOS.forEach(function (x) { x.tipoNombre = TIPOS[x.tipo] ? TIPOS[x.tipo].nombre : ""; });
+      estadoCatalogo = { cargando: false, cargado: t.cargado && p.cargado, error: t.error || p.error, actualizado: (t.error || p.error) ? estadoCatalogo.actualizado : new Date() };
+      if (estado.tiendaSeleccionada) {
+        var vigente = TIENDAS.find(function (x) { return x.id === estado.tiendaSeleccionada.id; });
+        if (vigente) estado.tiendaSeleccionada = vigente;
       }
-      console.log("✅ Tiendas sincronizadas desde Supabase Cloud (" + tiendasActualizadas.length + " tiendas)");
-    }).catch(function (err) {
-      console.warn("Error cargando tiendas desde Supabase:", err);
+      refrescarVistasCatalogo();
+    });
+    return promesaCatalogo;
+  }
+
+  function refrescarVistasCatalogo() {
+    renderizarTiendasMarketplace();
+    var modal = document.getElementById("modal-tienda-vitrina");
+    if (modal && modal.classList.contains("abierto") && estado.tabModalActiva === 0) renderizarProductosModal();
+    actualizarContadorTabsModal();
+    if (typeof actualizarDashboardEmprendedora === "function") actualizarDashboardEmprendedora();
+    pintarEstadoDatos();
+  }
+
+  /** Productos de mi tienda (también los que solo yo veo). Solo con sesión de emprendedora. */
+  function recargarMisProductos() {
+    var tienda = obtenerTiendaUsuarioActivo();
+    if (!servicio || !tienda) { MIS_PRODUCTOS = []; return Promise.resolve({ ok: false }); }
+    return servicio.listarMisProductos(tienda.id).then(function (r) {
+      if (r.ok) {
+        MIS_PRODUCTOS = (r.datos || []).map(Cat.normalizarProducto);
+        MIS_PRODUCTOS.forEach(function (x) { x.tipoNombre = TIPOS[x.tipo] ? TIPOS[x.tipo].nombre : ""; });
+      } else {
+        mostrarEstadoGestion("No se pudo cargar tu catálogo. " + Cat.mensajeError(r.error), true);
+      }
+      renderizarGestionCatalogo();
+      actualizarDashboardEmprendedora();
+      var pos = document.getElementById("modal-pos");
+      if (pos && pos.classList.contains("abierto")) renderizarPOS();
+      return r;
     });
   }
 
   function cargarProductosDesdeSupabase() {
-    if (!supabaseClient) return;
-    supabaseClient.from("productos").select("*").then(function (res) {
-      if (res.error) {
-        console.warn("Aviso consultando productos en Supabase:", res.error);
-        return;
-      }
-      var data = res.data;
-      if (!data || !data.length) return;
-
-      data.forEach(function (p) {
-        var variantes = p.variantes;
-        if (typeof variantes === "string") {
-          try { variantes = JSON.parse(variantes); } catch(e) { variantes = []; }
-        }
-        if (!Array.isArray(variantes) || variantes.length === 0) {
-          variantes = [{ id: "v_1", nombre: "Estándar", stock: 10, precio: Number(p.precio) || 0 }];
-        }
-        var stockCalc = variantes.reduce(function (acc, v) { return acc + (Number(v.stock) || 0); }, 0);
-        if (stockCalc === 0 && p.publicado) stockCalc = 10;
-
-        var prodObj = {
-          id: p.id,
-          tiendaId: p.tienda_id,
-          nombre: p.nombre,
-          precio: Number(p.precio) || 0,
-          stockTotal: stockCalc,
-          descripcion: p.descripcion || "",
-          categoria: p.categoria || "GENERAL",
-          publicado: p.publicado !== false,
-          destacado: !!p.destacado,
-          colorFoto: normalizarColorHex(p.color_foto, "#4a5568"),
-          fotoUrl: p.foto_url || "",
-          variantes: variantes
-        };
-
-        var idx = PRODUCTOS.findIndex(function (item) { return item.id === p.id; });
-        if (idx >= 0) {
-          PRODUCTOS[idx] = Object.assign({}, PRODUCTOS[idx], prodObj);
-        } else {
-          PRODUCTOS.unshift(prodObj);
-        }
-      });
-
-      guardarProductosEnStorage();
-      renderizarTiendasMarketplace();
-      if (typeof renderizarProductosPOS === "function") {
-        renderizarProductosPOS();
-      }
-      if (typeof renderizarGestionCatalogo === "function") {
-        renderizarGestionCatalogo();
-      }
-      if (typeof actualizarDashboardEmprendedora === "function") {
-        actualizarDashboardEmprendedora();
-      }
-      console.log("✅ Productos sincronizados desde Supabase Cloud (" + data.length + " productos)");
-    }).catch(function (err) {
-      console.warn("Error cargando productos desde Supabase:", err);
-    });
+    return cargarCatalogoPublico();
   }
 
   function cargarFeriasDesdeSupabase() {
@@ -3057,149 +3180,103 @@
     });
   }
 
-  function configurarObservadorAuthSupabase() {
-    if (!supabaseClient || !supabaseClient.auth) return;
-    try {
-      if (typeof window !== "undefined" && window.location.search && window.location.search.indexOf("recuperar=1") !== -1) {
-        setTimeout(function () {
-          abrirModal("modal-cambiar-clave");
-        }, 600);
-      }
-
-      supabaseClient.auth.getSession().then(function (resp) {
-        var session = resp.data ? resp.data.session : null;
-        if (session && session.user) {
-          procesarUsuarioSupabase(session.user);
-        }
-      }).catch(function (e) { console.warn("Aviso sesión Supabase:", e); });
-
-      supabaseClient.auth.onAuthStateChange(function (event, session) {
-        if (event === "PASSWORD_RECOVERY") {
-          abrirModal("modal-cambiar-clave");
-          return;
-        }
-        if (session && session.user) {
-          procesarUsuarioSupabase(session.user);
-        } else if (event === "SIGNED_OUT") {
-          cerrarSesionWebLocal();
-        }
-      });
-    } catch (e) {
-      console.warn("Aviso listener Supabase Auth:", e);
-    }
+  function leerErrorDeEnlace() {
+    var hash = window.location.hash ? window.location.hash.slice(1) : "";
+    var datos = new URLSearchParams(hash);
+    var query = new URLSearchParams(window.location.search);
+    var codigo = datos.get("error_code") || query.get("error_code");
+    var descripcion = datos.get("error_description") || query.get("error_description");
+    if (!codigo && !descripcion && !datos.get("error") && !query.get("error")) return null;
+    if (codigo === "otp_expired") return "El enlace venció o ya se usó. Pide uno nuevo.";
+    return "El enlace no es válido" + (descripcion ? ": " + descripcion.replace(/\+/g, " ") : "") + ". Pide uno nuevo.";
   }
 
-  function __legacy_configurarObservadorAuthSupabase() {
+  function configurarObservadorAuthSupabase() {
     if (!supabaseClient || !supabaseClient.auth) return;
-    try {
-      supabaseClient.auth.getSession().then(function (resp) {
-        var session = resp.data ? resp.data.session : null;
-        if (session && session.user) {
-          procesarUsuarioSupabase(session.user);
-        }
-      }).catch(function (e) { console.warn("Aviso sesión Supabase:", e); });
+    var vieneDeRecuperacion = /[?&]recuperar=1(&|$)/.test(window.location.search);
+    var errorEnlace = leerErrorDeEnlace();
+    var recuperacionActiva = false;
 
-      supabaseClient.auth.onAuthStateChange(function (event, session) {
-        if (session && session.user) {
-          procesarUsuarioSupabase(session.user);
-        } else if (event === "SIGNED_OUT") {
-          aplicarUsuarioLocal("Visitante", "Visitante");
-          estado.tiendaEmprendedoraId = null;
-          actualizarUIControlesSegunRol();
-        }
-      });
-    } catch (e) {
-      console.warn("Aviso listener Supabase Auth:", e);
+    if (errorEnlace) {
+      mostrarAviso("recuperar-aviso-error", errorEnlace);
+      abrirModal("modal-recuperar-contrasena");
+      try { window.history.replaceState({}, document.title, window.location.pathname + (vieneDeRecuperacion ? "" : window.location.search)); } catch (e) {}
     }
+
+    supabaseClient.auth.onAuthStateChange(function (event, session) {
+      if (event === "PASSWORD_RECOVERY") {
+        recuperacionActiva = true;
+        mostrarAviso("cambiar-clave-aviso-error", "");
+        abrirModal("modal-cambiar-clave");
+        return;
+      }
+      if (session && session.user) {
+        if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "USER_UPDATED") setTimeout(function () { procesarUsuarioSupabase(session.user); }, 0);
+      } else if (event === "SIGNED_OUT") {
+        setTimeout(cerrarSesionWebLocal, 0);
+      }
+    });
+
+    supabaseClient.auth.getSession().then(function (resp) {
+      var session = resp && resp.data ? resp.data.session : null;
+      if (vieneDeRecuperacion && !errorEnlace) {
+        setTimeout(function () {
+          if (recuperacionActiva) return;
+          if (session) { abrirModal("modal-cambiar-clave"); return; }
+          mostrarAviso("recuperar-aviso-error", "No encontramos una solicitud de recuperación activa en este navegador. Pide un enlace nuevo.");
+          abrirModal("modal-recuperar-contrasena");
+        }, 800);
+      }
+    }).catch(function (e) { console.warn("Aviso sesión Supabase:", e); });
   }
 
   function procesarUsuarioSupabase(user) {
-    if (!user) return;
+    if (!user || !servicio) return;
+    if (estado.usuario && estado.usuario.id && estado.usuario.id !== user.id) {
+      // Cambio de cuenta sin cierre previo: no deben quedar datos de la anterior.
+      limpiarDatosPrivados();
+    }
     var meta = user.user_metadata || {};
     var email = user.email || "";
-    var nombreFallback = meta.nombre || user.displayName || email.split("@")[0] || "Usuario";
+    var nombreFallback = meta.nombre || meta.full_name || email.split("@")[0] || "Usuario";
 
     // RN-01: el rol y la tienda solo se aceptan desde el perfil creado por el servidor.
-    supabaseClient.from("perfiles").select("nombre, rol, tienda_id, foto_url").eq("id", user.id).maybeSingle().then(function (res) {
-      if (res.error) throw res.error;
-      var p = res.data || {};
-      var nombre = (p && p.nombre) ? p.nombre : nombreFallback;
+    servicio.leerPerfil(user.id).then(function (res) {
+      if (!res.ok) throw res.error;
+      var p = res.datos || {};
+      var nombre = p.nombre || nombreFallback;
       var rol = p.rol === "ADMIN" || p.rol === "EMPRENDEDORA" ? p.rol : "VISITANTE";
       var tiendaId = rol === "EMPRENDEDORA" && p.tienda_id ? p.tienda_id : null;
-      var fotoUrl = (p && p.foto_url) ? p.foto_url : null;
+      var fotoUrl = Cat.urlImagenSegura(p.foto_url || "") || null;
 
-      estado.usuario = {
-        id: user.id,
-        email: email,
-        nombre: nombre,
-        rol: rol,
-        tiendaId: tiendaId,
-        fotoUrl: fotoUrl
-      };
-
-      if (tiendaId) {
-        estado.tiendaEmprendedoraId = tiendaId;
-        estadoPOS.tiendaId = tiendaId;
-      } else {
-        estado.tiendaEmprendedoraId = null;
-        estadoPOS.tiendaId = null;
-      }
+      estado.usuario = { id: user.id, email: email, nombre: nombre, rol: rol, tiendaId: tiendaId, fotoUrl: fotoUrl };
+      estado.tiendaEmprendedoraId = tiendaId;
+      estadoPOS.tiendaId = tiendaId;
 
       var rolEtiqueta = (rol === "ADMIN") ? "Administrador" : (rol === "EMPRENDEDORA" ? "Emprendedor/a" : "Comprador");
       aplicarUsuarioLocal(nombre, rolEtiqueta, fotoUrl);
-      actualizarUIControlesSegunRol();
-      if (rol === "ADMIN") entrarModoAdmin();
+      return promesaCatalogo.then(function () {
+        if (tiendaId && !TIENDAS.some(function (t) { return t.id === tiendaId; })) return cargarCatalogoPublico();
+      }).then(function () {
+        actualizarUIControlesSegunRol();
+        if (tiendaId) return recargarMisProductos();
+        if (rol === "ADMIN") entrarModoAdmin();
+      });
     }).catch(function (err) {
-      console.warn("Aviso leyendo perfil de Supabase:", err);
+      console.warn("No se pudo leer el perfil:", err);
       estado.usuario = { id: user.id, email: email, nombre: nombreFallback, rol: "VISITANTE", tiendaId: null, fotoUrl: "" };
       estado.tiendaEmprendedoraId = null;
       estadoPOS.tiendaId = null;
       aplicarUsuarioLocal(nombreFallback, "Comprador", null);
       actualizarUIControlesSegunRol();
+      mostrarToast("No pudimos leer tu perfil: " + Cat.mensajeError(err));
     });
   }
 
   // Sincronización en vivo con Cloud Firestore (compatibilidad de respaldo)
-  function cargarProductosDesdeFirestore() {
-    if (!firebaseFirestore) return;
-    try {
-      firebaseFirestore.collection("tiendas").get().then(function (snapshotTiendas) {
-        snapshotTiendas.forEach(function (docTienda) {
-          docTienda.ref.collection("productos").get().then(function (snapProds) {
-            snapProds.forEach(function (docP) {
-              var data = docP.data();
-              if (data && data.nombre) {
-                var yaExiste = false;
-                for (var i = 0; i < PRODUCTOS.length; i++) {
-                  if (PRODUCTOS[i].id === docP.id) {
-                    yaExiste = true;
-                    break;
-                  }
-                }
-                if (!yaExiste) {
-                  PRODUCTOS.unshift({
-                    id: docP.id,
-                    tiendaId: docTienda.id,
-                    nombre: data.nombre,
-                    precio: Number(data.precio) || 0,
-                    stockTotal: Number(data.stockTotal) || 10,
-                    descripcion: data.descripcion || "",
-                    fotoUrl: data.fotoUrl || "",
-                    variantes: data.variantes || [{ nombre: "Unidad", precio: Number(data.precio) || 0 }]
-                  });
-                }
-              }
-            });
-            renderizarTiendasMarketplace();
-          }).catch(function(e){ console.warn("Aviso Firestore productos:", e); });
-        });
-      }).catch(function(e){ console.warn("Aviso Firestore tiendas:", e); });
-    } catch(err) {
-      console.warn("Error conectando Firestore:", err);
-    }
-  }
+  // Firestore ya no se usa: los datos vienen solo de Supabase.
+  function cargarProductosDesdeFirestore() {}
 
-  
   // ============================================================
   // MÓDULO DE AUTENTICACIÓN FIREBASE WEB
   // ============================================================
@@ -3433,7 +3510,7 @@
               estadoPOS.tiendaId = tiendaId;
               estado.usuario = { id: user.id, email: email, nombre: nombre, rol: "EMPRENDEDORA", tiendaId: tiendaId, fotoUrl: fotoUrl };
               aplicarUsuarioLocal(nombre, "Emprendedor/a", fotoUrl);
-              cargarTiendasDesdeSupabase();
+              cargarCatalogoPublico();
               actualizarDashboardEmprendedora();
               cerrarModal("modal-registro-emprendedor");
               mostrarToast("¡Cuenta creada! Tu negocio autorizado ya tiene su ficha y su imagen.");
@@ -3455,148 +3532,6 @@
       }).catch(function (err) {
         console.warn("Aviso Supabase SignUp:", err);
         mostrarErrorReg("Error al registrar cuenta: " + (err.message || err));
-      });
-      return;
-    }
-
-    mostrarErrorReg("El servicio de cuentas no está configurado. Intenta más tarde.");
-  }
-
-  function __legacy_registrarEmprendedorModal() {
-    var inpNombre = document.getElementById("reg-emp-nombre");
-    var selectRubro = document.getElementById("reg-emp-rubro");
-    var selectSector = document.getElementById("reg-emp-sector");
-    var inpWsp = document.getElementById("reg-emp-whatsapp");
-    var inpEmail = document.getElementById("reg-emp-email");
-    var inpPass = document.getElementById("reg-emp-password");
-    var errorDiv = document.getElementById("reg-emp-aviso-error");
-    var exitoDiv = document.getElementById("reg-emp-aviso-exito");
-    var btnSubmit = document.getElementById("btn-submit-reg-emp");
-
-    var nombre = inpNombre ? inpNombre.value.trim() : "";
-    var rubro = selectRubro ? selectRubro.value : "Abarrotes y Alimentos";
-    var sector = selectSector ? selectSector.value : "Alerce Histórico";
-    var whatsapp = inpWsp ? inpWsp.value.trim() : "";
-    var email = inpEmail ? inpEmail.value.trim() : "";
-    var pass = inpPass ? inpPass.value : "";
-
-    function mostrarErrorReg(msg) {
-      if (errorDiv) {
-        errorDiv.textContent = msg;
-        errorDiv.style.display = "block";
-      }
-      if (btnSubmit) {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento";
-      }
-    }
-
-    if (!nombre) {
-      mostrarErrorReg("Por favor ingresa el nombre de tu emprendimiento o tu nombre.");
-      return;
-    }
-    if (!email || !pass || pass.length < 6) {
-      mostrarErrorReg("Por favor ingresa un correo válido y una contraseña de al menos 6 caracteres.");
-      return;
-    }
-
-    if (errorDiv) errorDiv.style.display = "none";
-    if (exitoDiv) exitoDiv.style.display = "none";
-    if (btnSubmit) {
-      btnSubmit.disabled = true;
-      btnSubmit.textContent = "Registrando tu emprendimiento...";
-    }
-
-    var slug = "t_" + nombre.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 24) + "_" + Math.floor(Math.random() * 1000);
-    var nuevaTienda = {
-      id: slug,
-      nombre: nombre,
-      rubro: rubro,
-      sector: sector,
-      bio: "Emprendimiento local de Alerce registrado a través de la plataforma web.",
-      whatsapp: whatsapp || "+56991234567",
-      instagram: "",
-      colorPortada: "#1A202C",
-      colorLogo: "#2B6CB0",
-      necesidades: {
-        tieneStock: true,
-        tieneAgendamiento: false,
-        tieneVentaPorWhatsApp: true,
-        tieneProductosAPedido: false,
-        participaEnFerias: true,
-        tieneForoComunidad: true
-      }
-    };
-
-    function completarRegistro() {
-      var existeIdx = TIENDAS.findIndex(function (t) { return t.id === nuevaTienda.id; });
-      if (existeIdx >= 0) {
-        TIENDAS[existeIdx] = nuevaTienda;
-      } else {
-        TIENDAS.unshift(nuevaTienda);
-      }
-      try {
-        localStorage.setItem("trama_tiendas_completo", JSON.stringify(TIENDAS));
-      try {
-        var cList = JSON.parse(localStorage.getItem("trama_tiendas_custom") || "[]");
-        cList = cList.filter(function(x){ return x.id !== nuevaTienda.id; });
-        cList.unshift(nuevaTienda);
-        localStorage.setItem("trama_tiendas_custom", JSON.stringify(cList));
-      } catch(e) {}
-      } catch(e) {}
-
-      estado.tiendaEmprendedoraId = nuevaTienda.id;
-      estadoPOS.tiendaId = nuevaTienda.id;
-      aplicarUsuarioLocal(nombre, "Emprendedor/a");
-      renderizarTiendasMarketplace();
-      actualizarDashboardEmprendedora();
-      actualizarUIControlesSegunRol();
-      cerrarModal("modal-auth-web");
-
-      if (btnSubmit) {
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = "🚀 Registrar mi Emprendimiento";
-      }
-      mostrarToast("¡Bienvenido/a! Emprendimiento " + nombre + " registrado exitosamente.");
-    }
-
-    if (supabaseClient && supabaseClient.auth) {
-      supabaseClient.auth.signUp({
-        email: email,
-        password: pass,
-        options: {
-          data: {
-            nombre: nombre,
-            rubro: rubro,
-            sector: sector,
-            whatsapp: whatsapp,
-            rol: "EMPRENDEDORA",
-            tienda_id: nuevaTienda.id
-          }
-        }
-      }).then(function (res) {
-        if (res.error) throw res.error;
-        console.log("✅ Emprendedor/a registrado/a en Supabase Auth:", email);
-
-        supabaseClient.from("tiendas").insert([{
-          id: nuevaTienda.id,
-          nombre: nuevaTienda.nombre,
-          rubro: nuevaTienda.rubro,
-          sector: nuevaTienda.sector,
-          bio: nuevaTienda.bio,
-          whatsapp: nuevaTienda.whatsapp,
-          color_portada: aArgb(nuevaTienda.colorPortada),
-          color_logo: aArgb(nuevaTienda.colorLogo),
-          necesidades: nuevaTienda.necesidades
-        }]).then(function (resT) {
-          if (resT.error) console.warn("Aviso tienda Supabase (RLS):", resT.error.message);
-          else console.log("✅ Tienda guardada en Supabase Cloud");
-        }).catch(function(e){ console.warn("Aviso:", e); });
-
-        completarRegistro();
-      }).catch(function (err) {
-        console.warn("Aviso Supabase SignUp:", err);
-        mostrarErrorReg("No se pudo registrar la cuenta. Intenta nuevamente: " + (err.message || err));
       });
       return;
     }
@@ -3729,15 +3664,13 @@
     if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Iniciar Sesión"; }
   }
 
+  // Solo existe en modo demostración: en producción no hay cuentas ni claves de muestra.
   function autocompletarCredenciales(email, pass) {
+    if (MODO !== "demo") return;
     var inpEmail = document.getElementById("auth-inp-email");
     var inpPass = document.getElementById("auth-inp-password");
     if (inpEmail) inpEmail.value = email;
     if (inpPass) inpPass.value = pass;
-    cambiarRolAuth("EMPRENDEDORA");
-    if (estadoAuthWeb.modoRegistro) {
-      toggleModoAuth();
-    }
   }
 
   function entrarModoDev(tiendaId) {
@@ -3874,23 +3807,40 @@
     actualizarUIControlesSegunRol();
   }
 
+  /** Quita de memoria y del navegador todo lo que pertenecía a la cuenta anterior. */
+  function limpiarDatosPrivados() {
+    MIS_PRODUCTOS = [];
+    estadoPOS.ticket = [];
+    estadoPOS.ventaPendiente = null;
+    estadoPublicar = nuevoEstadoPublicar();
+    try { localStorage.removeItem("alerce_admin_state_v1"); } catch (e) { /* sin almacenamiento */ }
+    var lista = document.getElementById("lista-items-catalogo-gestion");
+    if (lista) lista.textContent = "";
+    ["modal-gestion-catalogo", "modal-pos", "modal-publicar-producto", "modal-mi-perfil", "modal-editar-tienda", "modal-admin"].forEach(function (id) {
+      var m = document.getElementById(id);
+      if (m && m.classList.contains("abierto")) cerrarModal(id);
+    });
+  }
+
   function cerrarSesionWebLocal() {
+    limpiarDatosPrivados();
     estado.tiendaEmprendedoraId = null;
     estadoPOS.tiendaId = null;
     estado.usuario = { nombre: "Visitante", rol: "Visitante", fotoUrl: "" };
     aplicarUsuarioLocal("Visitante", "Visitante", "");
     actualizarUIControlesSegunRol();
+    // La lista pública se vuelve a pedir sin sesión: lo que solo veía la dueña desaparece.
+    cargarCatalogoPublico();
   }
 
   function cerrarSesionWeb() {
-    if (supabaseClient && supabaseClient.auth) {
-      try { supabaseClient.auth.signOut(); } catch (e) {}
-    }
-    if (firebaseAuth) {
-      try { firebaseAuth.signOut(); } catch (e) {}
-    }
-    cerrarSesionWebLocal();
-    mostrarToast("Sesión cerrada");
+    var salida = (supabaseClient && supabaseClient.auth) ? supabaseClient.auth.signOut() : Promise.resolve({});
+    Promise.resolve(salida).then(function (res) {
+      if (res && res.error) mostrarToast("La sesión se cerró en este navegador, pero el servidor respondió: " + Cat.mensajeError(res.error));
+      else mostrarToast("Sesión cerrada");
+    }, function () {
+      mostrarToast("La sesión se cerró en este navegador (sin conexión con el servidor).");
+    }).then(cerrarSesionWebLocal);
   }
 
   function configurarObservadorAuthFirebase() {
@@ -3936,321 +3886,250 @@
   }
 
 
-    function actualizarDashboardEmprendedora() {
+  var resumenVentasMes = { tiendaId: null, total: null, cargando: false };
+
+  function actualizarDashboardEmprendedora() {
     var tienda = obtenerTiendaUsuarioActivo();
-    if (!tienda) {
-      estado.tiendaEmprendedoraId = null;
-      estadoPOS.tiendaId = null;
-      return;
+    if (!tienda) return;
+    var prodsTienda = MIS_PRODUCTOS;
+    var publicos = prodsTienda.filter(function (p) { return Cat.estadoPublico(p) !== "OCULTO"; });
+    var unidades = prodsTienda.reduce(function (acc, p) { return acc + (p.manejaStock ? Cat.unidadesVendibles(p) : 0); }, 0);
+
+    function texto(id, valor) { var el = document.getElementById(id); if (el) el.textContent = valor; }
+    var nombreSaludo = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre !== "Visitante") ? estado.usuario.nombre : tienda.nombre;
+    texto("dashboard-emp-saludo", "Hola, " + nombreSaludo + " 👋");
+    texto("dashboard-emp-tienda-badge", "Emprendedor/a · " + tienda.nombre);
+    texto("dashboard-emp-subtitulo", "Panel de " + tienda.nombre + (tienda.sector ? " (" + tienda.sector + ")" : "") + ".");
+    texto("subtitulo-gestion-catalogo", tienda.nombre + (tienda.sector ? " · " + tienda.sector : ""));
+    texto("subtitulo-mis-ferias", "Ferias de " + tienda.nombre + " (las inscripciones de esta sección aún se guardan solo en este navegador)");
+    texto("metrica-prods-activos", publicos.length + " a la vista");
+    texto("metrica-stock-total", unidades + " un.");
+    // Sin datos de seguidores en el servidor: no se inventan cifras.
+    texto("metrica-seguidores", "Sin datos");
+    texto("metrica-sub-seguidores", "Disponible en una próxima entrega");
+
+    var agotados = prodsTienda.filter(function (p) { return Cat.estadoPublico(p) === "AGOTADO"; });
+    var bajos = prodsTienda.filter(function (p) { return p.manejaStock && p.modalidad === "REGULAR" && Cat.unidadesVendibles(p) > 0 && Cat.unidadesVendibles(p) <= 3; });
+    texto("texto-alerta-stock", !prodsTienda.length ? "Aún no has agregado productos." :
+      (agotados.length ? agotados.length + " producto(s) agotado(s): " + agotados.map(function (p) { return p.nombre; }).slice(0, 3).join(", ") :
+      (bajos.length ? bajos[0].nombre + ": quedan " + Cat.unidadesVendibles(bajos[0]) + " unidades." : "Todos tus productos con conteo tienen unidades.")));
+    texto("texto-proxima-feria", FERIAS_SERVIDOR.length ? FERIAS_SERVIDOR.length + " ferias registradas en la plataforma." : "Sin ferias registradas en la plataforma.");
+
+    if (servicio && resumenVentasMes.tiendaId !== tienda.id && !resumenVentasMes.cargando) {
+      resumenVentasMes = { tiendaId: tienda.id, total: null, cargando: true };
+      var inicio = new Date(); inicio.setDate(1); inicio.setHours(0, 0, 0, 0);
+      supabaseClient.from("ventas").select("total").eq("tienda_id", tienda.id).eq("en_historial", true).gte("fecha", inicio.toISOString()).then(function (res) {
+        resumenVentasMes.cargando = false;
+        resumenVentasMes.total = res.error ? null : (res.data || []).reduce(function (s, v) { return s + (Number(v.total) || 0); }, 0);
+        texto("metrica-ventas-mes", resumenVentasMes.total === null ? "Sin datos" : formatearMoneda(resumenVentasMes.total));
+      });
     }
-    var tiendaId = tienda.id;
-    estado.tiendaEmprendedoraId = tiendaId;
-    estadoPOS.tiendaId = tiendaId;
-
-    var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
-    var prodsActivos = prodsTienda.filter(function (p) { return p.publicado !== false; });
-    var stockTotal = prodsTienda.reduce(function (acc, p) { return acc + (p.stockTotal || 0); }, 0);
-
-    var saludoEl = document.getElementById("dashboard-emp-saludo");
-    var badgeEl = document.getElementById("dashboard-emp-tienda-badge");
-    var subtituloEl = document.getElementById("dashboard-emp-subtitulo");
-    var metricaProds = document.getElementById("metrica-prods-activos");
-    var metricaStock = document.getElementById("metrica-stock-total");
-    var metricaVentas = document.getElementById("metrica-ventas-mes");
-    var metricaSeguidores = document.getElementById("metrica-seguidores");
-    var metricaSubSeguidores = document.getElementById("metrica-sub-seguidores");
-    var alertaStockEl = document.getElementById("texto-alerta-stock");
-    var textoFeriaEl = document.getElementById("texto-proxima-feria");
-    var subCatalogo = document.getElementById("subtitulo-gestion-catalogo");
-    var subFerias = document.getElementById("subtitulo-mis-ferias");
-
-    // Nombre a mostrar en el saludo: si el usuario tiene nombre propio (ej: Punto 3D, Carlos), usarlo directamente
-    var nombreSaludo = (estado.usuario && estado.usuario.nombre && estado.usuario.nombre !== "Visitante" && estado.usuario.nombre !== "Usuario")
-      ? estado.usuario.nombre
-      : tienda.nombre;
-
-    if (saludoEl) saludoEl.textContent = "Hola, " + nombreSaludo + " 👋";
-    if (badgeEl) badgeEl.textContent = "Modo Emprendedor/a Activo · " + tienda.nombre;
-    if (subtituloEl) subtituloEl.textContent = "Panel comercial y taller virtual para " + tienda.nombre + " (" + tienda.sector + ").";
-    if (subCatalogo) subCatalogo.textContent = tienda.nombre + " · " + tienda.sector;
-    if (subFerias) subFerias.textContent = "Inscribe a " + tienda.nombre + " en los eventos de Alerce y Puerto Montt";
-
-    // Ventas del mes: calcular de VENTAS o $148.500 si es Doña Rosa demo
-    var ventasTienda = (typeof VENTAS !== "undefined" && Array.isArray(VENTAS))
-      ? VENTAS.filter(function(v){ return v.tiendaId === tiendaId; })
-      : [];
-    if (metricaVentas) {
-      if (tiendaId === "t_minimarket_rosa") {
-        metricaVentas.textContent = "$ 148.500";
-      } else if (ventasTienda.length > 0) {
-        var totalV = ventasTienda.reduce(function(acc, v){ return acc + (v.total || 0); }, 0);
-        metricaVentas.textContent = formatearMoneda(totalV);
-      } else {
-        metricaVentas.textContent = "$ 0";
-      }
-    }
-
-    if (metricaProds) metricaProds.textContent = prodsActivos.length + " activos";
-    if (metricaStock) metricaStock.textContent = stockTotal + " un.";
-
-    if (metricaSeguidores) {
-      metricaSeguidores.textContent = (tiendaId === "t_minimarket_rosa") ? "34 vecinos" : "12 vecinos";
-    }
-    if (metricaSubSeguidores) {
-      metricaSubSeguidores.textContent = tienda.sector || "Alerce";
-    }
-
-    // Alerta de stock bajo
-    var prodBajoStock = prodsTienda.find(function (p) { return p.stockTotal > 0 && p.stockTotal <= 10; });
-    if (alertaStockEl) {
-      if (prodBajoStock) {
-        alertaStockEl.textContent = prodBajoStock.nombre + ": Quedan " + prodBajoStock.stockTotal + " unidades disponibles en stock.";
-      } else if (prodsTienda.length === 0) {
-        alertaStockEl.textContent = "Catálogo listo: Aún no has agregado productos. Haz clic en '+ Añadir Producto'.";
-      } else {
-        alertaStockEl.textContent = "Inventario al día: Todos tus productos tienen stock disponible.";
-      }
-    }
-
-    if (textoFeriaEl) {
-      textoFeriaEl.textContent = "Próxima feria comunal en Puerto Montt · Disponible para " + tienda.nombre;
-    }
+    texto("metrica-ventas-mes", resumenVentasMes.total === null ? (resumenVentasMes.cargando ? "Cargando…" : "Sin datos") : formatearMoneda(resumenVentasMes.total));
   }
 
   function abrirModalGestionCatalogo() {
     if (!esUsuarioEmprendedora()) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a para gestionar el catálogo.");
+      mostrarToast("Inicia sesión como emprendedora para gestionar el catálogo.");
       return;
     }
     renderizarGestionCatalogo();
     abrirModal("modal-gestion-catalogo");
+    recargarMisProductos();
   }
+
+  function mostrarEstadoGestion(mensaje, esError) {
+    var el = document.getElementById("estado-gestion-catalogo");
+    if (!el) { if (mensaje) mostrarToast(mensaje); return; }
+    el.textContent = mensaje || "";
+    el.className = "estado-datos" + (esError ? " error" : (mensaje ? " ok" : ""));
+    el.style.display = mensaje ? "" : "none";
+    el.setAttribute("role", esError ? "alert" : "status");
+  }
+
+  /** Ejecuta una operación remota y solo informa éxito después de la respuesta del servidor. */
+  function operacionRemota(promesa, mensajeExito) {
+    mostrarEstadoGestion("Guardando en el servidor…");
+    return promesa.then(function (r) {
+      if (!r.ok) {
+        mostrarEstadoGestion("No se guardó: " + Cat.mensajeError(r.error), true);
+        return r;
+      }
+      mostrarEstadoGestion(mensajeExito + " ✓");
+      return recargarMisProductos().then(function () { cargarCatalogoPublico(); return r; });
+    });
+  }
+
+  var seleccionGestion = {};
 
   function renderizarGestionCatalogo() {
     var cont = document.getElementById("lista-items-catalogo-gestion");
     var conteo = document.getElementById("conteo-prods-catalogo-gestion");
     if (!cont) return;
-
+    cont.textContent = "";
     var tienda = obtenerTiendaUsuarioActivo();
-    if (!tienda) {
-      cont.textContent = "Tu cuenta todavía no tiene una tienda autorizada.";
+    if (!tienda) { cont.appendChild(h("p", { text: "Tu cuenta todavía no tiene una tienda." })); return; }
+    var filtroCat = (document.getElementById("gestion-filtro-categoria") || {}).value || "";
+    var lista = MIS_PRODUCTOS.filter(function (p) { return !filtroCat || p.categoria === filtroCat; });
+    if (conteo) conteo.textContent = MIS_PRODUCTOS.length + " productos en tu catálogo";
+    Object.keys(seleccionGestion).forEach(function (id) { if (!MIS_PRODUCTOS.some(function (p) { return p.id === id; })) delete seleccionGestion[id]; });
+
+    if (!lista.length) {
+      cont.appendChild(h("p", { class: "aviso-catalogo", text: MIS_PRODUCTOS.length ? "No hay productos en esa categoría." : "Aún no tienes productos. Usa «Añadir producto»." }));
       return;
     }
-    var tiendaId = tienda.id;
-    var prodsTienda = PRODUCTOS.filter(function (p) { return p.tiendaId === tiendaId; });
-
-    if (conteo) conteo.textContent = prodsTienda.length + " productos en catálogo";
-
-    if (prodsTienda.length === 0) {
-      cont.innerHTML = '<div style="text-align: center; padding: 30px 10px; color: var(--gris-texto); font-size: 13px;">No hay productos registrados aún.<br>Presiona "➕ Añadir Nuevo Producto" para comenzar.</div>';
-      return;
-    }
-
-    var html = "";
-    prodsTienda.forEach(function (prod) {
-      var publicado = prod.publicado !== false;
-      var stock = typeof prod.stockTotal === "number" ? prod.stockTotal : 0;
-      var icono = obtenerIconoProducto(prod.nombre);
-      var thumbHtml = prod.fotoUrl
-        ? '<img src="' + escaparHtml(prod.fotoUrl) + '" alt="" style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gris-borde); flex-shrink: 0;">'
-        : '<div style="width: 48px; height: 48px; border-radius: 8px; background: var(--gris-chip); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">' + icono + '</div>';
-
-      html += '<div class="item-catalogo-gestion" id="item-cat-' + prod.id + '">';
-      html += '  <div class="item-catalogo-gestion-info">';
-      html += '    ' + thumbHtml;
-      html += '    <div style="flex: 1;">';
-      html += '      <strong style="font-size: 13.5px; color: var(--negro-apple); display: block;">' + escaparHtml(prod.nombre) + '</strong>';
-      html += '      <span style="font-size: 11.5px; color: var(--gris-texto);">' + (prod.descripcion ? escaparHtml(prod.descripcion).slice(0, 50) + "..." : "Sin descripción") + '</span>';
-      html += '      <div style="margin-top: 4px; display: flex; align-items: center; gap: 8px;">';
-      html += '        <strong style="font-size: 13px; color: var(--rojo-alerce);">' + formatearMoneda(prod.precio) + '</strong>';
-      html += '        <button type="button" style="background: none; border: none; font-size: 11px; color: #2563eb; cursor: pointer; text-decoration: underline;" onclick="TramaWeb.editarPrecioProducto(\'' + prod.id + '\')">Editar precio</button>';
-      html += '      </div>';
-      html += '    </div>';
-      html += '  </div>';
-
-      // Controles: Publicado/Pausado + Stock + Eliminar
-      html += '  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">';
-      html += '    <button type="button" class="badge-estado-pub ' + (publicado ? 'activo' : 'pausado') + '" onclick="TramaWeb.togglePublicadoProducto(\'' + prod.id + '\')" title="Toca para cambiar estado">';
-      html +=        publicado ? '✅ En Vitrina' : '⏸️ Pausado';
-      html += '    </button>';
-
-      html += '    <div class="controles-cantidad" style="background: #fafafa; padding: 2px 6px; border-radius: 20px; border: 1px solid var(--gris-borde);">';
-      html += '      <span style="font-size: 10.5px; font-weight: 700; color: var(--gris-texto); margin-right: 4px;">Stock:</span>';
-      html += '      <button type="button" class="btn-qty" onclick="TramaWeb.modificarStockProducto(\'' + prod.id + '\', -1)">−</button>';
-      html += '      <span class="qty-numero" style="font-size: 12.5px;">' + stock + '</span>';
-      html += '      <button type="button" class="btn-qty" onclick="TramaWeb.modificarStockProducto(\'' + prod.id + '\', 1)">+</button>';
-      html += '    </div>';
-
-      html += '    <button type="button" class="btn-eliminar-item" style="font-size: 14px;" onclick="TramaWeb.eliminarProductoCatalogo(\'' + prod.id + '\')" title="Eliminar del catálogo">';
-      html += '      🗑️';
-      html += '    </button>';
-      html += '  </div>';
-
-      html += '</div>';
+    lista.forEach(function (p) {
+      var estadoP = Cat.estadoPublico(p);
+      var unidades = p.modalidad === "PIEZA_UNICA" ? (p.vendidaEn ? "Pieza única vendida" : "Pieza única")
+        : (p.modalidad === "A_PEDIDO" ? "A pedido" : (p.manejaStock ? "Quedan " + Cat.unidadesVendibles(p) : "Sin conteo"));
+      var chk = h("input", { type: "checkbox", id: "sel-" + p.id, "aria-label": "Seleccionar " + p.nombre });
+      chk.checked = !!seleccionGestion[p.id];
+      chk.addEventListener("change", function () { if (chk.checked) seleccionGestion[p.id] = true; else delete seleccionGestion[p.id]; });
+      var miniatura = imagenSegura(p.fotoUrl, "", "gestion-miniatura") || h("div", { class: "gestion-miniatura", "aria-hidden": "true", text: obtenerIconoProducto(p.nombre) });
+      cont.appendChild(h("div", { class: "item-catalogo-gestion" }, [
+        h("div", { class: "item-catalogo-gestion-info" }, [
+          chk, miniatura,
+          h("div", { style: "flex: 1; min-width: 0;" }, [
+            h("strong", { class: "gestion-nombre", text: p.nombre }),
+            h("span", { class: "gestion-detalle", text: [Cat.etiquetaCategoria(p), Cat.ETIQUETA_MODALIDAD[p.modalidad], unidades, p.variantes.length > 1 ? p.variantes.length + " opciones" : ""].filter(Boolean).join(" · ") }),
+            h("div", { class: "gestion-estado" }, [
+              h("strong", { text: formatearMoneda(p.precio) }),
+              h("span", { class: "chip-estado-publico estado-" + estadoP.toLowerCase(), text: p.publicado ? (p.disponible ? "Público: " + Cat.etiquetaEstado(estadoP) : "No disponible") : "Solo yo lo veo" })
+            ])
+          ])
+        ]),
+        h("div", { class: "gestion-acciones" }, [
+          h("button", { type: "button", class: "btn-accion-pill", text: "Editar", onclick: function () { abrirModalPublicarProducto(p.id); } }),
+          h("button", { type: "button", class: "btn-accion-pill", "aria-pressed": p.publicado ? "true" : "false", text: p.publicado ? "Lo ven todos" : "Solo yo", onclick: function () { togglePublicadoProducto(p.id); } }),
+          h("button", { type: "button", class: "btn-accion-pill", "aria-pressed": p.disponible ? "true" : "false", text: p.disponible ? "Disponible" : "No disponible", onclick: function () {
+            operacionRemota(servicio.cambiarDisponible([p.id], !p.disponible), p.disponible ? "Marcado como no disponible" : "Marcado como disponible");
+          } }),
+          h("button", { type: "button", class: "btn-eliminar-item", "aria-label": "Eliminar " + p.nombre, text: "🗑️", onclick: function () { eliminarProductoCatalogo(p.id); } })
+        ])
+      ]));
     });
-
-    cont.innerHTML = html;
   }
 
+  function cambiarDisponibleSeleccion(disponible) {
+    var ids = Object.keys(seleccionGestion);
+    var filtroCat = (document.getElementById("gestion-filtro-categoria") || {}).value || "";
+    if (!ids.length) {
+      var alcance = filtroCat ? "todos los productos de " + Cat.CATEGORIAS[filtroCat] : "todo tu catálogo";
+      if (!confirm("No elegiste productos. ¿Aplicar a " + alcance + "?")) return;
+      ids = MIS_PRODUCTOS.filter(function (p) { return !filtroCat || p.categoria === filtroCat; }).map(function (p) { return p.id; });
+    }
+    if (!ids.length) return;
+    operacionRemota(servicio.cambiarDisponible(ids, disponible), ids.length + (disponible ? " productos disponibles" : " productos no disponibles")).then(function (r) {
+      if (r.ok) seleccionGestion = {};
+    });
+  }
+
+  /** Suma o resta una unidad (solo productos con una opción); no pisa ventas simultáneas. */
   function modificarStockProducto(prodId, delta) {
-    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
-    if (!prod) return;
-    prod.stockTotal = Math.max(0, (prod.stockTotal || 0) + delta);
-    guardarProductosEnStorage();
-    renderizarGestionCatalogo();
-    actualizarDashboardEmprendedora();
-    renderizarPOS();
-    mostrarToast("Stock de " + prod.nombre + " actualizado a " + prod.stockTotal);
+    var p = MIS_PRODUCTOS.find(function (x) { return x.id === prodId; });
+    if (!p || p.variantes.length !== 1) { abrirModalPublicarProducto(prodId); return; }
+    var nueva = Math.max(0, p.variantes[0].stock + delta);
+    var form = Object.assign({}, p, { variantes: [Object.assign({}, p.variantes[0], { stock: nueva })] });
+    operacionRemota(servicio.guardarProducto(Cat.productoParaGuardar(form, p)), "Cantidad actualizada");
   }
 
   function togglePublicadoProducto(prodId) {
-    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
-    if (!prod) return;
-    prod.publicado = prod.publicado === false ? true : false;
-    guardarProductosEnStorage();
-    renderizarGestionCatalogo();
-    actualizarDashboardEmprendedora();
-    renderizarTiendasMarketplace();
-    renderizarPOS();
-    mostrarToast(prod.nombre + (prod.publicado ? " ahora está visible en vitrina" : " fue pausado (oculto)"));
+    var p = MIS_PRODUCTOS.find(function (x) { return x.id === prodId; });
+    if (!p) return;
+    operacionRemota(servicio.cambiarPublicado(p.id, !p.publicado), p.publicado ? "Ahora solo tú lo ves" : "Ahora lo ven todos");
   }
 
   function editarPrecioProducto(prodId) {
-    var prod = PRODUCTOS.find(function (p) { return p.id === prodId; });
-    if (!prod) return;
-    var nuevo = prompt("Ingresa el nuevo precio para " + prod.nombre + ":", prod.precio);
-    if (nuevo === null) return;
-    var num = parseInt(nuevo, 10);
-    if (!isNaN(num) && num >= 0) {
-      prod.precio = num;
-      if (prod.variantes && prod.variantes[0]) {
-        prod.variantes[0].precio = num;
-      }
-      guardarProductosEnStorage();
-      renderizarGestionCatalogo();
-      actualizarDashboardEmprendedora();
-      renderizarTiendasMarketplace();
-      renderizarPOS();
-      mostrarToast("¡Precio actualizado a " + formatearMoneda(num) + "!");
-    }
+    abrirModalPublicarProducto(prodId);
   }
 
   function eliminarProductoCatalogo(prodId) {
-    var idx = PRODUCTOS.findIndex(function (p) { return p.id === prodId; });
-    if (idx === -1) return;
-    var nombre = PRODUCTOS[idx].nombre;
-    if (confirm("¿Segura que deseas eliminar '" + nombre + "' del catálogo?")) {
-      PRODUCTOS.splice(idx, 1);
-      guardarProductosEnStorage();
-      renderizarGestionCatalogo();
-      actualizarDashboardEmprendedora();
-      renderizarTiendasMarketplace();
-      renderizarPOS();
-      mostrarToast("Producto eliminado del catálogo");
-    }
+    var p = MIS_PRODUCTOS.find(function (x) { return x.id === prodId; });
+    if (!p) return;
+    if (!confirm("¿Borrar «" + p.nombre + "»? Se quitará de tu tienda y no se puede recuperar. Si solo se acabó, mejor márcalo como no disponible.")) return;
+    operacionRemota(servicio.eliminarProducto(p.id), "Producto borrado");
   }
 
   function abrirModalEditarTienda() {
-    if (!esUsuarioEmprendedora()) {
+    var tienda = obtenerTiendaUsuarioActivo();
+    if (!esUsuarioEmprendedora() || !tienda) {
       abrirModalAuthEmprendedora();
-      mostrarToast("🔒 Debes iniciar sesión como Emprendedor/a.");
+      mostrarToast("Inicia sesión como emprendedora para editar tu tienda.");
       return;
     }
-    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
-    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; }) || TIENDAS[1];
-
-    var inpNom = document.getElementById("edit-tienda-nombre");
-    var inpRub = document.getElementById("edit-tienda-rubro");
-    var inpSec = document.getElementById("edit-tienda-sector");
-    var inpWsp = document.getElementById("edit-tienda-whatsapp");
-    var inpBio = document.getElementById("edit-tienda-bio");
-
-    var cStock = document.getElementById("check-cap-stock");
-    var cWsp = document.getElementById("check-cap-whatsapp");
-    var cPed = document.getElementById("check-cap-pedido");
-    var cFer = document.getElementById("check-cap-ferias");
-    var cForo = document.getElementById("check-cap-foro");
-    var cAge = document.getElementById("check-cap-agenda");
-
-    if (inpNom) inpNom.value = tienda.nombre;
-    if (inpRub) inpRub.value = tienda.rubro;
-    if (inpSec) inpSec.value = tienda.sector;
-    if (inpWsp) inpWsp.value = tienda.whatsapp;
-    if (inpBio) inpBio.value = tienda.bio;
-
+    function poner(id, valor) { var el = document.getElementById(id); if (el) el.value = valor || ""; }
+    function marcar(id, valor) { var el = document.getElementById(id); if (el) el.checked = !!valor; }
+    poner("edit-tienda-nombre", tienda.nombre);
+    poner("edit-tienda-rubro", tienda.rubro);
+    poner("edit-tienda-sector", tienda.sector);
+    poner("edit-tienda-whatsapp", tienda.whatsapp);
+    poner("edit-tienda-bio", tienda.bio);
     var nec = tienda.necesidades || {};
-    if (cStock) cStock.checked = !!nec.tieneStock;
-    if (cWsp) cWsp.checked = !!nec.tieneVentaPorWhatsApp;
-    if (cPed) cPed.checked = !!nec.tieneProductosAPedido;
-    if (cFer) cFer.checked = !!nec.participaEnFerias;
-    if (cForo) cForo.checked = !!nec.tieneForoComunidad;
-    if (cAge) cAge.checked = !!nec.tieneAgendamiento;
-
+    marcar("check-cap-stock", nec.tieneStock);
+    marcar("check-cap-whatsapp", nec.tieneVentaPorWhatsApp);
+    marcar("check-cap-pedido", nec.tieneProductosAPedido);
+    marcar("check-cap-ferias", nec.participaEnFerias);
+    marcar("check-cap-foro", nec.tieneForoComunidad);
+    marcar("check-cap-agenda", nec.tieneAgendamiento);
+    marcar("check-historial-ventas", tienda.historialActivo !== false);
+    var v = valoresIniciales();
+    poner("def-categoria", v.categoria);
+    poner("def-modalidad", v.modalidad);
+    poner("def-al-agotarse", v.alAgotarse);
+    marcar("def-maneja-stock", v.manejaStock);
+    marcar("def-publicado", v.publicado);
+    mostrarAviso("edit-tienda-aviso", "");
     abrirModal("modal-editar-tienda");
   }
 
   function guardarPerfilTienda() {
-    var tiendaId = estado.tiendaEmprendedoraId || "t_minimarket_rosa";
-    var tienda = TIENDAS.find(function (t) { return t.id === tiendaId; });
-    if (!tienda) return;
-
-    var inpNom = document.getElementById("edit-tienda-nombre");
-    var inpRub = document.getElementById("edit-tienda-rubro");
-    var inpSec = document.getElementById("edit-tienda-sector");
-    var inpWsp = document.getElementById("edit-tienda-whatsapp");
-    var inpBio = document.getElementById("edit-tienda-bio");
-
-    if (inpNom && inpNom.value.trim()) tienda.nombre = inpNom.value.trim();
-    if (inpRub && inpRub.value.trim()) tienda.rubro = inpRub.value.trim();
-    if (inpSec && inpSec.value.trim()) tienda.sector = inpSec.value.trim();
-    if (inpWsp && inpWsp.value.trim()) tienda.whatsapp = inpWsp.value.trim();
-    if (inpBio && inpBio.value.trim()) tienda.bio = inpBio.value.trim();
-
-    tienda.necesidades = {
-      tieneStock: document.getElementById("check-cap-stock") ? document.getElementById("check-cap-stock").checked : true,
-      tieneVentaPorWhatsApp: document.getElementById("check-cap-whatsapp") ? document.getElementById("check-cap-whatsapp").checked : true,
-      tieneProductosAPedido: document.getElementById("check-cap-pedido") ? document.getElementById("check-cap-pedido").checked : false,
-      participaEnFerias: document.getElementById("check-cap-ferias") ? document.getElementById("check-cap-ferias").checked : true,
-      tieneForoComunidad: document.getElementById("check-cap-foro") ? document.getElementById("check-cap-foro").checked : true,
-      tieneAgendamiento: document.getElementById("check-cap-agenda") ? document.getElementById("check-cap-agenda").checked : false
-    };
-
-    try {
-      localStorage.setItem("trama_tiendas_completo", JSON.stringify(TIENDAS));
-    } catch(e) {}
-
-    if (firebaseFirestore) {
-      try {
-        firebaseFirestore.collection("tiendas").doc(tienda.id).set(tienda, { merge: true });
-      } catch (e){}
-    }
-
-    if (supabaseClient) {
-      try {
-        supabaseClient.from("tiendas").update({
-          nombre: tienda.nombre,
-          rubro: tienda.rubro,
-          sector: tienda.sector,
-          whatsapp: tienda.whatsapp,
-          bio: tienda.bio,
-          necesidades: tienda.necesidades
-        }).eq("id", tienda.id).then(function (res) {
-          if (res.error) {
-            console.warn("Aviso Supabase al actualizar tienda (RLS):", res.error.message);
-          } else {
-            console.log("✅ Tienda actualizada en Supabase Cloud");
-          }
-        }).catch(function (e) { console.warn("Aviso Supabase tienda:", e); });
-      } catch (errSupT) {
-        console.warn("Excepción actualizando tienda en Supabase:", errSupT);
+    var tienda = obtenerTiendaUsuarioActivo();
+    if (!tienda || !servicio) { mostrarAviso("edit-tienda-aviso", "Vuelve a iniciar sesión para guardar."); return; }
+    function valor(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+    function marcado(id, porDefecto) { var el = document.getElementById(id); return el ? el.checked : porDefecto; }
+    var cambios = {
+      nombre: valor("edit-tienda-nombre") || tienda.nombre,
+      rubro: valor("edit-tienda-rubro") || tienda.rubro,
+      sector: valor("edit-tienda-sector") || tienda.sector,
+      whatsapp: valor("edit-tienda-whatsapp"),
+      bio: valor("edit-tienda-bio"),
+      necesidades: {
+        tieneStock: marcado("check-cap-stock", true),
+        tieneVentaPorWhatsApp: marcado("check-cap-whatsapp", true),
+        tieneProductosAPedido: marcado("check-cap-pedido", false),
+        participaEnFerias: marcado("check-cap-ferias", true),
+        tieneForoComunidad: marcado("check-cap-foro", false),
+        tieneAgendamiento: marcado("check-cap-agenda", false)
+      },
+      historial_activo: marcado("check-historial-ventas", true),
+      valores_producto: {
+        categoria: valor("def-categoria") || "TEXTIL",
+        modalidad: valor("def-modalidad") || "REGULAR",
+        alAgotarse: valor("def-al-agotarse") || "MOSTRAR_AGOTADO",
+        manejaStock: marcado("def-maneja-stock", true),
+        publicado: marcado("def-publicado", false),
+        disponible: true
       }
+    };
+    if (tienda.historialActivo !== false && cambios.historial_activo === false &&
+        !confirm("Al desactivar el historial, las próximas ventas solo guardarán lo mínimo para descontar unidades (sin precio ni lugar). Las ventas anteriores no se borran. ¿Continuar?")) {
+      return;
     }
-
-    renderizarTiendasMarketplace();
-    actualizarDashboardEmprendedora();
-    cerrarModal("modal-editar-tienda");
-    mostrarToast("¡Perfil de " + tienda.nombre + " guardado con éxito!");
+    var boton = document.getElementById("btn-guardar-perfil-tienda");
+    if (boton) { boton.disabled = true; boton.textContent = "Guardando…"; }
+    mostrarAviso("edit-tienda-aviso", "");
+    servicio.actualizarTienda(tienda.id, cambios).then(function (r) {
+      if (!r.ok) { mostrarAviso("edit-tienda-aviso", "No se guardó: " + Cat.mensajeError(r.error)); return; }
+      var actualizada = Cat.normalizarTienda(r.datos[0]);
+      var idx = TIENDAS.findIndex(function (t) { return t.id === actualizada.id; });
+      if (idx >= 0) TIENDAS[idx] = actualizada; else TIENDAS.push(actualizada);
+      renderizarTiendasMarketplace();
+      actualizarDashboardEmprendedora();
+      cerrarModal("modal-editar-tienda");
+      mostrarToast("Tienda guardada en el servidor.");
+    }).then(function () {
+      if (boton) { boton.disabled = false; boton.textContent = "Guardar cambios"; }
+    });
   }
 
   var FERIAS_COMUNALES = [
@@ -5652,12 +5531,32 @@
     });
   }
 
+  /**
+   * Acceso real con Google mediante Supabase Auth. Si el proveedor no está
+   * habilitado en el servidor se informa; nunca se simula una sesión.
+   */
   function iniciarSesionGoogleWeb() {
-    aplicarUsuarioLocal("Paul Ferrada (Google)", "Comprador");
-    cerrarModal("modal-auth-web");
-    mostrarToast("🎉 ¡Bienvenido! Sesión de Comprador iniciada con Google (W28).");
+    mostrarAviso("auth-aviso-error", "");
+    if (!supabaseClient || !SUPABASE_URL) {
+      mostrarAviso("auth-aviso-error", "El acceso con Google no está disponible: la web no está conectada al servidor.");
+      return;
+    }
+    fetch(SUPABASE_URL + "/auth/v1/settings", { headers: { apikey: SUPABASE_ANON_KEY } }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).catch(function () { return null; }).then(function (ajustes) {
+      if (!ajustes) { mostrarAviso("auth-aviso-error", "No se pudo consultar el servidor de cuentas. Intenta más tarde."); return; }
+      if (!ajustes.external || !ajustes.external.google) {
+        mostrarAviso("auth-aviso-error", "El acceso con Google aún no está habilitado en el servidor. Usa tu correo y contraseña.");
+        return;
+      }
+      return supabaseClient.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      }).then(function (res) {
+        if (res && res.error) mostrarAviso("auth-aviso-error", "No se pudo iniciar el acceso con Google: " + Cat.mensajeError(res.error));
+      });
+    });
   }
-
 
   // Exponer API global para callbacks en línea
   
@@ -5811,7 +5710,7 @@
             aplicarUsuarioLocal(nombre, etiquetaRol(rol), fotoUrl || "");
             if (rol === "ADMIN") entrarModoAdmin();
             if (rol === "EMPRENDEDORA" && tiendaId) {
-              cargarTiendasDesdeSupabase();
+              cargarCatalogoPublico();
               actualizarDashboardEmprendedora();
             }
           }).then(function () {
@@ -5835,6 +5734,9 @@
 
 
   window.TramaWeb = {
+    agregarOpcionPublicar: agregarOpcionPublicar,
+    cambiarDisponibleSeleccion: cambiarDisponibleSeleccion,
+    actualizarReglasPublicar: actualizarReglasPublicar,
     abrirVitrinaTienda: abrirVitrinaTienda,
     abrirQRTienda: abrirQRTienda,
     abrirQRTiendaActual: abrirQRTiendaActual,
@@ -5883,7 +5785,7 @@
     registrarEmprendedorModal: registrarEmprendedorModal,
     autocompletarCredenciales: autocompletarCredenciales,
     ejecutarAuthFirebase: ejecutarAuthFirebase,
-    cargarTiendasDesdeSupabase: cargarTiendasDesdeSupabase,
+    cargarCatalogoPublico: cargarCatalogoPublico,
     cargarProductosDesdeSupabase: cargarProductosDesdeSupabase,
     entrarModoDev: entrarModoDev,
     entrarModoDonaRosa: entrarModoDonaRosa,
@@ -5952,24 +5854,16 @@
 
   // Si se llegó por el QR o el enlace de una tienda (?tienda=ID), abrir su ficha.
   // Se reintenta unos segundos porque las tiendas de Firestore llegan después.
+  // Si se llegó por el QR o el enlace de una tienda (?tienda=ID), se abre su
+  // ficha cuando termina la carga del servidor (no con datos viejos).
   function abrirTiendaDesdeEnlace() {
     var id = null;
-    try {
-      id = new URLSearchParams(window.location.search).get("tienda");
-    } catch (e) {
-      id = null;
-    }
+    try { id = new URLSearchParams(window.location.search).get("tienda"); } catch (e) { id = null; }
     if (!id) return;
-    var intentos = 0;
-    (function intentar() {
-      var existe = TIENDAS.some(function (t) { return t.id === id; });
-      if (existe) {
-        abrirVitrinaTienda(id);
-        return;
-      }
-      intentos++;
-      if (intentos < 12) setTimeout(intentar, 500);
-    })();
+    promesaCatalogo.then(function () {
+      if (TIENDAS.some(function (t) { return t.id === id; })) abrirVitrinaTienda(id);
+      else if (!estadoCatalogo.error) mostrarToast("No encontramos la tienda del enlace. Puede haber cambiado de dirección.");
+    });
   }
 
   function arrancar() {

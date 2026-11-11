@@ -24,6 +24,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Pruebas de reglas del catálogo web
+        run: node --test "tests/web/**/*.test.js"
+
+      # Valida y genera js/config.js. Nunca imprime los valores de los secretos.
+      # Si falta algo, el trabajo falla ANTES de publicar: no se sube un sitio
+      # de producción sin conexión a la base de datos.
       - name: Generar config.js desde secrets
         shell: bash
         env:
@@ -31,7 +42,33 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           CONFIG_FILE="./LA PAgina (segun)/proyectode10/js/config.js"
-          node -e 'const fs=require("fs"); const cfg={supabase:{url:process.env.SUPABASE_URL||"",anonKey:process.env.SUPABASE_ANON_KEY||""}}; fs.writeFileSync(process.argv[1], "window.__CONFIG__ = "+JSON.stringify(cfg)+";\n")' "$CONFIG_FILE"
+          node - "$CONFIG_FILE" <<'NODE'
+          const fs = require("fs");
+          const url = (process.env.SUPABASE_URL || "").trim();
+          const clave = (process.env.SUPABASE_ANON_KEY || "").trim();
+          const faltan = [];
+          if (!url) faltan.push("SUPABASE_URL");
+          if (!clave) faltan.push("SUPABASE_ANON_KEY");
+          function fallar(mensaje) {
+            console.log("::error::" + mensaje + " Ver docs/entrega5/administrador.md");
+            process.exit(1);
+          }
+          if (faltan.length) fallar("Faltan o están vacíos los secretos de GitHub Actions: " + faltan.join(", ") + ". No se publica el sitio.");
+          let host = "";
+          try { const u = new URL(url); if (u.protocol !== "https:") throw 0; host = u.hostname; } catch (e) { fallar("SUPABASE_URL no es una URL https válida."); }
+          const esJwt = /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(clave);
+          const esPublicable = /^sb_publishable_[\w-]+$/.test(clave);
+          if (!esJwt && !esPublicable) fallar("SUPABASE_ANON_KEY no tiene formato de clave pública (anon o sb_publishable_).");
+          if (/^sb_secret_/.test(clave)) fallar("SUPABASE_ANON_KEY parece una clave secreta. Usa solo la clave pública anon.");
+          if (esJwt) {
+            let rol = "";
+            try { rol = JSON.parse(Buffer.from(clave.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8")).role || ""; } catch (e) { /* sin rol legible */ }
+            if (rol && rol !== "anon") fallar("SUPABASE_ANON_KEY no es la clave anon (rol distinto). Nunca uses service_role en la web.");
+          }
+          const cfg = { supabase: { url, anonKey: clave } };
+          fs.writeFileSync(process.argv[2], "window.__CONFIG__ = " + JSON.stringify(cfg) + ";\n");
+          console.log("config.js generado para el proyecto en " + host.replace(/^([^.]{3})[^.]*/, "$1***"));
+          NODE
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

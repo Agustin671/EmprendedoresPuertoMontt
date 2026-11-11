@@ -25,3 +25,15 @@ supabase.properties
 # Configuración web con claves de Supabase y Firebase (RNF-SEG-03)
 **/js/config.js
 !**/js/config.ejemplo.js
+
+# Herramientas y dependencias locales de desarrollo
+node_modules/
+.herramientas/
+tests/.pgdata*/
+test-results/
+playwright-report/
+
+# Herramientas de IA instaladas localmente (no forman parte de la entrega)
+/.agents/
+/.claude/
+/skills-lock.json

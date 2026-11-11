@@ -56,6 +56,9 @@ fun TramaApp() {
     val rol = TramaStore.rol
     val ruta = nav.actual
 
+    // Con una sesión guardada, al abrir se sube lo pendiente y se trae lo nuevo del servidor.
+    androidx.compose.runtime.LaunchedEffect(Unit) { com.example.trabajodea10.data.SesionManager.actualizarAlAbrir() }
+
     BackHandler(enabled = nav.pila.size > 1) {
         nav.volver()
     }
@@ -167,6 +170,9 @@ private fun ContenidoSegunRuta(
             nav = nav,
             avisar = avisar
         )
+        Ruta.VistaPrevia -> com.example.trabajodea10.ui.emprendedora.PantallaVistaPrevia(nav = nav)
+        Ruta.HistorialVentas -> com.example.trabajodea10.ui.emprendedora.PantallaHistorialVentas(nav = nav, avisar = avisar)
+        Ruta.ConfigVentas -> com.example.trabajodea10.ui.emprendedora.PantallaConfigVentas(nav = nav, avisar = avisar)
 
         Ruta.VisInicio -> PantallaVisFerias(avisar = avisar)
         Ruta.VisProductos -> PantallaMarketplace(nav = nav, avisar = avisar)

@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import com.example.trabajodea10.data.remoto.ClienteSupabase
 import com.example.trabajodea10.data.remoto.ConfigSupabase
 import com.example.trabajodea10.data.remoto.ErrorSupabase
+import com.example.trabajodea10.data.remoto.FeriaRepositorio
+import com.example.trabajodea10.data.remoto.TipoRepositorio
 import com.example.trabajodea10.data.remoto.PerfilRepositorio
 import com.example.trabajodea10.data.remoto.ProductoRepositorio
 import com.example.trabajodea10.data.remoto.Sincronizador
@@ -143,6 +145,7 @@ object SesionManager {
 
     suspend fun iniciarSesion(correo: String, clave: String): Result<Rol> = runCatching {
         ClienteSupabase.ingresar(correo, clave)
+        olvidarHuellaDeOtraCuenta()
         prepararSesion()
     }.onFailure { Log.w(TAG, "Ingreso fallido: ${it.message}") }
 
@@ -157,6 +160,7 @@ object SesionManager {
         crearTienda: Boolean = false
     ): Result<Rol> = runCatching {
         ClienteSupabase.registrar(correo, clave, nombre, crearTienda)
+        olvidarHuellaDeOtraCuenta()
         prepararSesion()
     }.onFailure { Log.w(TAG, "Registro fallido: ${it.message}") }
 
@@ -173,22 +177,31 @@ object SesionManager {
         ClienteSupabase.recuperarContrasena(correo)
     }.onFailure { Log.w(TAG, "No se pudo enviar el correo de recuperación: ${it.message}") }
 
-    /** Hay una sesión guardada y la persona activó la huella. */
-    fun huellaDisponible(): Boolean =
-        ClienteSupabase.sesion != null && ClienteSupabase.leerDato(DATO_HUELLA) == "si"
+    private val uidSesion: String? get() = ClienteSupabase.sesion?.userId
 
-    fun huellaActivada(): Boolean = ClienteSupabase.leerDato(DATO_HUELLA) == "si"
+    /** Hay una sesión guardada y esa misma cuenta activó la huella. */
+    fun huellaDisponible(): Boolean = ReglaHuella.abreEstaCuenta(ClienteSupabase.leerDato(DATO_HUELLA), uidSesion)
 
+    fun huellaActivada(): Boolean = huellaDisponible()
+
+    /** Se guarda a qué cuenta pertenece la activación (no un simple «sí»). */
     fun activarHuella(activar: Boolean) {
-        ClienteSupabase.guardarDato(DATO_HUELLA, if (activar) "si" else null)
-        if (activar) ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, "si")
+        ClienteSupabase.guardarDato(DATO_HUELLA, if (activar) uidSesion else null)
+        if (activar) ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, uidSesion)
     }
 
-    /** Para no preguntar por la huella en cada ingreso si la persona dijo que no. */
-    fun huellaYaOfrecida(): Boolean = ClienteSupabase.leerDato(DATO_HUELLA_OFRECIDA) == "si"
+    /** Para no preguntar por la huella en cada ingreso si esta cuenta dijo que no. */
+    fun huellaYaOfrecida(): Boolean = ReglaHuella.abreEstaCuenta(ClienteSupabase.leerDato(DATO_HUELLA_OFRECIDA), uidSesion)
 
     fun marcarHuellaOfrecida() {
-        ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, "si")
+        ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, uidSesion)
+    }
+
+    /** Si entra otra cuenta con su contraseña, la huella de la cuenta anterior deja de servir. */
+    private fun olvidarHuellaDeOtraCuenta() {
+        val uid = uidSesion ?: return
+        if (ReglaHuella.debeOlvidar(ClienteSupabase.leerDato(DATO_HUELLA), uid)) ClienteSupabase.guardarDato(DATO_HUELLA, null)
+        if (ReglaHuella.debeOlvidar(ClienteSupabase.leerDato(DATO_HUELLA_OFRECIDA), uid)) ClienteSupabase.guardarDato(DATO_HUELLA_OFRECIDA, null)
     }
 
     /** Después de validar la huella con el sistema: renueva la sesión guardada y entra. */
@@ -209,6 +222,18 @@ object SesionManager {
         prepararSesion()
     }
 
+    /**
+     * Al abrir la app con una sesión guardada: sube lo pendiente y trae del
+     * servidor la tienda, el catálogo, el historial, los tipos y las ferias.
+     * Sin conexión no cambia nada y se sigue con lo guardado en el celular.
+     */
+    suspend fun actualizarAlAbrir(): Boolean {
+        if (ClienteSupabase.sesion == null || !ConfigSupabase.configurado || TramaStore.rol == null) return false
+        return runCatching { prepararSesion() }
+            .onFailure { Log.w(TAG, "Sin actualizar al abrir (se usa lo guardado): ${it.message}") }
+            .isSuccess
+    }
+
     /** Lee el perfil del servidor y deja la app lista según el rol. */
     private suspend fun prepararSesion(): Rol {
         val perfil = PerfilRepositorio.miPerfil()
@@ -219,9 +244,15 @@ object SesionManager {
         ClienteSupabase.guardarDato(DATO_ROL, perfil.rol.name)
         ClienteSupabase.guardarDato(DATO_FOTO, perfil.fotoUrl)
 
+        // Datos y cola de esta cuenta (los de otra cuenta quedan aparte).
+        TramaStore.cambiarCuenta(perfil.id)
         if (perfil.rol == Rol.EMPRENDEDORA && perfil.tiendaId != null) {
+            // Primero se sube lo pendiente; así lo descargado ya lo incluye.
+            runCatching { Sincronizador.subirPendientes() }
             traerMiTienda(perfil.tiendaId)
         }
+        runCatching { TipoRepositorio.listar() }.onSuccess { TramaStore.reemplazarTipos(it) }
+        runCatching { FeriaRepositorio.listar() }.onSuccess { TramaStore.reemplazarFeriasPlataforma(it) }
         TramaStore.iniciarSesion(perfil.rol)
         Sincronizador.subirEnSegundoPlano()
         return perfil.rol
@@ -231,7 +262,7 @@ object SesionManager {
     private suspend fun traerMiTienda(tiendaId: String) {
         TiendaRepositorio.obtener(tiendaId)?.let { TramaStore.guardarTienda(it) }
         runCatching { ProductoRepositorio.deTienda(tiendaId) }
-            .onSuccess { TramaStore.reemplazarProductosDeTienda(tiendaId, it, Sincronizador.idsProductosPendientes()) }
+            .onSuccess { TramaStore.reemplazarProductosDeTienda(tiendaId, it, Sincronizador.idsProductosPendientes(), Sincronizador.idsEliminadosPendientes()) }
             .onFailure { Log.w(TAG, "No se pudieron traer los productos: ${it.message}") }
         runCatching { VentaRepositorio.historial(tiendaId) }
             .onSuccess { TramaStore.reemplazarVentas(it, Sincronizador.idsVentasPendientes()) }
@@ -253,8 +284,9 @@ object SesionManager {
      */
     suspend fun cerrarSesionCompleta() {
         if (!huellaActivada()) {
+            // Lo que no alcanzó a subirse queda guardado en la cola de esta cuenta
+            // (no se descarta) y se sube la próxima vez que entre con ella.
             runCatching { Sincronizador.subirPendientes() }
-            Sincronizador.descartarTodo()
             ClienteSupabase.cerrarSesion()
             ClienteSupabase.guardarDato(DATO_ROL, null)
             ClienteSupabase.guardarDato(DATO_NOMBRE, null)
@@ -263,6 +295,7 @@ object SesionManager {
             nombreUsuarioActual = ""
             fotoPerfilUrl = ""
             rolUsuarioActual = null
+            TramaStore.cambiarCuenta(null)
         }
         TramaStore.cerrarSesion()
     }
