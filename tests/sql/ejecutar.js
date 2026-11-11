@@ -28,6 +28,16 @@ async function instalacionLimpia(pg, r) {
     for (const f of filas) r.ok("pruebas_rls.sql · " + f.resultado.slice(6), f.resultado.startsWith("OK"));
     r.ok("pruebas_rls.sql produjo resultados", filas.length > 30, filas.length);
 
+    // Contrato compartido: la función del servidor da el mismo estado que web y app.
+    const contrato = require("../contrato/casos_estado.json");
+    for (const caso of contrato.casos) {
+      const p = caso.p;
+      const res = await c.query("select public.estado_publico_producto($1, $2, $3, $4, $5, $6, $7::jsonb) e",
+        [p.publicado, p.disponible, p.vendida ? new Date() : null, p.manejaStock, p.modalidad, p.alAgotarse,
+         JSON.stringify(p.variantes.map((s, i) => ({ id: "v" + i, stock: s })))]);
+      r.igual("Contrato de estado · " + caso.nombre, res.rows[0].e, caso.estado);
+    }
+
     await crearUsuarios(c);
     await pruebasEntrega5(c, r);
     await concurrencia(pg, "limpia", c, r);

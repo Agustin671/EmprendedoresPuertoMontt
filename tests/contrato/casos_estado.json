@@ -1,0 +1,20 @@
+{
+  "descripcion": "Tabla de verdad del estado público de un producto. La usan las pruebas SQL (estado_publico_producto), web (catalogo.js) y Android (ReglasCatalogo.kt). Fuente: decisiones de Entrega 5 en docs/entrega5/contrato-catalogo.md.",
+  "casos": [
+    { "nombre": "regular con unidades", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [5] }, "estado": "DISPONIBLE" },
+    { "nombre": "no publicado", "p": { "publicado": false, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [5] }, "estado": "OCULTO" },
+    { "nombre": "no disponible", "p": { "publicado": true, "disponible": false, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [5] }, "estado": "OCULTO" },
+    { "nombre": "agotado, mostrar agotado", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [0, 0] }, "estado": "AGOTADO" },
+    { "nombre": "agotado, ocultar", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "OCULTAR", "variantes": [0] }, "estado": "OCULTO" },
+    { "nombre": "agotado, pasar a pedido", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "PASAR_A_PEDIDO", "variantes": [0] }, "estado": "A_PEDIDO" },
+    { "nombre": "una opción agotada y otra con unidades", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "OCULTAR", "variantes": [0, 2] }, "estado": "DISPONIBLE" },
+    { "nombre": "sin control de unidades", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": false, "alAgotarse": "OCULTAR", "variantes": [0] }, "estado": "DISPONIBLE" },
+    { "nombre": "a pedido sin unidades", "p": { "publicado": true, "disponible": true, "modalidad": "A_PEDIDO", "manejaStock": false, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [0] }, "estado": "A_PEDIDO" },
+    { "nombre": "a pedido con conteo y unidades", "p": { "publicado": true, "disponible": true, "modalidad": "A_PEDIDO", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [3] }, "estado": "A_PEDIDO" },
+    { "nombre": "pieza única disponible", "p": { "publicado": true, "disponible": true, "modalidad": "PIEZA_UNICA", "manejaStock": true, "alAgotarse": "OCULTAR", "variantes": [1, 0] }, "estado": "DISPONIBLE" },
+    { "nombre": "pieza única vendida", "p": { "publicado": true, "disponible": true, "modalidad": "PIEZA_UNICA", "manejaStock": true, "alAgotarse": "OCULTAR", "variantes": [0], "vendida": true }, "estado": "OCULTO" },
+    { "nombre": "pieza única sin unidad aunque diga mostrar agotado", "p": { "publicado": true, "disponible": true, "modalidad": "PIEZA_UNICA", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [0] }, "estado": "OCULTO" },
+    { "nombre": "vendida_en manda aunque la modalidad cambie", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [4], "vendida": true }, "estado": "OCULTO" },
+    { "nombre": "sin opciones", "p": { "publicado": true, "disponible": true, "modalidad": "REGULAR", "manejaStock": true, "alAgotarse": "MOSTRAR_AGOTADO", "variantes": [] }, "estado": "AGOTADO" }
+  ]
+}
