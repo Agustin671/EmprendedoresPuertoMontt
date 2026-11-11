@@ -585,4 +585,9 @@ grant select on public.migraciones_aplicadas to authenticated;
 insert into public.migraciones_aplicadas (nombre) values ('05_catalogo_ventas')
 on conflict (nombre) do update set aplicada_en = now();
 
+-- Algunas instalaciones de Supabase conceden ALL a los clientes por defecto.
+-- RLS no protege TRUNCATE. Los clientes no necesitan vaciar tablas, crear
+-- triggers ni referencias: se conservan solo sus permisos de datos existentes.
+revoke truncate, references, trigger on all tables in schema public from anon, authenticated;
+
 notify pgrst, 'reload schema';

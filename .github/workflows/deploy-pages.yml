@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Pruebas de reglas del catálogo web
         run: node --test "tests/web/**/*.test.js"
 

@@ -20,8 +20,17 @@ async function instalacionLimpia(pg, r) {
                      "supabase/03_migracion_fotos.sql", "supabase/04_registro_vendedores.sql", "supabase/05_catalogo_ventas.sql"]) {
       await ejecutarArchivo(c, f);
     }
+    // Supabase del curso concede estos privilegios por defecto; RLS no protege TRUNCATE.
+    await c.query("grant truncate, references, trigger on all tables in schema public to anon, authenticated");
     await ejecutarArchivo(c, "supabase/05_catalogo_ventas.sql");
     r.ok("05 se puede ejecutar dos veces", true);
+    const privilegiosAmplios = (await c.query(`select count(*)::int n from pg_tables t
+      cross join (values ('anon'), ('authenticated')) r(rol)
+      where t.schemaname = 'public' and (
+        has_table_privilege(r.rol, format('%I.%I', t.schemaname, t.tablename), 'TRUNCATE') or
+        has_table_privilege(r.rol, format('%I.%I', t.schemaname, t.tablename), 'TRIGGER') or
+        has_table_privilege(r.rol, format('%I.%I', t.schemaname, t.tablename), 'REFERENCES'))`)).rows[0].n;
+    r.igual("Clientes sin permisos de vaciar tablas ni cambiar su estructura", privilegiosAmplios, 0);
 
     const salida = await ejecutarArchivo(c, "supabase/pruebas_rls.sql");
     const filas = [].concat(salida).filter(x => x && x.fields && x.fields.some(f => f.name === "resultado")).flatMap(x => x.rows);

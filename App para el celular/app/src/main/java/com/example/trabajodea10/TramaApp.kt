@@ -56,6 +56,9 @@ fun TramaApp() {
     val rol = TramaStore.rol
     val ruta = nav.actual
 
+    // Con una sesión guardada, al abrir se sube lo pendiente y se trae lo nuevo del servidor.
+    androidx.compose.runtime.LaunchedEffect(Unit) { com.example.trabajodea10.data.SesionManager.actualizarAlAbrir() }
+
     BackHandler(enabled = nav.pila.size > 1) {
         nav.volver()
     }
