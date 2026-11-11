@@ -1,0 +1,203 @@
+
+> test:sql
+> node tests/sql/ejecutar.js --version 15
+
+OK    PG15 limpia · 05 se puede ejecutar dos veces
+FALLA PG15 limpia · Clientes sin permisos de vaciar tablas ni cambiar su estructura  → {"real":20,"esperado":0}
+OK    PG15 limpia · pruebas_rls.sql · Admin queda como ADMIN
+OK    PG15 limpia · pruebas_rls.sql · Doña Marta queda como EMPRENDEDORA con su tienda
+OK    PG15 limpia · pruebas_rls.sql · Correo no autorizado queda como VISITANTE
+OK    PG15 limpia · pruebas_rls.sql · La tienda de Marta queda a su nombre
+OK    PG15 limpia · pruebas_rls.sql · Registro vendedor crea tienda propia
+OK    PG15 limpia · pruebas_rls.sql · Metadatos no pueden crear una cuenta ADMIN
+OK    PG15 limpia · pruebas_rls.sql · Marta edita su tienda
+OK    PG15 limpia · pruebas_rls.sql · Marta NO edita la tienda de otra
+OK    PG15 limpia · pruebas_rls.sql · Marta crea un producto en su tienda
+OK    PG15 limpia · pruebas_rls.sql · Marta NO crea productos en otra tienda
+OK    PG15 limpia · pruebas_rls.sql · Marta ve su producto no publicado
+OK    PG15 limpia · pruebas_rls.sql · Visitante NO ve productos no publicados
+OK    PG15 limpia · pruebas_rls.sql · Visitante ve productos publicados
+OK    PG15 limpia · pruebas_rls.sql · Visitante NO crea productos
+OK    PG15 limpia · pruebas_rls.sql · Vendedora nueva crea producto en su tienda
+OK    PG15 limpia · pruebas_rls.sql · Vendedora nueva NO crea producto en otra tienda
+OK    PG15 limpia · pruebas_rls.sql · Sin sesión se ven las tiendas
+OK    PG15 limpia · pruebas_rls.sql · Sin sesión NO se modifica nada
+OK    PG15 limpia · pruebas_rls.sql · Marta registra una venta con registrar_venta
+OK    PG15 limpia · pruebas_rls.sql · Marta NO inserta ventas directamente (solo registrar_venta)
+OK    PG15 limpia · pruebas_rls.sql · Marta ve su historial de ventas
+OK    PG15 limpia · pruebas_rls.sql · El admin NO ve ventas (RN-10)
+OK    PG15 limpia · pruebas_rls.sql · Sin sesión NO se ven ventas
+OK    PG15 limpia · pruebas_rls.sql · El admin autoriza una emprendedora
+OK    PG15 limpia · pruebas_rls.sql · Marta NO autoriza cuentas
+OK    PG15 limpia · pruebas_rls.sql · Visitante NO se cambia el rol
+OK    PG15 limpia · pruebas_rls.sql · El admin crea una feria
+OK    PG15 limpia · pruebas_rls.sql · Marta NO crea ferias (RN-02)
+OK    PG15 limpia · pruebas_rls.sql · Marta sube foto en su carpeta
+OK    PG15 limpia · pruebas_rls.sql · Marta NO sube foto en carpeta ajena
+OK    PG15 limpia · pruebas_rls.sql · Marta NO mueve su foto a una carpeta ajena
+OK    PG15 limpia · pruebas_rls.sql · Sin sesión NO se suben fotos
+OK    PG15 limpia · pruebas_rls.sql · Marta cambia su foto con la función
+OK    PG15 limpia · pruebas_rls.sql · La foto de Marta quedó guardada
+OK    PG15 limpia · pruebas_rls.sql · Marta NO cambia su perfil directamente
+OK    PG15 limpia · pruebas_rls.sql · Compradora cambia su foto con la función
+OK    PG15 limpia · pruebas_rls.sql · La función NO cambió el rol de Marta
+OK    PG15 limpia · pruebas_rls.sql · La función NO cambió la foto de otra persona
+OK    PG15 limpia · pruebas_rls.sql · Marta sube su foto de perfil a su carpeta
+OK    PG15 limpia · pruebas_rls.sql · Marta NO sube foto de perfil a carpeta ajena
+OK    PG15 limpia · pruebas_rls.sql · Marta cambia el logo de su tienda
+OK    PG15 limpia · pruebas_rls.sql · El logo de Marta quedó guardado
+OK    PG15 limpia · pruebas_rls.sql · Marta NO cambia el logo de otra tienda
+OK    PG15 limpia · pruebas_rls.sql · Compradora abre su tienda con crear_mi_tienda
+OK    PG15 limpia · pruebas_rls.sql · La compradora quedó como EMPRENDEDORA con tienda propia
+OK    PG15 limpia · pruebas_rls.sql · Emprendedora nueva recibe tienda propia
+OK    PG15 limpia · pruebas_rls.sql produjo resultados
+OK    PG15 limpia · Contrato de estado · regular con unidades
+OK    PG15 limpia · Contrato de estado · no publicado
+OK    PG15 limpia · Contrato de estado · no disponible
+OK    PG15 limpia · Contrato de estado · agotado, mostrar agotado
+OK    PG15 limpia · Contrato de estado · agotado, ocultar
+OK    PG15 limpia · Contrato de estado · agotado, pasar a pedido
+OK    PG15 limpia · Contrato de estado · una opción agotada y otra con unidades
+OK    PG15 limpia · Contrato de estado · sin control de unidades
+OK    PG15 limpia · Contrato de estado · a pedido sin unidades
+OK    PG15 limpia · Contrato de estado · a pedido con conteo y unidades
+OK    PG15 limpia · Contrato de estado · pieza única disponible
+OK    PG15 limpia · Contrato de estado · pieza única vendida
+OK    PG15 limpia · Contrato de estado · pieza única sin unidad aunque diga mostrar agotado
+OK    PG15 limpia · Contrato de estado · vendida_en manda aunque la modalidad cambie
+OK    PG15 limpia · Contrato de estado · sin opciones
+OK    PG15 limpia · Sin sesión solo se ven los productos que la regla deja ver
+OK    PG15 limpia · Una compradora con sesión tampoco ve ocultos (RLS, no JavaScript)
+OK    PG15 limpia · La dueña sigue viendo todos sus productos (RN-09)
+OK    PG15 limpia · Estados públicos calculados en el servidor
+OK    PG15 limpia · Cada opción guarda su precio, foto y cantidad
+OK    PG15 limpia · Pieza única no acepta más de una unidad
+OK    PG15 limpia · Precio negativo rechazado
+OK    PG15 limpia · Foto de opción que no es https rechazada
+OK    PG15 limpia · Otra emprendedora no puede sobrescribir un producto ajeno
+OK    PG15 limpia · Ni por actualización directa (0 filas)
+OK    PG15 limpia · El tienda_id enviado por el cliente se ignora: queda en la tienda de la sesión
+OK    PG15 limpia · Sin sesión no se guarda
+OK    PG15 limpia · Venta registrada
+OK    PG15 limpia · Descuenta solo la opción vendida
+OK    PG15 limpia · Guarda precio de la opción, fecha y lugar
+OK    PG15 limpia · Sin unidades suficientes se rechaza (no queda en cero en silencio)
+OK    PG15 limpia · El rechazo no cambia cantidades ni guarda venta
+OK    PG15 limpia · Reintento con el mismo id y contenido no duplica
+OK    PG15 limpia · Mismo id con otro contenido no modifica la venta previa
+OK    PG15 limpia · La venta previa sigue intacta
+OK    PG15 limpia · Otra tienda no puede vender productos ajenos
+OK    PG15 limpia · Un tiendaId ajeno en la venta se rechaza
+OK    PG15 limpia · Cantidad cero rechazada
+OK    PG15 limpia · Cantidad negativa rechazada
+OK    PG15 limpia · Cantidad decimal rechazada
+OK    PG15 limpia · Cantidad texto rechazada
+OK    PG15 limpia · Opción inexistente rechazada
+OK    PG15 limpia · Sin sesión no se vende
+OK    PG15 limpia · Producto sin conteo se vende sin tocar cantidades
+OK    PG15 limpia · Un producto a pedido queda registrado como encargo
+OK    PG15 limpia · Una opción agotada no se vende como entrega inmediata
+OK    PG15 limpia · La misma opción sí se puede anotar como encargo
+OK    PG15 limpia · Pieza única vendida queda marcada y sin unidades
+OK    PG15 limpia · La pieza vendida desaparece del catálogo público
+OK    PG15 limpia · No se puede vender dos veces
+OK    PG15 limpia · Ninguna edición vuelve a publicarla (RN-08)
+OK    PG15 limpia · vendida_en es permanente
+OK    PG15 limpia · Editar con stockBase suma la diferencia a lo que queda (5-2+2)
+OK    PG15 limpia · Si la diferencia deja la opción bajo cero, se informa conflicto
+OK    PG15 limpia · APK antiguo: el nombre se actualiza
+OK    PG15 limpia · APK antiguo: no pisa cantidades
+OK    PG15 limpia · APK antiguo: no borra precio ni foto de opciones
+OK    PG15 limpia · APK antiguo: su subida directa de ventas se rechaza con un error claro
+OK    PG15 limpia · Tampoco puede modificar ventas existentes
+OK    PG15 limpia · Una opción sin id recibe un id estable
+OK    PG15 limpia · El admin no ve ventas (RN-10)
+OK    PG15 limpia · Otra emprendedora no ve ventas ajenas
+OK    PG15 limpia · Sin sesión no se ven ventas
+OK    PG15 limpia · Historial desactivado: solo registro técnico mínimo
+OK    PG15 limpia · Historial desactivado: igual descuenta la cantidad
+OK    PG15 limpia · Las ventas anteriores no se borran
+OK    PG15 limpia · Feria inexistente rechazada
+OK    PG15 limpia · Venta en feria de la plataforma
+OK    PG15 limpia · Sin sesión se leen los tipos de producto
+OK    PG15 limpia · Una emprendedora no crea tipos
+OK    PG15 limpia · No se puede mover una foto propia a una carpeta ajena
+OK    PG15 limpia · Otra persona no borra fotos ajenas
+OK    PG15 limpia · Sin sesión no se suben fotos
+OK    PG15 limpia · La segunda venta espera el bloqueo de la primera
+OK    PG15 limpia · Solo una se lleva la última unidad
+OK    PG15 limpia · Queda una venta y cero unidades
+OK    PG15 limpia · Reintentos simultáneos: uno registra y el otro reconoce la venta
+OK    PG15 limpia · Reintentos simultáneos descuentan una sola vez
+OK    PG15 limpia · 50 ventas cruzadas sin interbloqueos ni errores
+OK    PG15 limpia · Cada producto descontó exactamente 50
+OK    PG15 limpia · Reponer 5 mientras se venden 3 deja 12 (no pisa la venta)
+OK    PG15 actualización · Se conservan productos, ventas y tiendas
+OK    PG15 actualización · La venta anterior sigue visible para su dueña y completa
+OK    PG15 actualización · Producto antiguo: id de opción asignado y valores por defecto
+OK    PG15 actualización · Los productos publicados con unidades siguen visibles sin sesión
+OK    PG15 actualización · Queda registrada la migración
+OK    PG15 actualización · Sin sesión solo se ven los productos que la regla deja ver
+OK    PG15 actualización · Una compradora con sesión tampoco ve ocultos (RLS, no JavaScript)
+OK    PG15 actualización · La dueña sigue viendo todos sus productos (RN-09)
+OK    PG15 actualización · Estados públicos calculados en el servidor
+OK    PG15 actualización · Cada opción guarda su precio, foto y cantidad
+OK    PG15 actualización · Pieza única no acepta más de una unidad
+OK    PG15 actualización · Precio negativo rechazado
+OK    PG15 actualización · Foto de opción que no es https rechazada
+OK    PG15 actualización · Otra emprendedora no puede sobrescribir un producto ajeno
+OK    PG15 actualización · Ni por actualización directa (0 filas)
+OK    PG15 actualización · El tienda_id enviado por el cliente se ignora: queda en la tienda de la sesión
+OK    PG15 actualización · Sin sesión no se guarda
+OK    PG15 actualización · Venta registrada
+OK    PG15 actualización · Descuenta solo la opción vendida
+OK    PG15 actualización · Guarda precio de la opción, fecha y lugar
+OK    PG15 actualización · Sin unidades suficientes se rechaza (no queda en cero en silencio)
+OK    PG15 actualización · El rechazo no cambia cantidades ni guarda venta
+OK    PG15 actualización · Reintento con el mismo id y contenido no duplica
+OK    PG15 actualización · Mismo id con otro contenido no modifica la venta previa
+OK    PG15 actualización · La venta previa sigue intacta
+OK    PG15 actualización · Otra tienda no puede vender productos ajenos
+OK    PG15 actualización · Un tiendaId ajeno en la venta se rechaza
+OK    PG15 actualización · Cantidad cero rechazada
+OK    PG15 actualización · Cantidad negativa rechazada
+OK    PG15 actualización · Cantidad decimal rechazada
+OK    PG15 actualización · Cantidad texto rechazada
+OK    PG15 actualización · Opción inexistente rechazada
+OK    PG15 actualización · Sin sesión no se vende
+OK    PG15 actualización · Producto sin conteo se vende sin tocar cantidades
+OK    PG15 actualización · Un producto a pedido queda registrado como encargo
+OK    PG15 actualización · Una opción agotada no se vende como entrega inmediata
+OK    PG15 actualización · La misma opción sí se puede anotar como encargo
+OK    PG15 actualización · Pieza única vendida queda marcada y sin unidades
+OK    PG15 actualización · La pieza vendida desaparece del catálogo público
+OK    PG15 actualización · No se puede vender dos veces
+OK    PG15 actualización · Ninguna edición vuelve a publicarla (RN-08)
+OK    PG15 actualización · vendida_en es permanente
+OK    PG15 actualización · Editar con stockBase suma la diferencia a lo que queda (5-2+2)
+OK    PG15 actualización · Si la diferencia deja la opción bajo cero, se informa conflicto
+OK    PG15 actualización · APK antiguo: el nombre se actualiza
+OK    PG15 actualización · APK antiguo: no pisa cantidades
+OK    PG15 actualización · APK antiguo: no borra precio ni foto de opciones
+OK    PG15 actualización · APK antiguo: su subida directa de ventas se rechaza con un error claro
+OK    PG15 actualización · Tampoco puede modificar ventas existentes
+OK    PG15 actualización · Una opción sin id recibe un id estable
+OK    PG15 actualización · El admin no ve ventas (RN-10)
+OK    PG15 actualización · Otra emprendedora no ve ventas ajenas
+OK    PG15 actualización · Sin sesión no se ven ventas
+OK    PG15 actualización · Historial desactivado: solo registro técnico mínimo
+OK    PG15 actualización · Historial desactivado: igual descuenta la cantidad
+OK    PG15 actualización · Las ventas anteriores no se borran
+OK    PG15 actualización · Feria inexistente rechazada
+OK    PG15 actualización · Venta en feria de la plataforma
+OK    PG15 actualización · Sin sesión se leen los tipos de producto
+OK    PG15 actualización · Una emprendedora no crea tipos
+OK    PG15 actualización · No se puede mover una foto propia a una carpeta ajena
+OK    PG15 actualización · Otra persona no borra fotos ajenas
+OK    PG15 actualización · Sin sesión no se suben fotos
+OK    PG15 actualización · El diagnóstico no modifica datos
+OK    PG15 actualización · La reversión conserva productos, ventas y cantidades
+OK    PG15 actualización · Tras revertir, el APK 1.2 vuelve a poder subir ventas
+OK    PG15 actualización · 05 se puede volver a aplicar después de revertir
+
+196 de 197 casos correctos (PG15)

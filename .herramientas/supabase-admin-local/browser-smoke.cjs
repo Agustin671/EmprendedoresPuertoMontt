@@ -1,0 +1,19 @@
+const {chromium,expect}=require('@playwright/test');const crypto=require('crypto');const fs=require('fs');const path=require('path');
+const {crearServidor}=require('../../tests/e2e/servidor');const {query,root}=require('./api.cjs');
+const email='revision-web-'+crypto.randomBytes(6).toString('hex')+'@example.com';const password=crypto.randomBytes(20).toString('base64url')+'A1!';const name='Prueba temporal navegador';
+const results=[];let browser,server;const q=s=>"'"+s.replaceAll("'","''")+"'";
+(async()=>{try{
+ server=crearServidor();await new Promise(r=>server.listen(4177,'127.0.0.1',r));browser=await chromium.launch({channel:'msedge',headless:true});const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('dialog',d=>d.accept());
+ await page.goto('http://localhost:4177/',{waitUntil:'domcontentloaded'});await expect(page.locator('#texto-estado-sincronizacion')).toContainText('Conectado · datos del servidor',{timeout:30000});results.push('Web local conectada al servidor real');
+ await page.evaluate(()=>window.TramaWeb.abrirModalRegistroEmprendedor());await page.locator('#reg-emp-nombre').fill(name);await page.locator('#reg-emp-email').fill(email);await page.locator('#reg-emp-password').fill(password);await page.locator('#btn-submit-reg-emp').click();
+ await expect(page.locator('#modal-registro-emprendedor')).not.toHaveClass(/abierto/,{timeout:30000});await expect(page.locator('#btn-abrir-publicar-nav')).toBeVisible();results.push('Registro de emprendedora desde formulario web');
+ await page.locator('#btn-abrir-publicar-nav').click();await page.locator('#pub-nombre').fill('Producto temporal navegador');await page.locator('#pub-precio').fill('5000');await page.locator('#pub-op-0-nombre').fill('Azul');await page.locator('#pub-op-0-stock').fill('3');await page.locator('#pub-publicado').check();await page.locator('#pub-guardar').click();
+ await expect(page.locator('#modal-publicar-producto')).not.toHaveClass(/abierto/,{timeout:30000});await expect(page.locator('#toast-texto')).toContainText('Guardado en el servidor');results.push('Guardar producto desde formulario web en Supabase');
+ const rows=await query(`select t.id from public.tiendas t join auth.users u on u.id=t.owner_id where u.email=${q(email)}`);if(rows.length!==1)throw new Error('Tienda temporal no encontrada');
+ const publicPage=await browser.newPage();await publicPage.goto('http://localhost:4177/?tienda='+encodeURIComponent(rows[0].id),{waitUntil:'domcontentloaded'});await expect(publicPage.locator('#lista-productos-tienda-modal')).toContainText('Producto temporal navegador',{timeout:30000});results.push('Producto visible en navegador sin sesión');
+ await publicPage.screenshot({path:path.join(root,'web-real-verificada.png')});
+ console.log(JSON.stringify({ok:true,checks:results}));fs.writeFileSync(path.join(root,'browser-results.json'),JSON.stringify({ok:true,checks:results},null,2));
+}catch(e){fs.writeFileSync(path.join(root,'browser-error.local.txt'),e.stack);console.error('Verificación navegador: '+e.message.slice(0,250));process.exitCode=1;}finally{
+ if(browser)await browser.close();if(server)await new Promise(r=>server.close(r));
+ await query(`begin; delete from public.ventas where tienda_id in(select t.id from public.tiendas t join auth.users u on u.id=t.owner_id where u.email=${q(email)}); delete from public.productos where tienda_id in(select t.id from public.tiendas t join auth.users u on u.id=t.owner_id where u.email=${q(email)}); delete from public.perfiles where id in(select id from auth.users where email=${q(email)}); delete from public.tiendas where owner_id in(select id from auth.users where email=${q(email)}); delete from auth.users where email=${q(email)}; commit; select 'LIMPIEZA_WEB_OK' as resultado;`);console.log('Cuenta y producto temporales del navegador eliminados.');
+}})().catch(e=>{console.error(e.message);process.exitCode=1;});

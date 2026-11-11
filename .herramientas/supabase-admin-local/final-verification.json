@@ -1,0 +1,22 @@
+{
+  "counts": {
+    "fairs": 0,
+    "sales": 1,
+    "users": 15,
+    "stores": 5,
+    "products": 14,
+    "profiles": 15
+  },
+  "storageFiles": 2,
+  "originalData": [
+    {
+      "table": "productos",
+      "unchanged": true
+    },
+    {
+      "table": "ventas",
+      "unchanged": true
+    }
+  ],
+  "excessPrivileges": 0
+}

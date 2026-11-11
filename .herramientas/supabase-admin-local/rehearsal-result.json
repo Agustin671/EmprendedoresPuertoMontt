@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "backupRoundtrip": true,
+  "originalProductsAndSalesUnchanged": true,
+  "counts": {
+    "stores": 5,
+    "profiles": 15,
+    "products": 14,
+    "sales": 1
+  },
+  "repair04": 1
+}

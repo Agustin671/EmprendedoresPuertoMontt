@@ -1,0 +1,19 @@
+Error: expect(locator).toHaveText(expected) failed
+
+Locator:  locator('#texto-estado-sincronizacion')
+Expected: "Conectado · datos del servidor"
+Received: "Conectado · datos del servidor (11:40 a. m.)"
+Timeout:  30000ms
+
+Call log:
+  - Expect "toHaveText" locator('#texto-estado-sincronizacion') with timeout 30000ms
+  - waiting for locator('#texto-estado-sincronizacion')
+    4 × locator resolved to <span aria-live="polite" id="texto-estado-sincronizacion">Conectando…</span>
+      - unexpected value "Conectando…"
+    57 × locator resolved to <span aria-live="polite" id="texto-estado-sincronizacion">Conectado · datos del servidor (11:40 a. m.)</span>
+       - unexpected value "Conectado · datos del servidor (11:40 a. m.)"
+
+    at captureRawStack (C:\EmprendedoresPuertoMontt\node_modules\playwright-core\lib\coreBundle.js:9551:17)
+    at callMatcherAsStep (C:\EmprendedoresPuertoMontt\node_modules\playwright\lib\matchers\expect.js:13342:57)
+    at Object.toHaveText (C:\EmprendedoresPuertoMontt\node_modules\playwright\lib\matchers\expect.js:13334:23)
+    at C:\EmprendedoresPuertoMontt\.herramientas\supabase-admin-local\browser-smoke.cjs:7:134

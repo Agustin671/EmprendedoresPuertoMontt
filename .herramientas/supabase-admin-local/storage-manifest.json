@@ -1,0 +1,16 @@
+[
+  {
+    "bucket": "productos",
+    "name": "b9ceb90c-4afb-4230-b09f-71d49c9ad97c/logo_tienda_t_minimarket_rosa_1794194194903.jpg",
+    "file": "storage-df506825e79886e58d2e8422561a7b3641381e2b5859d6ce968949a64d9da9b1.bin",
+    "bytes": 58122,
+    "sha256": "d331d80226ff3843e792e749a922f4bed0b92f9e712b338ad1e87ad2151d2b60"
+  },
+  {
+    "bucket": "productos",
+    "name": "b9ceb90c-4afb-4230-b09f-71d49c9ad97c/logo_tienda_t_minimarket_rosa_1794195256575.jpg",
+    "file": "storage-3078152fb5b06a2a2553494d1ecab033c93196d7192416c02297df61130e83c6.bin",
+    "bytes": 58122,
+    "sha256": "d331d80226ff3843e792e749a922f4bed0b92f9e712b338ad1e87ad2151d2b60"
+  }
+]

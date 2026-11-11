@@ -1,0 +1,812 @@
+[
+  {
+    "diagnosis": {
+      "counts": {
+        "fairs": 0,
+        "sales": 1,
+        "users": 15,
+        "stores": 4,
+        "products": 14,
+        "profiles": 15
+      },
+      "tables": [
+        {
+          "rls": true,
+          "name": "cuentas_autorizadas"
+        },
+        {
+          "rls": true,
+          "name": "perfiles"
+        },
+        {
+          "rls": true,
+          "name": "ventas"
+        },
+        {
+          "rls": true,
+          "name": "asociaciones"
+        },
+        {
+          "rls": true,
+          "name": "tiendas"
+        },
+        {
+          "rls": true,
+          "name": "productos"
+        },
+        {
+          "rls": true,
+          "name": "ferias"
+        },
+        {
+          "rls": true,
+          "name": "participaciones"
+        }
+      ],
+      "buckets": [
+        {
+          "id": "productos",
+          "public": true
+        }
+      ],
+      "columns": [
+        {
+          "type": "uuid",
+          "table": "perfiles",
+          "column": "id"
+        },
+        {
+          "type": "numeric",
+          "table": "ventas",
+          "column": "total"
+        },
+        {
+          "type": "timestamp with time zone",
+          "table": "ventas",
+          "column": "fecha"
+        },
+        {
+          "type": "numeric",
+          "table": "productos",
+          "column": "precio"
+        },
+        {
+          "type": "boolean",
+          "table": "productos",
+          "column": "publicado"
+        },
+        {
+          "type": "boolean",
+          "table": "productos",
+          "column": "destacado"
+        },
+        {
+          "type": "bigint",
+          "table": "productos",
+          "column": "color_foto"
+        },
+        {
+          "type": "jsonb",
+          "table": "productos",
+          "column": "variantes"
+        },
+        {
+          "type": "timestamp with time zone",
+          "table": "perfiles",
+          "column": "creado_en"
+        },
+        {
+          "type": "timestamp with time zone",
+          "table": "productos",
+          "column": "actualizado_en"
+        },
+        {
+          "type": "jsonb",
+          "table": "ventas",
+          "column": "items"
+        },
+        {
+          "type": "bigint",
+          "table": "asociaciones",
+          "column": "color"
+        },
+        {
+          "type": "bigint",
+          "table": "tiendas",
+          "column": "color_portada"
+        },
+        {
+          "type": "date",
+          "table": "ferias",
+          "column": "fecha_inicio"
+        },
+        {
+          "type": "date",
+          "table": "ferias",
+          "column": "fecha_fin"
+        },
+        {
+          "type": "bigint",
+          "table": "tiendas",
+          "column": "color_logo"
+        },
+        {
+          "type": "integer",
+          "table": "ferias",
+          "column": "cupos"
+        },
+        {
+          "type": "numeric",
+          "table": "ferias",
+          "column": "precio_entrada"
+        },
+        {
+          "type": "jsonb",
+          "table": "tiendas",
+          "column": "necesidades"
+        },
+        {
+          "type": "double precision",
+          "table": "ferias",
+          "column": "latitud"
+        },
+        {
+          "type": "double precision",
+          "table": "ferias",
+          "column": "longitud"
+        },
+        {
+          "type": "boolean",
+          "table": "tiendas",
+          "column": "mostrar_precios"
+        },
+        {
+          "type": "timestamp with time zone",
+          "table": "tiendas",
+          "column": "actualizado_en"
+        },
+        {
+          "type": "timestamp with time zone",
+          "table": "cuentas_autorizadas",
+          "column": "creado_en"
+        },
+        {
+          "type": "uuid",
+          "table": "tiendas",
+          "column": "owner_id"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "tienda_id"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "descripcion"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "categoria"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "foto_url"
+        },
+        {
+          "type": "text",
+          "table": "ferias",
+          "column": "id"
+        },
+        {
+          "type": "text",
+          "table": "ferias",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "ferias",
+          "column": "ubicacion"
+        },
+        {
+          "type": "text",
+          "table": "ferias",
+          "column": "horario"
+        },
+        {
+          "type": "text",
+          "table": "ferias",
+          "column": "estado"
+        },
+        {
+          "type": "text",
+          "table": "participaciones",
+          "column": "feria_id"
+        },
+        {
+          "type": "text",
+          "table": "participaciones",
+          "column": "tienda_id"
+        },
+        {
+          "type": "text",
+          "table": "participaciones",
+          "column": "invitacion"
+        },
+        {
+          "type": "text",
+          "table": "cuentas_autorizadas",
+          "column": "email"
+        },
+        {
+          "type": "text",
+          "table": "participaciones",
+          "column": "asistencia"
+        },
+        {
+          "type": "text",
+          "table": "cuentas_autorizadas",
+          "column": "rol"
+        },
+        {
+          "type": "text",
+          "table": "cuentas_autorizadas",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "cuentas_autorizadas",
+          "column": "tienda_id"
+        },
+        {
+          "type": "text",
+          "table": "cuentas_autorizadas",
+          "column": "asociacion_id"
+        },
+        {
+          "type": "text",
+          "table": "perfiles",
+          "column": "email"
+        },
+        {
+          "type": "text",
+          "table": "perfiles",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "perfiles",
+          "column": "rol"
+        },
+        {
+          "type": "text",
+          "table": "perfiles",
+          "column": "tienda_id"
+        },
+        {
+          "type": "text",
+          "table": "ventas",
+          "column": "id"
+        },
+        {
+          "type": "text",
+          "table": "ventas",
+          "column": "tienda_id"
+        },
+        {
+          "type": "text",
+          "table": "ventas",
+          "column": "fecha_local"
+        },
+        {
+          "type": "text",
+          "table": "ventas",
+          "column": "medio_pago"
+        },
+        {
+          "type": "text",
+          "table": "ventas",
+          "column": "feria_id"
+        },
+        {
+          "type": "text",
+          "table": "asociaciones",
+          "column": "id"
+        },
+        {
+          "type": "text",
+          "table": "asociaciones",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "asociaciones",
+          "column": "localidad"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "id"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "nombre"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "rubro"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "sector"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "bio"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "whatsapp"
+        },
+        {
+          "type": "text",
+          "table": "tiendas",
+          "column": "instagram"
+        },
+        {
+          "type": "text",
+          "table": "productos",
+          "column": "id"
+        }
+      ],
+      "version": "15.8",
+      "policies": [
+        {
+          "cmd": "ALL",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "cuentas_autorizadas",
+          "permissive": "PERMISSIVE",
+          "policyname": "cuentas_admin",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "perfiles",
+          "permissive": "PERMISSIVE",
+          "policyname": "perfiles_admin",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "((id = uid()) OR es_admin())",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "perfiles",
+          "permissive": "PERMISSIVE",
+          "policyname": "perfiles_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "ALL",
+          "qual": "es_duena_de(tienda_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ventas",
+          "permissive": "PERMISSIVE",
+          "policyname": "ventas_duena",
+          "schemaname": "public",
+          "with_check": "es_duena_de(tienda_id)"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "asociaciones",
+          "permissive": "PERMISSIVE",
+          "policyname": "asociaciones_admin",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "public"
+          ],
+          "tablename": "asociaciones",
+          "permissive": "PERMISSIVE",
+          "policyname": "asociaciones_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "tiendas",
+          "permissive": "PERMISSIVE",
+          "policyname": "tiendas_admin_borrar",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "tiendas",
+          "permissive": "PERMISSIVE",
+          "policyname": "tiendas_admin_crear",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "((owner_id = uid()) OR es_admin())",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "tiendas",
+          "permissive": "PERMISSIVE",
+          "policyname": "tiendas_editar",
+          "schemaname": "public",
+          "with_check": "((owner_id = uid()) OR es_admin())"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "public"
+          ],
+          "tablename": "tiendas",
+          "permissive": "PERMISSIVE",
+          "policyname": "tiendas_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "es_duena_de(tienda_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "productos",
+          "permissive": "PERMISSIVE",
+          "policyname": "productos_borrar",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "es_duena_de(tienda_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "productos",
+          "permissive": "PERMISSIVE",
+          "policyname": "productos_editar",
+          "schemaname": "public",
+          "with_check": "es_duena_de(tienda_id)"
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "productos",
+          "permissive": "PERMISSIVE",
+          "policyname": "productos_crear",
+          "schemaname": "public",
+          "with_check": "es_duena_de(tienda_id)"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(publicado OR es_duena_de(tienda_id))",
+          "roles": [
+            "public"
+          ],
+          "tablename": "productos",
+          "permissive": "PERMISSIVE",
+          "policyname": "productos_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "ALL",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "ferias",
+          "permissive": "PERMISSIVE",
+          "policyname": "ferias_admin",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "public"
+          ],
+          "tablename": "ferias",
+          "permissive": "PERMISSIVE",
+          "policyname": "ferias_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "es_duena_de(tienda_id)",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "participaciones",
+          "permissive": "PERMISSIVE",
+          "policyname": "participaciones_responder",
+          "schemaname": "public",
+          "with_check": "es_duena_de(tienda_id)"
+        },
+        {
+          "cmd": "ALL",
+          "qual": "es_admin()",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "participaciones",
+          "permissive": "PERMISSIVE",
+          "policyname": "participaciones_admin",
+          "schemaname": "public",
+          "with_check": "es_admin()"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "true",
+          "roles": [
+            "public"
+          ],
+          "tablename": "participaciones",
+          "permissive": "PERMISSIVE",
+          "policyname": "participaciones_ver",
+          "schemaname": "public",
+          "with_check": null
+        },
+        {
+          "cmd": "DELETE",
+          "qual": "((bucket_id = 'productos'::text) AND ((storage.foldername(name))[1] = (uid())::text))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "fotos_borrar",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "UPDATE",
+          "qual": "((bucket_id = 'productos'::text) AND ((storage.foldername(name))[1] = (uid())::text))",
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "fotos_reemplazar",
+          "schemaname": "storage",
+          "with_check": null
+        },
+        {
+          "cmd": "INSERT",
+          "qual": null,
+          "roles": [
+            "authenticated"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "fotos_subir",
+          "schemaname": "storage",
+          "with_check": "((bucket_id = 'productos'::text) AND ((storage.foldername(name))[1] = (uid())::text))"
+        },
+        {
+          "cmd": "SELECT",
+          "qual": "(bucket_id = 'productos'::text)",
+          "roles": [
+            "public"
+          ],
+          "tablename": "objects",
+          "permissive": "PERMISSIVE",
+          "policyname": "fotos_ver",
+          "schemaname": "storage",
+          "with_check": null
+        }
+      ],
+      "functions": [
+        {
+          "args": "",
+          "name": "al_crear_usuario"
+        },
+        {
+          "args": "",
+          "name": "es_admin"
+        },
+        {
+          "args": "p_tienda text",
+          "name": "es_duena_de"
+        }
+      ],
+      "sales_grants": [
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "INSERT",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "SELECT",
+          "with_hierarchy": "YES"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "UPDATE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "DELETE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "TRUNCATE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "REFERENCES",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "anon",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "TRIGGER",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "INSERT",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "SELECT",
+          "with_hierarchy": "YES"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "UPDATE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "DELETE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "TRUNCATE",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "REFERENCES",
+          "with_hierarchy": "NO"
+        },
+        {
+          "grantee": "authenticated",
+          "grantor": "supabase_admin",
+          "table_name": "ventas",
+          "is_grantable": "NO",
+          "table_schema": "public",
+          "table_catalog": "postgres",
+          "privilege_type": "TRIGGER",
+          "with_hierarchy": "NO"
+        }
+      ],
+      "storage_files": 2
+    }
+  }
+]

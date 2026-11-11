@@ -1,0 +1,3 @@
+Error: Restauración no coincide en ventas
+    at C:\EmprendedoresPuertoMontt\.herramientas\supabase-admin-local\rehearse.cjs:12:255
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

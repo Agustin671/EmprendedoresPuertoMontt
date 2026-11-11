@@ -1,0 +1,171 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "name": "Registro EMPRENDEDORA con confirmación automática",
+      "ok": true
+    },
+    {
+      "name": "Registro EMPRENDEDORA con confirmación automática",
+      "ok": true
+    },
+    {
+      "name": "Registro ADMIN con confirmación automática",
+      "ok": true
+    },
+    {
+      "name": "Inicio de sesión con correo y contraseña",
+      "ok": true
+    },
+    {
+      "name": "Perfil emprendedora y tienda creados",
+      "ok": true
+    },
+    {
+      "name": "Metadatos no permiten obtener ADMIN",
+      "ok": true
+    },
+    {
+      "name": "Subir imagen a productos",
+      "ok": true
+    },
+    {
+      "name": "Leer imagen pública de productos",
+      "ok": true
+    },
+    {
+      "name": "Subir imagen a perfiles",
+      "ok": true
+    },
+    {
+      "name": "Leer imagen pública de perfiles",
+      "ok": true
+    },
+    {
+      "name": "Guardar foto del perfil",
+      "ok": true
+    },
+    {
+      "name": "Guardar logo de la tienda",
+      "ok": true
+    },
+    {
+      "name": "Crear producto con opciones reales",
+      "ok": true
+    },
+    {
+      "name": "Catálogo anónimo con precio y foto por opción",
+      "ok": true
+    },
+    {
+      "name": "Otra cuenta no puede editar el producto",
+      "ok": true
+    },
+    {
+      "name": "Venta registrada y total correcto",
+      "ok": true
+    },
+    {
+      "name": "Reintento no duplica venta",
+      "ok": true
+    },
+    {
+      "name": "Descuento solo en opción vendida",
+      "ok": true
+    },
+    {
+      "name": "Sobreventa rechazada",
+      "ok": true
+    },
+    {
+      "name": "Historial con una venta, precio y lugar",
+      "ok": true
+    },
+    {
+      "name": "Historial privado entre cuentas",
+      "ok": true
+    },
+    {
+      "name": "Venta directa fuera de RPC rechazada",
+      "ok": true
+    },
+    {
+      "name": "Preparar agotado",
+      "ok": true
+    },
+    {
+      "name": "Vender última unidad agotado",
+      "ok": true
+    },
+    {
+      "name": "Visibilidad pública agotado",
+      "ok": true
+    },
+    {
+      "name": "Preparar ocultar",
+      "ok": true
+    },
+    {
+      "name": "Vender última unidad ocultar",
+      "ok": true
+    },
+    {
+      "name": "Visibilidad pública ocultar",
+      "ok": true
+    },
+    {
+      "name": "Preparar pedido",
+      "ok": true
+    },
+    {
+      "name": "Vender última unidad pedido",
+      "ok": true
+    },
+    {
+      "name": "Visibilidad pública pedido",
+      "ok": true
+    },
+    {
+      "name": "Preparar unica",
+      "ok": true
+    },
+    {
+      "name": "Vender última unidad unica",
+      "ok": true
+    },
+    {
+      "name": "Visibilidad pública unica",
+      "ok": true
+    },
+    {
+      "name": "Pieza única permanece oculta",
+      "ok": true
+    },
+    {
+      "name": "Cambiar disponibilidad",
+      "ok": true
+    },
+    {
+      "name": "No disponible oculto al visitante",
+      "ok": true
+    },
+    {
+      "name": "Dueña conserva producto no disponible",
+      "ok": true
+    },
+    {
+      "name": "Editar conservando cantidades",
+      "ok": true
+    },
+    {
+      "name": "Recarga anónima muestra edición",
+      "ok": true
+    },
+    {
+      "name": "Storage rechaza carpeta ajena",
+      "ok": true
+    }
+  ],
+  "temporaryAccountsRemoved": 3,
+  "temporaryImagesRemoved": 2
+}

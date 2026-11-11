@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "checks": [
+    "Web local conectada al servidor real",
+    "Registro de emprendedora desde formulario web",
+    "Guardar producto desde formulario web en Supabase",
+    "Producto visible en navegador sin sesión"
+  ]
+}
