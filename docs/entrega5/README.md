@@ -73,6 +73,18 @@ No se asigna nota: el checklist se evalúa usándolo.
 | W12 | Pieza única vendida no vuelve a aparecer | Probado en SQL (permanente, también frente al APK antiguo) |
 | W13 | Edición visible al recargar (sin caché) | Implementado + recorrido de recarga |
 
+## Mejora de facilidad de uso del alta de productos (Android, 11-nov-2026)
+
+El asistente de 5 etapas (A01) ahora:
+- hace preguntas simples: «¿Tiene distintos tamaños, colores o sabores?», «¿Cómo lo vendes?», «¿Quién lo ve?»;
+- muestra cada control solo cuando corresponde;
+- deja la etiqueta de cada campo siempre visible y muestra los errores junto a él;
+- pide confirmar cualquier acción que borre datos.
+
+Cambiar una respuesta no borra datos ni modifica cantidades. Esa lógica está en `data/FormularioProducto.kt`, con 12 pruebas en `FormularioProductoTest.kt`. No cambia el modelo, el SQL ni las RPC.
+
+Se verificó en el emulador en modo desarrollador, sin servidor. Eso no prueba la sincronización con Supabase.
+
 ## Además del checklist (prioridad 2)
 
 - **Gestión web real:** alta y edición con opciones, publicar, disponibilidad masiva, eliminar, cantidades sin pisar ventas.

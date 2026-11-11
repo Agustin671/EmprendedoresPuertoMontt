@@ -32,3 +32,8 @@ node_modules/
 tests/.pgdata*/
 test-results/
 playwright-report/
+
+# Herramientas de IA instaladas localmente (no forman parte de la entrega)
+/.agents/
+/.claude/
+/skills-lock.json

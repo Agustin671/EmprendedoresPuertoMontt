@@ -59,7 +59,7 @@ fun colorEstadoPublico(e: EstadoPublico): ColorEstado = when (e) {
  * unidades, «al agotarse» y visibilidad con ReglasCatalogo (RF-PRO-12).
  */
 @Composable
-fun TarjetaVistaPrevia(producto: Producto) {
+fun TarjetaVistaPrevia(producto: Producto, mostrarMotivoOculto: Boolean = true) {
     val estado = ReglasCatalogo.estadoPublico(producto)
     var elegida by remember(producto.id) { mutableStateOf(producto.variantes.firstOrNull { ReglasCatalogo.opcionVendible(producto, it) }?.id ?: producto.variantes.firstOrNull()?.id) }
     val opcion = producto.variantes.firstOrNull { it.id == elegida }
@@ -85,12 +85,13 @@ fun TarjetaVistaPrevia(producto: Producto) {
                 ContenedorChips(modifier = Modifier.fillMaxWidth()) {
                     producto.variantes.forEach { v ->
                         val agotada = estado != EstadoPublico.A_PEDIDO && !ReglasCatalogo.opcionVendible(producto, v)
-                        ChipFiltro(texto = v.nombre.ifBlank { "Opción" } + if (agotada) " (se acabó)" else "", seleccionado = v.id == elegida, onClick = { elegida = v.id })
+                        // La opción elegida lleva una marca además del color.
+                        ChipFiltro(texto = (if (v.id == elegida) "✓ " else "") + v.nombre.ifBlank { "Opción" } + if (agotada) " (se acabó)" else "", seleccionado = v.id == elegida, onClick = { elegida = v.id })
                     }
                 }
             }
             val detalle = when {
-                estado == EstadoPublico.OCULTO -> "No se muestra: ${ReglasCatalogo.motivoOculto(producto)}"
+                estado == EstadoPublico.OCULTO -> if (mostrarMotivoOculto) "No se muestra: ${ReglasCatalogo.motivoOculto(producto)}" else ""
                 producto.modalidad == Modalidad.PIEZA_UNICA -> "Pieza única"
                 estado == EstadoPublico.DISPONIBLE && producto.manejaStock && opcion != null ->
                     if (opcion.stock > 0) "Quedan ${opcion.stock}" else "Esta opción se acabó"
