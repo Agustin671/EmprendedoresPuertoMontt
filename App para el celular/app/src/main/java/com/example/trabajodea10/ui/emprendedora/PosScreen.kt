@@ -18,7 +18,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -66,7 +73,15 @@ fun PantallaVenta(
                     )
                 }
             )
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            var elegir by remember { mutableStateOf<com.example.trabajodea10.data.Producto?>(null) }
+            elegir?.let { p -> DialogoElegirOpcion(producto = p, onCerrar = { elegir = null }, onAgregado = { elegir = null; avisar(it) }) }
+            Column(modifier = Modifier.padding(horizontal = 16.dp).verticalScroll(rememberScrollState())) {
+                TituloSeccion(texto = "Elige qué vendiste")
+                TramaStore.productosDeMiTienda().filter { it.vendidaEn == null && it.nombre.isNotBlank() }.forEach { p ->
+                    androidx.compose.material3.TextButton(onClick = { elegir = p }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text("${p.nombre} · ${formatearMoneda(p.precio)}", modifier = Modifier.weight(1f))
+                    }
+                }
                 BotonPrimario(
                     texto = "Ir al catálogo",
                     onClick = { nav.seleccionarTab(Ruta.EmpCatalogo) }
@@ -112,7 +127,7 @@ fun PantallaVenta(
                                         maxLines = 1
                                     )
                                     Text(
-                                        text = "${item.detalle} · ${formatearMoneda(item.precio)} c/u",
+                                        text = "${item.detalle} · ${formatearMoneda(item.precio)} c/u" + if (item.encargo) " · encargo" else "",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = TextoSecundario
                                     )
@@ -129,8 +144,15 @@ fun PantallaVenta(
                                         if (nueva <= 0) {
                                             carrito.remove(item)
                                         } else {
-                                            val idx = carrito.indexOf(item)
-                                            if (idx >= 0) carrito[idx] = item.copy(cantidad = nueva)
+                                            // No se puede vender más de lo que queda en esa opción.
+                                            val p = TramaStore.productoPorId(item.productoId)
+                                            val problema = p?.let { com.example.trabajodea10.data.ReglasCatalogo.validarLinea(it, it.variantes.firstOrNull { v -> v.id == item.varianteId }, nueva, item.encargo) }
+                                                ?: "El producto ya no está en tu catálogo."
+                                            if (problema != null && nueva > item.cantidad) avisar(problema)
+                                            else {
+                                                val idx = carrito.indexOf(item)
+                                                if (idx >= 0) carrito[idx] = item.copy(cantidad = nueva)
+                                            }
                                         }
                                     }
                                 )
@@ -178,8 +200,24 @@ fun PantallaVenta(
             item {
                 BotonPrimario(
                     texto = "Continuar al pago · ${formatearMoneda(total)}",
-                    onClick = { nav.irA(Ruta.PagoVenta) }
+                    onClick = {
+                        val problema = TramaStore.validarVenta(carrito.toList())
+                        if (problema != null) avisar(problema) else nav.irA(Ruta.PagoVenta)
+                    }
                 )
+            }
+
+            item {
+                var productoVenta by remember { mutableStateOf<com.example.trabajodea10.data.Producto?>(null) }
+                productoVenta?.let { p ->
+                    DialogoElegirOpcion(producto = p, onCerrar = { productoVenta = null }, onAgregado = { productoVenta = null; avisar(it) })
+                }
+                TituloSeccion(texto = "Agregar otro producto")
+                TramaStore.productosDeMiTienda().filter { it.vendidaEn == null && it.nombre.isNotBlank() }.forEach { p ->
+                    androidx.compose.material3.TextButton(onClick = { productoVenta = p }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        Text("${p.nombre} · ${formatearMoneda(p.precio)}", modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
     }

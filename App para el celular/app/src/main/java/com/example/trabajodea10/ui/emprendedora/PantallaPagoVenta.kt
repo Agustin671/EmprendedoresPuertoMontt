@@ -66,6 +66,11 @@ fun PantallaPagoVenta(
     val carrito = TramaStore.carritoVenta
     var medio by remember { mutableStateOf<MedioPago?>(null) }
     var ventaConfirmada by remember { mutableStateOf<Venta?>(null) }
+    // Lugar de la venta (RF-VEN-03): feria de la plataforma, otro lugar o sin indicar.
+    var lugar by remember { mutableStateOf<String?>(null) }
+    var lugarOtro by remember { mutableStateOf("") }
+    var problema by remember { mutableStateOf<String?>(null) }
+    val historialActivo = TramaStore.tienda.historialActivo
     val total = carrito.sumOf { it.precio * it.cantidad }
 
     LaunchedEffect(carrito.size) {
@@ -136,6 +141,39 @@ fun PantallaPagoVenta(
                 }
             }
 
+            TituloSeccion(texto = "¿Dónde vendiste?")
+            com.example.trabajodea10.ui.componentes.ContenedorChips(modifier = Modifier.fillMaxWidth()) {
+                ChipFiltro(texto = "Sin indicar", seleccionado = lugar == null, onClick = { lugar = null })
+                TramaStore.feriasPlataforma.forEach { f ->
+                    ChipFiltro(texto = f.nombre, seleccionado = lugar == f.id, onClick = { lugar = f.id })
+                }
+                ChipFiltro(texto = "Otro lugar", seleccionado = lugar == "OTRO", onClick = { lugar = "OTRO" })
+            }
+            if (TramaStore.feriasPlataforma.isEmpty()) {
+                Text(
+                    text = "No hay ferias registradas en la plataforma. Puedes anotar otro lugar.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextoSecundario
+                )
+            }
+            if (lugar == "OTRO") {
+                com.example.trabajodea10.ui.componentes.CampoTexto(
+                    valor = lugarOtro,
+                    onValorChange = { lugarOtro = it.take(80) },
+                    etiqueta = "Lugar",
+                    placeholder = "Ej: Plaza de Alerce"
+                )
+            }
+            Text(
+                text = if (historialActivo) "Se guardará el precio, la fecha y el lugar en tu historial."
+                else "Tu historial está desactivado: solo se descontarán las unidades.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextoSecundario
+            )
+            problema?.let {
+                Text(text = it, color = com.example.trabajodea10.ui.theme.RojoError, fontWeight = FontWeight.SemiBold)
+            }
+
             Spacer(modifier = Modifier.height(6.dp))
         }
 
@@ -151,16 +189,23 @@ fun PantallaPagoVenta(
                 enabled = carrito.isNotEmpty() && medio != null,
                 onClick = {
                     val pago = medio ?: return@BotonPrimario
-                    val venta = TramaStore.registrarVenta(carrito.toList(), pago, null)
+                    if (lugar == "OTRO" && lugarOtro.isBlank()) { problema = "Escribe dónde fue la venta."; return@BotonPrimario }
+                    val resultado = TramaStore.registrarVenta(
+                        carrito.toList(), pago,
+                        feriaId = lugar?.takeIf { it != "OTRO" },
+                        lugarNombre = if (lugar == "OTRO") lugarOtro else null
+                    )
+                    val venta = resultado.getOrElse { problema = it.message; return@BotonPrimario }
+                    problema = null
                     val archivo = generarPdfVenta(context, venta)
                     ventaConfirmada = venta
                     carrito.clear()
                     medio = null
                     if (archivo != null) {
                         compartirPdf(context, archivo)
-                        avisar("Venta registrada. PDF generado y listo para compartir")
+                        avisar(if (venta.estadoSync == com.example.trabajodea10.data.EstadoSync.PENDIENTE) "Venta anotada. Se confirmará con el servidor al subirla." else "Venta registrada. PDF listo para compartir")
                     } else {
-                        avisar("Venta registrada")
+                        avisar(if (venta.estadoSync == com.example.trabajodea10.data.EstadoSync.PENDIENTE) "Venta anotada. Se confirmará con el servidor al subirla." else "Venta registrada")
                     }
                 }
             )

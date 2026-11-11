@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import com.example.trabajodea10.data.remoto.ClienteSupabase
 import com.example.trabajodea10.data.remoto.ConfigSupabase
 import com.example.trabajodea10.data.remoto.ErrorSupabase
+import com.example.trabajodea10.data.remoto.FeriaRepositorio
+import com.example.trabajodea10.data.remoto.TipoRepositorio
 import com.example.trabajodea10.data.remoto.PerfilRepositorio
 import com.example.trabajodea10.data.remoto.ProductoRepositorio
 import com.example.trabajodea10.data.remoto.Sincronizador
@@ -219,9 +221,15 @@ object SesionManager {
         ClienteSupabase.guardarDato(DATO_ROL, perfil.rol.name)
         ClienteSupabase.guardarDato(DATO_FOTO, perfil.fotoUrl)
 
+        // Datos y cola de esta cuenta (los de otra cuenta quedan aparte).
+        TramaStore.cambiarCuenta(perfil.id)
         if (perfil.rol == Rol.EMPRENDEDORA && perfil.tiendaId != null) {
+            // Primero se sube lo pendiente; así lo descargado ya lo incluye.
+            runCatching { Sincronizador.subirPendientes() }
             traerMiTienda(perfil.tiendaId)
         }
+        runCatching { TipoRepositorio.listar() }.onSuccess { TramaStore.reemplazarTipos(it) }
+        runCatching { FeriaRepositorio.listar() }.onSuccess { TramaStore.reemplazarFeriasPlataforma(it) }
         TramaStore.iniciarSesion(perfil.rol)
         Sincronizador.subirEnSegundoPlano()
         return perfil.rol
@@ -231,7 +239,7 @@ object SesionManager {
     private suspend fun traerMiTienda(tiendaId: String) {
         TiendaRepositorio.obtener(tiendaId)?.let { TramaStore.guardarTienda(it) }
         runCatching { ProductoRepositorio.deTienda(tiendaId) }
-            .onSuccess { TramaStore.reemplazarProductosDeTienda(tiendaId, it, Sincronizador.idsProductosPendientes()) }
+            .onSuccess { TramaStore.reemplazarProductosDeTienda(tiendaId, it, Sincronizador.idsProductosPendientes(), Sincronizador.idsEliminadosPendientes()) }
             .onFailure { Log.w(TAG, "No se pudieron traer los productos: ${it.message}") }
         runCatching { VentaRepositorio.historial(tiendaId) }
             .onSuccess { TramaStore.reemplazarVentas(it, Sincronizador.idsVentasPendientes()) }
@@ -253,8 +261,9 @@ object SesionManager {
      */
     suspend fun cerrarSesionCompleta() {
         if (!huellaActivada()) {
+            // Lo que no alcanzó a subirse queda guardado en la cola de esta cuenta
+            // (no se descarta) y se sube la próxima vez que entre con ella.
             runCatching { Sincronizador.subirPendientes() }
-            Sincronizador.descartarTodo()
             ClienteSupabase.cerrarSesion()
             ClienteSupabase.guardarDato(DATO_ROL, null)
             ClienteSupabase.guardarDato(DATO_NOMBRE, null)
@@ -263,6 +272,7 @@ object SesionManager {
             nombreUsuarioActual = ""
             fotoPerfilUrl = ""
             rolUsuarioActual = null
+            TramaStore.cambiarCuenta(null)
         }
         TramaStore.cerrarSesion()
     }

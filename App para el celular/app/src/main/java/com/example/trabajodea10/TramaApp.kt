@@ -167,6 +167,9 @@ private fun ContenidoSegunRuta(
             nav = nav,
             avisar = avisar
         )
+        Ruta.VistaPrevia -> com.example.trabajodea10.ui.emprendedora.PantallaVistaPrevia(nav = nav)
+        Ruta.HistorialVentas -> com.example.trabajodea10.ui.emprendedora.PantallaHistorialVentas(nav = nav, avisar = avisar)
+        Ruta.ConfigVentas -> com.example.trabajodea10.ui.emprendedora.PantallaConfigVentas(nav = nav, avisar = avisar)
 
         Ruta.VisInicio -> PantallaVisFerias(avisar = avisar)
         Ruta.VisProductos -> PantallaMarketplace(nav = nav, avisar = avisar)

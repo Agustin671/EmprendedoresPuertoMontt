@@ -21,7 +21,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -84,6 +87,10 @@ fun PantallaCatalogo(
 ) {
     var busqueda by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf(FiltroCatalogo.TODOS) }
+    // Cambio masivo de disponibilidad (RF-PRO-10): por selección, por categoría o todo.
+    var seleccionando by remember { mutableStateOf(false) }
+    val seleccion = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    var productoVenta by remember { mutableStateOf<Producto?>(null) }
     // Último producto marcado como "Se acabó", para poder deshacerlo.
     var ultimoAgotado by remember { mutableStateOf<Pair<Producto, List<Variante>>?>(null) }
     // El aviso con "Deshacer" se esconde solo después de 8 segundos.
@@ -114,11 +121,64 @@ fun PantallaCatalogo(
             subtitulo = "${TramaStore.productosPublicados()} a la vista de tus clientas · ${todos.size} en total" +
                 if (Sincronizador.pendientes > 0) " · ${Sincronizador.pendientes} cambios por subir (sin señal)" else "",
             acciones = {
-                IconButton(onClick = { nav.irA(Ruta.Ajustes) }) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Ajustes")
+                IconButton(onClick = { nav.irA(Ruta.VistaPrevia) }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Filled.Visibility, contentDescription = "Vista previa de mi tienda")
+                }
+                IconButton(onClick = { nav.irA(Ruta.HistorialVentas) }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Filled.History, contentDescription = "Historial de ventas")
+                }
+                IconButton(onClick = { nav.irA(Ruta.ConfigVentas) }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Filled.Tune, contentDescription = "Ventas y productos nuevos")
                 }
             }
         )
+
+        productoVenta?.let { p ->
+            com.example.trabajodea10.ui.emprendedora.DialogoElegirOpcion(
+                producto = p,
+                onCerrar = { productoVenta = null },
+                onAgregado = { productoVenta = null; avisar(it) }
+            )
+        }
+
+        // Producto sin terminar (se guardó solo): se puede retomar tras cerrar la app.
+        TramaStore.borrador?.let { b ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .background(Color(0xFFFFF3E6), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = (if (b.esNuevo) "Producto sin terminar" else "Cambios sin guardar") + ": «" + b.producto.nombre.ifBlank { "sin nombre" } + "»",
+                    modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold
+                )
+                TextButton(onClick = { nav.irA(Ruta.ProductoDetalle(b.producto.id)) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text("Continuar", fontWeight = FontWeight.Bold)
+                }
+                TextButton(onClick = { TramaStore.descartarBorrador(); avisar("Descartado") }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text("Descartar", color = TextoSecundario)
+                }
+            }
+        }
+        TramaStore.avisosSync.toList().forEach { aviso ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .background(Color(0xFFFDECEC), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(aviso, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = { TramaStore.descartarAviso(aviso) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Entendido") }
+            }
+        }
+        Sincronizador.ultimoProblema?.let { problema ->
+            Text(problema, color = TextoSecundario, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
+        }
 
         // Botón sobrio para añadir producto
         androidx.compose.material3.Card(
@@ -185,7 +245,43 @@ fun PantallaCatalogo(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (seleccionando) "${seleccion.size} elegidos" else "Cambiar varios a la vez",
+                modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold
+            )
+            TextButton(onClick = { seleccionando = !seleccionando; seleccion.clear() }, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(if (seleccionando) "Listo" else "Elegir varios", fontWeight = FontWeight.Bold)
+            }
+        }
+        if (seleccionando) {
+            com.example.trabajodea10.ui.componentes.ContenedorChips(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                ChipFiltro(texto = "Todo el catálogo", seleccionado = seleccion.size == todos.size && todos.isNotEmpty(), onClick = {
+                    seleccion.clear(); seleccion.addAll(todos.map { it.id })
+                })
+                todos.map { it.categoria }.distinct().forEach { c ->
+                    ChipFiltro(texto = "Toda la categoría " + c.etiqueta, seleccionado = false, onClick = {
+                        seleccion.removeAll { id -> todos.any { it.id == id && it.categoria == c } }
+                        seleccion.addAll(todos.filter { it.categoria == c }.map { it.id })
+                    })
+                }
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { val n = TramaStore.cambiarDisponibilidad(seleccion.toList(), true); avisar("$n productos disponibles"); seleccion.clear() },
+                    enabled = seleccion.isNotEmpty(), modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                ) { Text("Disponibles") }
+                OutlinedButton(
+                    onClick = { val n = TramaStore.cambiarDisponibilidad(seleccion.toList(), false); avisar("$n productos no disponibles (siguen en tu tienda)"); seleccion.clear() },
+                    enabled = seleccion.isNotEmpty(), modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                ) { Text("No disponibles") }
+            }
+        }
 
         ultimoAgotado?.let { (producto, variantes) ->
             Row(
@@ -231,16 +327,32 @@ fun PantallaCatalogo(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(visibles, key = { it.id }) { producto ->
-                    Tarjeta(onClick = { nav.irA(Ruta.ProductoDetalle(producto.id)) }) {
-                        TarjetaProducto(
-                            producto = producto,
-                            nav = nav,
-                            avisar = avisar,
-                            onSeAcabo = {
-                                ultimoAgotado = producto to producto.variantes
-                                TramaStore.marcarAgotado(producto.id)
+                    val elegido = producto.id in seleccion
+                    Tarjeta(onClick = {
+                        if (seleccionando) { if (elegido) seleccion.remove(producto.id) else seleccion.add(producto.id) }
+                        else nav.irA(Ruta.ProductoDetalle(producto.id))
+                    }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (seleccionando) {
+                                androidx.compose.material3.Checkbox(
+                                    checked = elegido,
+                                    onCheckedChange = { if (it) seleccion.add(producto.id) else seleccion.remove(producto.id) },
+                                    modifier = Modifier.padding(start = 6.dp)
+                                )
                             }
-                        )
+                            Column(modifier = Modifier.weight(1f)) {
+                                TarjetaProducto(
+                                    producto = producto,
+                                    nav = nav,
+                                    avisar = avisar,
+                                    onSeAcabo = {
+                                        ultimoAgotado = producto to producto.variantes
+                                        TramaStore.marcarAgotado(producto.id)
+                                    },
+                                    onVender = { productoVenta = producto }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -253,7 +365,8 @@ fun TarjetaProducto(
     producto: Producto,
     nav: ControladorNavegacion,
     avisar: (String) -> Unit,
-    onSeAcabo: () -> Unit = { TramaStore.marcarAgotado(producto.id) }
+    onSeAcabo: () -> Unit = { TramaStore.marcarAgotado(producto.id) },
+    onVender: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -295,6 +408,9 @@ fun TarjetaProducto(
                     texto = producto.categoria.etiqueta,
                     color = ColorEstado(SuperficieVariante, TextoSecundario)
                 )
+                Spacer(modifier = Modifier.width(6.dp))
+                val estadoPublico = com.example.trabajodea10.data.ReglasCatalogo.estadoPublico(producto)
+                ChipEstado(texto = if (!producto.disponible) "No disponible" else estadoPublico.etiqueta, color = colorEstadoPublico(estadoPublico))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = formatearMoneda(producto.precio),
@@ -305,7 +421,13 @@ fun TarjetaProducto(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = if (producto.agotado) "Se acabó" else "Quedan ${producto.stockTotal}",
+                    text = when {
+                        producto.modalidad == com.example.trabajodea10.data.Modalidad.A_PEDIDO -> "A pedido"
+                        producto.vendidaEn != null -> "Pieza única vendida"
+                        !producto.manejaStock -> "Sin conteo"
+                        producto.agotado -> "Se acabó"
+                        else -> "Quedan ${producto.stockTotal}" + if (producto.variantes.size > 1) " en ${producto.variantes.size} opciones" else ""
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = colorDeStock(producto.stockTotal)
@@ -348,25 +470,9 @@ fun TarjetaProducto(
                     ) {
                         Text("Se acabó", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = NegroApple)
                     }
-                    if (producto.publicado) {
+                    if (producto.vendidaEn == null) {
                         TextButton(
-                            onClick = {
-                                val variante = producto.variantes.firstOrNull { it.stock > 0 } ?: producto.variantes.firstOrNull()
-                                if (variante != null) {
-                                    TramaStore.agregarAlCarrito(
-                                        com.example.trabajodea10.data.ItemVenta(
-                                            productoId = producto.id,
-                                            varianteId = variante.id,
-                                            nombre = producto.nombre,
-                                            detalle = variante.nombre,
-                                            precio = producto.precio,
-                                            cantidad = 1,
-                                            fotoUrl = producto.fotoUrl
-                                        )
-                                    )
-                                    avisar("«${producto.nombre}» agregado a la venta")
-                                }
-                            },
+                            onClick = onVender,
                             modifier = Modifier.heightIn(min = 48.dp),
                             contentPadding = PaddingValues(horizontal = 8.dp)
                         ) {

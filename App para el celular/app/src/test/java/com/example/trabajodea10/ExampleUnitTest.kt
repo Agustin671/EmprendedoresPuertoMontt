@@ -28,7 +28,7 @@ class ExampleUnitTest {
 
         val nav = ControladorNavegacion()
         nav.iniciarSesion(Rol.EMPRENDEDORA)
-        assertEquals(Ruta.EmpTienda, nav.actual)
+        assertEquals(Ruta.EmpInicio, nav.actual)
         assertEquals(5, itemsSegunRol(Rol.EMPRENDEDORA).size)
     }
 
